@@ -1,0 +1,35 @@
+use_gpu: true
+add_synthetic: true
+task: B # A or B
+
+training:
+  model_name: facebook/xlm-v-base # google/flan-t5-base # MilaNLProc/hate-ita
+
+  add_synthetic: false # Add also synthetic examples to training set
+  eval_size: 0.25
+  model_max_length: 256 # max is 512 for XMLRoberta, so it depends on the backbone model
+
+  batch_size: 4
+  test_batch_size: 16
+  learning_rate: 5.0e-3
+  decay: 0.0
+  freeze_base: true
+  epochs: 2
+  es_patience: 2
+  keep_n_best_models: 2
+
+  resume: false
+  checkpoint: dumps/nlp_models/MilaNLProc_hate-ita_5 # path to folder with checkpoints (last epoch will be loaded)
+
+testing:
+  task_m_model_name: dumps/nlp_models/MilaNLProc_hate-ita_2/checkpoint-828 # "Hate-speech-CNERG/dehatebert-mono-italian OR path to existing checkpoint
+  task_a_model_name: dumps/nlp_models/MilaNLProc_hate-ita_2/checkpoint-828 # "Hate-speech-CNERG/dehatebert-mono-italian OR path to existing checkpoint
+  target_label: hateful # LABEL_1 # hateful # target for inference, depends on pre-trained model
+
+
+grid_search_params:
+  model_max_length: [ 128, 256, 512 ]
+  batch_size: [ 8, 16, 32 ]
+  learning_rate: [ 1.0e-3, 5.0e-3, 1.0e-4, 5.0e-4, 1.0e-5, 5.0e-5, 1.0e-6 ]
+  decay: [ 0.0, 0.01, 0.001 ]
+  epochs: [ 2, 3, 4 ]
