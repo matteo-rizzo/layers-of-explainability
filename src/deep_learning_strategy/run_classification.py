@@ -7,7 +7,7 @@ import torch.cuda
 from dataset.ami2020_misogyny_detection.scripts.dataset_handling import compute_metrics
 from dataset.ami2020_misogyny_detection.scripts.evaluation_submission import read_gold, evaluate_task_b_singlefile
 from src.deep_learning_strategy.classes.HuggingFacePipeline import HuggingFacePipeline
-from src.deep_learning_strategy.classes.MisogynyDataset import MisogynyDataset
+from src.deep_learning_strategy.classes.HuggingFaceDataset import HuggingFaceDataset
 from src.utils.yaml_manager import load_yaml
 
 config = load_yaml(os.path.join("src", "deep_learning_strategy", "config.yml"))
@@ -23,7 +23,7 @@ ADD_SYNTHETIC = config["add_synthetic"]
 def task_a() -> float:
     print("--> Task A: Predicting aggressiveness")
     pipeline = HuggingFacePipeline(TASK_A_MODEL_NAME, BATCH_SIZE)
-    dataset = MisogynyDataset(target="A")
+    dataset = HuggingFaceDataset(target="A")
     predictions = pipeline.test(dataset.get_test_data(), TARGET_LABEL)
     metrics = compute_metrics(y_pred=predictions, y_true=dataset.get_test_groundtruth())
     pprint(metrics)
@@ -37,7 +37,7 @@ def task_a() -> float:
 def task_b(predictions):
     print("--> Task B ")
     pipeline = HuggingFacePipeline(TASK_B_MODEL_NAME, BATCH_SIZE)
-    dataset = MisogynyDataset(target="M")
+    dataset = HuggingFaceDataset(target="M")
     predictions_synthetic = pipeline.test(dataset.get_synthetic_test_data(), TARGET_LABEL)
 
     df_pred = pd.Series(predictions, index=pd.Index(dataset.get_test_ids(), dtype=str))
@@ -61,7 +61,7 @@ def task_b(predictions):
 def main():
     print("*** PREDICTING MISOGYNY ***")
     pipeline = HuggingFacePipeline(TEST_MODEL_NAME, BATCH_SIZE)
-    dataset = MisogynyDataset(augment_training=ADD_SYNTHETIC or TASK == "B")
+    dataset = HuggingFaceDataset(augment_training=ADD_SYNTHETIC or TASK == "B")
     predictions = pipeline.test(dataset.get_test_data(), TARGET_LABEL)
     metrics = compute_metrics(y_pred=predictions, y_true=dataset.get_test_groundtruth())
     pprint(metrics)

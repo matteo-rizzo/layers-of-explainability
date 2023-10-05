@@ -1,35 +1,36 @@
 import re
+from typing import Dict
+
+from datasets import Features, Value, ClassLabel, NamedSplit, Dataset
 
 from dataset.ami2020_misogyny_detection.scripts.dataset_handling import train_val_test
 from src.feature_extraction.text_features import separate_html_entities
 
 
-class MisogynyDataset:
+class HuggingFaceDataset:
 
     def __init__(self, augment_training=False, target="M"):
         self.split_data = train_val_test(target=target, add_synthetic_train=augment_training,
                                          preprocessing_function=self.preprocessing)
 
-    def get_test_data(self):
-        return self.split_data["test"]["x"]
+        self.hg_wrapped_data = {k: {"text": v["x"], "label": v["y"]} for k, v in self.split_data.items()}
 
-    def get_test_ids(self):
-        return self.split_data["test"]["ids"]
+        feat = Features({
+            "text": Value("string"),
+            "label": ClassLabel(num_classes=2, names=["no", "yes"], names_file=None, id=None)}
+        )
 
-    def get_synthetic_test_data(self):
-        return self.split_data["test_synt"]["x"]
+        self.train_data = Dataset.from_dict(self.hg_wrapped_data["train"], split=NamedSplit("train"), features=feat)
+        self.test_data = Dataset.from_dict(self.hg_wrapped_data["test"], split=NamedSplit("test"), features=feat)
 
-    def get_synthetic_test_ids(self):
-        return self.split_data["test_synt"]["ids"]
+    def get_test_data(self) -> Dataset:
+        return self.test_data
 
-    def get_test_groundtruth(self):
-        return self.split_data["test"]["y"]
+    def get_train_data(self) -> Dataset:
+        return self.train_data
 
-    def get_train_val_test_split(self):
+    def get_train_val_test_split(self) -> Dict:
         return self.split_data
-
-    def get_path_to_testset(self):
-        return self.split_data["test_set_path"]
 
     @staticmethod
     def preprocessing(text_string: str) -> str:

@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import itertools
 import os
+import re
 from pathlib import Path
 
 import torch
-from src.deep_learning_strategy.pipeline import deep_preprocessing
 from transformers import AutoModelForSequenceClassification, EarlyStoppingCallback
 from transformers import AutoTokenizer
 from transformers import TrainingArguments
@@ -127,9 +127,6 @@ def grid_search_finetune(hyperparameters) -> None:
 
 if __name__ == "__main__":
     assert torch.cuda.is_available(), "CUDA is not available :("
+    config = load_yaml(os.path.join("src", "deep_learning_strategy", "config.yml"))
+    grid_search_finetune(config) if DO_GRID_SEARCH else finetune(config)
 
-    config: dict = load_yaml("src/nlp/params/deep_learning_strategy.yml")
-    if DO_GRID_SEARCH:
-        grid_search_finetune(config)
-    else:
-        finetune(config)
