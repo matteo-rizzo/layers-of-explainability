@@ -6,9 +6,11 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
-from src.ami2020.simple_model.pipeline import train_val_test, naive_classifier, compute_metrics
-from src.ami2020.simple_model.run_classification import classifier_type
-from src.cv.classifiers.deep_learning.functional.yaml_manager import load_yaml
+
+from src.explainable_strategy.find_negatives import classifier_type
+from src.explainable_strategy.pipeline import naive_classifier
+from src.utils.ami_2020_scripts.dataset_handling import train_val_test, compute_metrics
+from src.utils.yaml_manager import load_yaml
 
 # Ignore all warnings
 warnings.filterwarnings('ignore')

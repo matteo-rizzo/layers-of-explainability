@@ -2,9 +2,9 @@ from pathlib import Path
 
 import pandas as pd
 from sklearn.linear_model import RidgeClassifier
-from src.ami2020.dataset import train_val_test, compute_metrics, task_b_eval
-from src.ami2020.simple_model.pipeline import naive_classifier
-from src.cv.classifiers.deep_learning.functional.yaml_manager import load_yaml
+from src.utils.ami_2020_scripts.dataset_handling import train_val_test, compute_metrics, task_b_eval
+from src.explainable_strategy.pipeline import naive_classifier
+from src.utils.yaml_manager import load_yaml
 
 classifier_type = RidgeClassifier
 

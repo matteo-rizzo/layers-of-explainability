@@ -7,9 +7,10 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import RidgeClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
-from src.ami2020.dataset import train_val_test, compute_metrics
-from src.ami2020.text_features import TextFeatureExtractor
-from src.cv.classifiers.deep_learning.functional.yaml_manager import load_yaml
+
+from src.feature_extraction.text_features import TextFeatureExtractor
+from src.utils.ami_2020_scripts.dataset_handling import train_val_test, compute_metrics
+from src.utils.yaml_manager import load_yaml
 
 
 def predict_scores(pipeline: Pipeline, samples: list[str]) -> np.ndarray:
