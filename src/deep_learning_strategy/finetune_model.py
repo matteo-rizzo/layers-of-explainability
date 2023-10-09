@@ -13,13 +13,14 @@ from transformers.trainer import Trainer
 
 from src.deep_learning_strategy.utils import create_hf_dataset, compute_metrics, get_next_run_name, log_results, \
     delete_checkpoints
+from src.feature_extraction.text_features import deep_preprocessing
 from src.utils.yaml_manager import load_yaml, dump_yaml
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 # os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
 
-DO_GRID_SEARCH: bool = True
+DO_GRID_SEARCH: bool = False
 
 
 def finetune(hyperparameters) -> Trainer:
@@ -129,4 +130,3 @@ if __name__ == "__main__":
     assert torch.cuda.is_available(), "CUDA is not available :("
     config = load_yaml(os.path.join("src", "deep_learning_strategy", "config.yml"))
     grid_search_finetune(config) if DO_GRID_SEARCH else finetune(config)
-

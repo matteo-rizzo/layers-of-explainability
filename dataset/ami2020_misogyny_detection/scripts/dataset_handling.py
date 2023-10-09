@@ -8,6 +8,7 @@ from sklearn.model_selection import train_test_split
 
 from dataset.ami2020_misogyny_detection.scripts.evaluation_submission import read_gold, evaluate_task_b_singlefile
 
+BASE_AMI_DATASET = Path("dataset/ami2020_misogyny_detection/data")
 
 def loop_preprocess(fn: Callable[[str], str], texts: list[str]) -> list[str]:
     texts_preprocessed = list()
@@ -19,25 +20,19 @@ def loop_preprocess(fn: Callable[[str], str], texts: list[str]) -> list[str]:
 def train_val_test(target: str = "M", validation: float = .0,
                    random_state: int = 0, add_synthetic_train: bool = False,
                    preprocessing_function: Callable[[str], str] = None) -> dict[str, dict[str, list]]:
-    base_dataset = Path("dataset/AMI2020")
-
     target = "misogynous" if target == "M" else "aggressiveness"
 
     # base_dataset
-    train_df = pd.read_csv(base_dataset / "trainingset" / "training_raw_groundtruth.tsv", sep="\t",
-                           usecols=["id", "text", target])
-    test_df = pd.read_csv(base_dataset / "testset" / "test_raw_groundtruth.tsv", sep="\t",
-                          usecols=["id", "text", target])
+    train_df = pd.read_csv(BASE_AMI_DATASET / "training_raw_groundtruth.tsv", sep="\t", usecols=["id", "text", target])
+    test_df = pd.read_csv(BASE_AMI_DATASET / "test_raw_groundtruth.tsv", sep="\t", usecols=["id", "text", target])
 
     synt_test_x, synt_test_y, synt_test_ids = None, None, None  # Synthetic test set, only returned if add_synthetic_train = True
     if add_synthetic_train and target == "misogynous":
-        train_df_synt = pd.read_csv(base_dataset / "trainingset" / "training_synt_groundtruth.tsv", sep="\t",
-                                    usecols=["id", "text", "misogynous"])
+        train_df_synt = pd.read_csv(BASE_AMI_DATASET / "training_synt_groundtruth.tsv", sep="\t", usecols=["id", "text", "misogynous"])
         train_df_synt["id"] = "s_" + train_df_synt["id"].astype(str)
         train_df = pd.concat([train_df, train_df_synt])
 
-        test_df_synt = pd.read_csv(base_dataset / "testset" / "test_synt_groundtruth.tsv", sep="\t",
-                                   usecols=["id", "text", "misogynous"])
+        test_df_synt = pd.read_csv(BASE_AMI_DATASET / "test_synt_groundtruth.tsv", sep="\t", usecols=["id", "text", "misogynous"])
         synt_test_x, synt_test_y, synt_test_ids = test_df_synt["text"].tolist(), test_df_synt[target].tolist(), \
             test_df_synt["id"].tolist()
 
@@ -74,7 +69,7 @@ def train_val_test(target: str = "M", validation: float = .0,
         })
 
     return {
-        "test_set_path": base_dataset / "testset",  # used for task B evaluation
+        "test_set_path": BASE_AMI_DATASET / "testset",  # used for task B evaluation
         "train": {
             "x": train_x,
             "y": train_y,

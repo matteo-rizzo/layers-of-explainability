@@ -1,9 +1,13 @@
+from __future__ import annotations
+
 import re
+from pathlib import Path
 from typing import Dict
 
+import numpy as np
 from datasets import Features, Value, ClassLabel, NamedSplit, Dataset
 
-from dataset.ami2020_misogyny_detection.scripts.dataset_handling import train_val_test
+from dataset.ami2020_misogyny_detection.scripts.dataset_handling import train_val_test, BASE_AMI_DATASET
 from src.feature_extraction.text_features import separate_html_entities
 
 
@@ -13,7 +17,7 @@ class HuggingFaceDataset:
         self.split_data = train_val_test(target=target, add_synthetic_train=augment_training,
                                          preprocessing_function=self.preprocessing)
 
-        self.hg_wrapped_data = {k: {"text": v["x"], "label": v["y"]} for k, v in self.split_data.items()}
+        self.hg_wrapped_data = {k: {"text": v["x"], "label": v["y"]} for k, v in self.split_data.items() if isinstance(v, dict)}
 
         feat = Features({
             "text": Value("string"),
@@ -23,14 +27,30 @@ class HuggingFaceDataset:
         self.train_data = Dataset.from_dict(self.hg_wrapped_data["train"], split=NamedSplit("train"), features=feat)
         self.test_data = Dataset.from_dict(self.hg_wrapped_data["test"], split=NamedSplit("test"), features=feat)
 
-    def get_test_data(self) -> Dataset:
-        return self.test_data
+    def get_test_data(self) -> np.ndarray | list:
+        return self.split_data["test"]["x"]
 
     def get_train_data(self) -> Dataset:
         return self.train_data
 
     def get_train_val_test_split(self) -> Dict:
         return self.split_data
+
+    def get_test_groundtruth(self) -> np.ndarray[int]:
+        return np.asarray(self.hg_wrapped_data["test"]["label"])
+
+    def get_synthetic_test_data(self) -> np.ndarray:
+        return np.asarray(self.split_data["test_synt"]["y"])
+
+    def get_test_ids(self) -> np.ndarray | list:
+        return self.split_data["test"]["ids"]
+
+    def get_synthetic_test_ids(self) -> np.ndarray | list:
+        return self.split_data["test_synt"]["ids"]
+
+    @staticmethod
+    def get_path_to_testset() -> Path:
+        return BASE_AMI_DATASET
 
     @staticmethod
     def preprocessing(text_string: str) -> str:

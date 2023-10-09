@@ -27,7 +27,7 @@ def create_hf_dataset(target: str = "M", add_synthetic: bool = False,
     dataset = train_val_test(target=target, add_synthetic_train=add_synthetic,
                              preprocessing_function=preprocessing_function)
 
-    data_hf = {k: {"text": v["x"], "label": v["y"]} for k, v in dataset.items()}
+    data_hf = {k: {"text": v["x"], "label": v["y"]} for k, v in dataset.items() if isinstance(v, dict)}
 
     feat = Features({
         "text": Value("string"),
