@@ -6,7 +6,7 @@ import pandas as pd
 from sklearn import metrics
 from sklearn.model_selection import train_test_split
 
-from dataset.ami2020_misogyny_detection.scripts.evaluation_submission import read_gold, evaluate_task_b_singlefile
+from src.utils.ami_2020_scripts.evaluation_submission import read_gold, evaluate_task_b_singlefile
 
 BASE_AMI_DATASET = Path("dataset/ami2020_misogyny_detection/data")
 

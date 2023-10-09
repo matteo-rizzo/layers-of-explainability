@@ -1,4 +1,4 @@
-from dataset.ami2020_misogyny_detection.scripts.dataset_handling import train_val_test
+from src.utils.ami_2020_scripts.dataset_handling import train_val_test
 from src.deep_learning_strategy.classes.HuggingFacePipeline import HuggingFacePipeline
 
 from src.deep_learning_strategy.utils import shap_explain

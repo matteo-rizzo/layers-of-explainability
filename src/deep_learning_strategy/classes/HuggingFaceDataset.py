@@ -7,7 +7,7 @@ from typing import Dict
 import numpy as np
 from datasets import Features, Value, ClassLabel, NamedSplit, Dataset
 
-from dataset.ami2020_misogyny_detection.scripts.dataset_handling import train_val_test, BASE_AMI_DATASET
+from src.utils.ami_2020_scripts.dataset_handling import train_val_test, BASE_AMI_DATASET
 from src.feature_extraction.text_features import separate_html_entities
 
 

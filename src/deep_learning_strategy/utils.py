@@ -11,10 +11,9 @@ import numpy as np
 import shap
 from datasets import Dataset, NamedSplit, Features, Value, ClassLabel
 from matplotlib import pyplot as plt
-from shap.models import TransformersPipeline
 from transformers import Trainer
 
-from dataset.ami2020_misogyny_detection.scripts.dataset_handling import train_val_test
+from src.utils.ami_2020_scripts.dataset_handling import train_val_test
 
 
 def create_hf_dataset(target: str = "M", add_synthetic: bool = False,

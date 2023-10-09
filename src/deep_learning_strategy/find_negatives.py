@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from dataset.ami2020_misogyny_detection.scripts.dataset_handling import train_val_test, compute_metrics, wrong_predictions
+from src.utils.ami_2020_scripts.dataset_handling import train_val_test, compute_metrics, wrong_predictions
 from src.deep_learning_strategy.classes.HuggingFacePipeline import HuggingFacePipeline
 from src.feature_extraction.text_features import deep_preprocessing
 from src.utils.yaml_manager import load_yaml

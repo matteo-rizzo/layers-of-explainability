@@ -2,7 +2,7 @@ import argparse
 import zipfile
 
 import pandas as pd
-from dataset.ami2020_misogyny_detection.scripts import evaluation_utils
+from src.utils.ami_2020_scripts import evaluation_utils
 
 
 # import evaluation_utils

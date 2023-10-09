@@ -1,6 +1,6 @@
 import re
 
-from dataset.ami2020_misogyny_detection.scripts.dataset_handling import train_val_test
+from src.utils.ami_2020_scripts.dataset_handling import train_val_test
 from src.feature_extraction.text_features import separate_html_entities
 
 
