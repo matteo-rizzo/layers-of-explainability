@@ -3,10 +3,10 @@ from pathlib import Path
 import numpy as np
 import shap
 from matplotlib import pyplot as plt
-from explainers import visualize_explanations
+from src.explainable_strategy.transhap.explainers import visualize_explanations
 from nltk import TweetTokenizer
 
-from src.deep_learning_strategy.explainers.SHAP_for_text import SHAPexplainer
+from src.explainable_strategy.transhap.explainers.SHAP_for_text import SHAPexplainer
 
 
 def shap_explain(texts: list[str], model, tokenizer, target_label: str, show: bool = True):
@@ -39,7 +39,7 @@ def shap_explain(texts: list[str], model, tokenizer, target_label: str, show: bo
         plt.show()
 
 
-def transhap_explain(texts: list[str], model, tokenizer, target_label: str, show: bool = True, device: str = None):
+def transhap_explain(texts: list[str], explain_ids: list[int], model, tokenizer, target_label: str, show: bool = True, device: str = None):
     word_tokenizer = TweetTokenizer()
     bag_of_words = set([xx for x in texts for xx in word_tokenizer.tokenize(x)])
 
@@ -58,21 +58,24 @@ def transhap_explain(texts: list[str], model, tokenizer, target_label: str, show
     texts_ = [predictor.split_string(x) for x in texts]
     idx_texts, _ = predictor.dt_to_idx(texts_, max_seq_len=max_seq_len)
 
-    to_use = idx_texts[-1:]
+    idx_texts_to_use = np.asarray([idx_texts[a] for a in explain_ids])
+    tokenized_texts_ = [texts_[a] for a in explain_ids]
+    shap_values = explainer.shap_values(X=idx_texts_to_use, nsamples=64, l1_reg="aic")
 
-    shap_values = explainer.shap_values(X=to_use, nsamples=64, l1_reg="aic")
+    # Explain each ID
+    for idx, j in enumerate(range(len(explain_ids))):
+        len_ = len(tokenized_texts_[j])
+        d = {i: sum(x > 0 for x in shap_values[i][j, :len_]) for i, x in enumerate(shap_values)}
+        m = max(d, key=d.get)
+        print(" ".join(tokenized_texts_[j]))
+        shap.force_plot(explainer.expected_value[m], shap_values[m][j, :len_], tokenized_texts_[j], matplotlib=True)
 
-    len_ = len(texts_[-1:][0])
-    d = {i: sum(x > 0 for x in shap_values[i][0, :len_]) for i, x in enumerate(shap_values)}
-    m = max(d, key=d.get)
-    print(" ".join(texts_[-1:][0]))
-    shap.force_plot(explainer.expected_value[m], shap_values[m][0, :len_], texts_[-1:][0])
+        # Barplot
 
-    # Barplot
+        text_j = tokenized_texts_[j]
+        idx_to_use = idx_texts_to_use[j].reshape(1, -1)
+        f = predictor.predict(idx_to_use)
+        pred_f = np.argmax(f[0])
 
-    text = texts_[-1:]
-    to_use = idx_texts[-1:].reshape(1, -1)
-    f = predictor.predict(to_use)
-    pred_f = np.argmax(f[0])
-
-    visualize_explanations.joint_visualization(text[0], shap_values[pred_f][0, :len(text[0])], ["Non-hateful", "Hateful"][int(pred_f)], f[0][pred_f], -1)
+        visualize_explanations.joint_visualization("plots/nlp", text_j, shap_values[pred_f][j, :len(text_j)], ["Non-hateful", "Hateful"][int(pred_f)], f[0][pred_f], idx)
+        plt.show()

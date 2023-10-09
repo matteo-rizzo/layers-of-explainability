@@ -1,3 +1,4 @@
+from src.deep_learning_strategy.classes.HuggingFaceDataset import HuggingFaceDataset
 from src.utils.ami_2020_scripts.dataset_handling import train_val_test
 from src.deep_learning_strategy.classes.HuggingFacePipeline import HuggingFacePipeline
 
@@ -16,6 +17,10 @@ if __name__ == "__main__":
     dataset_m = train_val_test(target="M")
 
     hf_pipeline = pipe_m.get()
-    # shap_explain(dataset_m["test"]["x"][:NUM_EXPLANATIONS], model=hf_pipeline, tokenizer=hf_pipeline.tokenizer, target_label=target_label)
-    transhap_explain(dataset_m["test"]["x"][:NUM_EXPLANATIONS], model=hf_pipeline, tokenizer=hf_pipeline.tokenizer, target_label=target_label,
+
+    dataset_processed = [HuggingFaceDataset.preprocessing(t) for t in dataset_m["test"]["x"][:NUM_EXPLANATIONS]]
+
+    # shap_explain(dataset_processed, model=hf_pipeline, tokenizer=hf_pipeline.tokenizer, target_label=target_label)
+    transhap_explain(dataset_processed, explain_ids=[0, 99], model=hf_pipeline, tokenizer=hf_pipeline.tokenizer,
+                     target_label=target_label,
                      device="cuda" if config["use_gpu"] else "cpu")
