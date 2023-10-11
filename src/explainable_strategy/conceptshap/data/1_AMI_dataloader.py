@@ -1,4 +1,5 @@
 import argparse
+import random
 
 import pandas as pd
 
@@ -10,9 +11,17 @@ def make_sliding_window_pkl(size, data: dict, savedir):
     windows = []
     labels = []
 
+    x_data = data["x"]
+    y_data = data["y"]
+
+    # Shuffle data
+    c = list(zip(x_data, y_data))
+    random.shuffle(c)
+    x_data, y_data = zip(*c)
+
     for i in range(size):
-        split_review = data["x"][i].split()
-        label = data["y"][i]
+        split_review = x_data[i].split()
+        label = y_data[i]
         for j in range(10, len(split_review)):
             sliding_window = split_review[j - 10:j]
             windows.append(sliding_window)

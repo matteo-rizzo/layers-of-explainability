@@ -2,13 +2,12 @@ import os
 from pprint import pprint
 
 import numpy as np
+import pandas as pd
 import torch
-from torch import nn
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, SequentialSampler, TensorDataset
 from tqdm import tqdm
-from transformers import pipeline, Pipeline
+from transformers import Pipeline
 
-from src.deep_learning_strategy.classes.HuggingFaceDataset import HuggingFaceDataset
 from src.deep_learning_strategy.classes.HuggingFacePipeline import HuggingFacePipeline
 from src.utils.ami_2020_scripts.dataset_handling import compute_metrics
 from src.utils.yaml_manager import load_yaml
@@ -23,16 +22,15 @@ TASK = config["task"]
 ADD_SYNTHETIC = config["add_synthetic"]
 model_max_length: int = config["training"]["model_max_length"]
 ACTIVATION_DIR = "dumps/AMI_embeddings.npy"
+DEVICE = "cuda" if config["use_gpu"] else "cpu"
 
 
 def main():
-    print("*** PREDICTING MISOGYNY ***")
     pip = HuggingFacePipeline(TEST_MODEL_NAME, BATCH_SIZE)
-    dataset = HuggingFaceDataset(augment_training=ADD_SYNTHETIC or TASK == "B")
-    # predictions = pip.test(dataset.get_test_data(), TARGET_LABEL)
+    dataset = pd.read_pickle("dumps/AMI_train_fragments.pkl")
 
     hf_pipeline: Pipeline = pip.get()
-    model = hf_pipeline.model
+    model = hf_pipeline.model.to(DEVICE)
 
     extracted_activations = list()
 
@@ -50,38 +48,30 @@ def main():
 
     add_activation_hook(model, layer_idx=-3)
 
-    print("running inference..")
-    # run the whole model
+    print("running inference...")
+    # Run the whole model
 
-    predictions = pip.test(dataset.get_test_data(), TARGET_LABEL)
-    metrics = compute_metrics(y_pred=predictions, y_true=dataset.get_test_groundtruth())
+    tokenized_dataset = hf_pipeline.tokenizer(text=dataset["sentence"].tolist(), padding="max_length", truncation=True, max_length=model_max_length, is_split_into_words=True)
+
+    torch_data = TensorDataset(torch.IntTensor(tokenized_dataset.input_ids).to(DEVICE), torch.tensor(tokenized_dataset.attention_mask).to(DEVICE))
+    sampler = SequentialSampler(torch_data)
+    loader = DataLoader(torch_data, sampler=sampler, batch_size=BATCH_SIZE)
+
+    all_results = list()
+    for batch in tqdm(loader):
+        b_input_ids, b_input_mask = batch
+        with torch.no_grad():
+            logits = model(b_input_ids, token_type_ids=None, attention_mask=b_input_mask).logits
+            results = torch.sigmoid(logits)
+            all_results.extend(results.cpu().detach().numpy().tolist())
+
+    predictions = np.argmax(all_results, axis=1).tolist()
+    metrics = compute_metrics(y_pred=predictions, y_true=dataset["polarity"].tolist())
     pprint(metrics)
 
     activations = np.concatenate(extracted_activations, axis=0)
+    print(activations.shape)
     np.save(ACTIVATION_DIR, activations)
-
-    # ce_loss = nn.BCEWithLogitsLoss()
-    #
-    # all_losses = []
-    #
-    # def tokenize_function(examples):
-    #     return hf_pipeline.tokenizer(examples["text"], padding="max_length", truncation=True, max_length=model_max_length)
-    #
-    # tokenized_train_ds = dataset.test_data.map(tokenize_function, batched=True)
-    # loader = DataLoader(tokenized_train_ds, batch_size=BATCH_SIZE)
-    #
-    # for batch in tqdm(loader):
-    #     b_input_ids = batch["input_ids"]
-    #     b_input_mask = batch["attention_mask"]
-    #     b_labels = batch["label"]
-    #     # print(torch.sum(b_labels).item())
-    #     # outputs doesn't need to be saved
-    #     with torch.no_grad():
-    #         logits = model(**batch)
-    #         loss_val_list = ce_loss(logits, b_labels)
-    #         pred_loss = torch.mean(loss_val_list).item()
-    #         all_losses.append(pred_loss)
-    # print("inference loss:", np.mean(np.array(all_losses)))
 
 
 if __name__ == "__main__":
