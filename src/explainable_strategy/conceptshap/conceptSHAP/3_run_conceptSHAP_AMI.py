@@ -133,11 +133,11 @@ if __name__ == "__main__":
     parser.add_argument('--l2', type=float, default=.002)
     parser.add_argument('--topk', type=int, default=10)
     parser.add_argument('--batch_size', type=int, default=32)
-    parser.add_argument('--loss_reg_epoch', type=int, default=2,
+    parser.add_argument('--loss_reg_epoch', type=int, default=3,
                         help="num of epochs to run without loss regularization")
-    parser.add_argument('--num_epochs', type=int, default=3,
+    parser.add_argument('--num_epochs', type=int, default=15,
                         help="num of training epochs")
-    parser.add_argument('--shapley_interval', type=int, default=5)
+    parser.add_argument('--shapley_interval', type=int, default=2000)
     args = parser.parse_args()
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
