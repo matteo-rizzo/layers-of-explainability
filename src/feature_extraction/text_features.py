@@ -57,22 +57,22 @@ def replace_with_unicode(text, mapping: dict):
 
 
 class TextFeatureExtractor:
-    def __init__(self):
-        experiment_config: dict = load_yaml("src/nlp/params/config.yml")
+    def __init__(self, language: str = "it"):
+        experiment_config: dict = load_yaml("src/feature_extraction/config.yml")
 
         global TREETAGGER
         if experiment_config["tree_tagger_path"]:
             logging.warning(" ********** TreeTagger option is selected. "
                             " ********** This requires installing 'treetaggerwrapper' and TreeTagger.\n"
                             " ********** See https://pypi.org/project/treetaggerwrapper for instructions. ")
-            TREETAGGER = TreeTagger(TAGDIR=experiment_config["tree_tagger_path"], TAGLANG="it")
+            TREETAGGER = TreeTagger(TAGDIR=experiment_config["tree_tagger_path"], TAGLANG=language)
         else:
             TREETAGGER = None
 
-        self.__spacy_model = spacy.load("it_core_news_lg")
+        self.__spacy_model = spacy.load(f"{language}_core_{'news' if language == 'it' else 'web'}_lg")
         if TREETAGGER is not None:
             self.__spacy_model.replace_pipe("lemmatizer", "tree_tagger")
-        with open("src/nlp/full-emoji-list.json", mode="r", encoding="utf-8") as f:
+        with open("dataset/asset/full-emoji-list.json", mode="r", encoding="utf-8") as f:
             emap = json.load(f)
         emap = [a for v in emap.values() for a in v]
 

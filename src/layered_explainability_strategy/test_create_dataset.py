@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pandas as pd
 import torch
 from scipy.special import softmax
@@ -10,7 +12,7 @@ logging.set_verbosity_error()
 
 
 def get_pred(model, all_texts, opposite: bool = False, task: str = ""):
-    batch_size = 128
+    batch_size = 4
     tokenizer = AutoTokenizer.from_pretrained(model)
     model = AutoModelForSequenceClassification.from_pretrained(model).to("cuda:0")
     texts = [preprocess(t) for t in all_texts]
@@ -20,6 +22,8 @@ def get_pred(model, all_texts, opposite: bool = False, task: str = ""):
         low = i * batch_size
         high = (i + 1) * batch_size
         current_batch = texts[low:high]
+        if not current_batch:
+            continue
         encoded_input = tokenizer(current_batch, return_tensors='pt', padding=True).to("cuda:0")
         output = model(**encoded_input)
         scores.extend(output[0].cpu().detach().tolist())
@@ -61,7 +65,7 @@ def create_compound_df(ds):
 
 def create_compound_dataset():
     train = pd.read_table("dataset/ami2018_misogyny_detection/en_training_anon.tsv")
-    test = pd.read_table("dataset/ami2018_misogyny_detection/en_testing_labeled_anon.tsv")
+    test = pd.read_table("dataset/ami2018_  misogyny_detection/en_testing_labeled_anon.tsv")
 
     print("Generating train dataset...")
     train_df = create_compound_df(train)
@@ -69,8 +73,10 @@ def create_compound_dataset():
     test_df = create_compound_df(test)
 
     print("Saving to file...")
-    train_df.to_csv("dataset/ami2018_misogyny_detection/processed/en_training_anon.tsv", sep='\t', index=False)
-    test_df.to_csv("dataset/ami2018_misogyny_detection/processed/en_testing_labeled_anon.tsv", sep='\t', index=False)
+    root = Path("dataset/ami2018_misogyny_detection/processed")
+    root.mkdir(exist_ok=True)
+    train_df.to_csv(root / "en_training_anon.tsv", sep='\t', index=False)
+    test_df.to_csv(root / "en_testing_labeled_anon.tsv", sep='\t', index=False)
     print("")
 
 
