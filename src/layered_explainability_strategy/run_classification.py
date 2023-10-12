@@ -22,8 +22,9 @@ def load_data(df: pd.DataFrame,
         if vectorizer is None:
             raise ValueError("if keep_text is true, a vectorizer must be specified")
         text = shuffled["text"].to_list()
-        vectors = vectorizer.fit_transform(text) if fit_vectorizer else vectorizer.transform(text)
-        X = np.hstack(X, vectors)
+        vectors = (vectorizer.fit_transform(text) if fit_vectorizer else vectorizer.transform(text)).toarray()
+        # Consider other ways of concatenating
+        X = np.concatenate((X, vectors), axis=1)
     return X, y
 
 
@@ -41,7 +42,7 @@ def main():
     test_x, test_y = load_data(test, keep_text=True, vectorizer=bow_vectorizer, fit_vectorizer=False)
     # -----------------------------------------------
     params: dict = load_yaml("src/layered_explainability_strategy/config.yml")
-    gs = GridSearchCV(DecisionTreeClassifier(), n_jobs=8,
+    gs = GridSearchCV(DecisionTreeClassifier(), n_jobs=4,
                       param_grid=params["DecisionTreeClassifier"], verbose=10, refit=True)
     gs.fit(X=train_x, y=train_y)
     predictions = gs.predict(X=test_x)
@@ -55,4 +56,8 @@ def main():
 
 
 if __name__ == "__main__":
+    import warnings
+
+    warnings.filterwarnings("ignore", category=FutureWarning)
+
     main()

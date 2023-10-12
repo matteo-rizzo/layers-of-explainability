@@ -5,13 +5,13 @@ DecisionTreeClassifier:
   # Supported strategies are “best” to choose the best split and “random” to choose the best random split
   splitter: [ "best", "random" ]
   # The maximum depth of the tree # null = None
-  max_depth: [null, 2, 3, 4, 5, 10, 12, 14, 15, 16, 18, 20]
+  max_depth: [null, 5, 14, 18, 20]
   # The minimum number of samples required to split an internal node
   min_samples_split: [ 2, 3, 4 ]
   # The minimum number of samples required to be at a leaf node
 #  min_samples_leaf: [1, 2, 3, 4, 5]
   # The number of features to consider when looking for the best split # null = None
-  max_features: [ null, "sqrt", "log2" ] # Not very impactful
+#  max_features: [ null, "sqrt", "log2" ] # Not very impactful
   # Grow a tree with max_leaf_nodes in best-first fashion # null = None
   #  max_leaf_nodes: [null, 5, 10, 15, 30, 50, 75, 100]
   # Complexity parameter used for Minimal Cost-Complexity Pruning
