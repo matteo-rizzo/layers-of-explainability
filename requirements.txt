@@ -13,7 +13,7 @@ tqdm
 scipy==1.11.3
 torchmetrics==1.2.0
 lime~=0.2.0.1
-shap==0.42.1
+shap==0.43.0
 spacy~=3.7.0
 treetaggerwrapper~=2.3
 accelerate

@@ -15,13 +15,13 @@ class HuggingFaceDataset:
 
         self.hg_wrapped_data = {k: {"text": v["x"], "label": v["y"]} for k, v in self.split_data.items()}
 
-        feat = Features({
+        features = Features({
             "text": Value("string"),
             "label": ClassLabel(num_classes=2, names=["no", "yes"], names_file=None, id=None)}
         )
 
-        self.train_data = Dataset.from_dict(self.hg_wrapped_data["train"], split=NamedSplit("train"), features=feat)
-        self.test_data = Dataset.from_dict(self.hg_wrapped_data["test"], split=NamedSplit("test"), features=feat)
+        self.train_data = Dataset.from_dict(self.hg_wrapped_data["train"], split=NamedSplit("train"), features=features)
+        self.test_data = Dataset.from_dict(self.hg_wrapped_data["test"], split=NamedSplit("test"), features=features)
 
     def get_test_data(self) -> Dataset:
         return self.test_data

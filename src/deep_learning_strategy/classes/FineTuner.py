@@ -35,7 +35,7 @@ class FineTuner:
         self.__optimizer_name: str = "adamw_torch_fused" if self.__use_gpu else "adamw_torch"
         self.__trainer: Trainer = None
 
-    def finetune(self):
+    def run(self):
         training_args = TrainingArguments(
             output_dir=self.__get_checkpoint_path(), overwrite_output_dir=self.__resume,
             num_train_epochs=self.__epochs, seed=1234, data_seed=4321,
@@ -51,7 +51,7 @@ class FineTuner:
             args=training_args,
             train_dataset=self.__data["train"],
             eval_dataset=self.__data["test"],
-            compute_metrics=self.__compute_metrics,
+            compute_metrics=self.__get_metrics,
             callbacks=[EarlyStoppingCallback(early_stopping_patience=self.__es_patience)],
             tokenizer=self.__tokenizer)
 
@@ -62,7 +62,7 @@ class FineTuner:
     def get_trainer(self) -> Trainer:
         return self.__trainer
 
-    def __get_model(self):
+    def __get_model(self) -> PreTrainedModel:
         num_labels = self.__data["train"].features["label"].num_classes
         model = AutoModelForSequenceClassification.from_pretrained(self.__model_name, num_labels=num_labels)
         return self.__freeze_parameters(model) if self.__freeze_base else model
@@ -105,7 +105,7 @@ class FineTuner:
         return model
 
     @staticmethod
-    def __compute_metrics(model_output: Tuple) -> Dict:
+    def __get_metrics(model_output: Tuple) -> Dict:
         logits, labels = model_output
         predictions = np.argmax(logits, axis=-1)
         return {
