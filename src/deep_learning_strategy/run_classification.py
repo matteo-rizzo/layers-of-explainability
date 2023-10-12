@@ -4,8 +4,8 @@ from pprint import pprint
 import pandas as pd
 import torch.cuda
 
-from dataset.ami2020_misogyny_detection.scripts.dataset_handling import compute_metrics
-from dataset.ami2020_misogyny_detection.scripts.evaluation_submission import read_gold, evaluate_task_b_singlefile
+from src.utils.ami_2020_scripts.dataset_handling import compute_metrics
+from src.utils.ami_2020_scripts.evaluation_submission import read_gold, evaluate_task_b_singlefile
 from src.deep_learning_strategy.classes.HuggingFacePipeline import HuggingFacePipeline
 from src.deep_learning_strategy.classes.HuggingFaceDataset import HuggingFaceDataset
 from src.utils.yaml_manager import load_yaml

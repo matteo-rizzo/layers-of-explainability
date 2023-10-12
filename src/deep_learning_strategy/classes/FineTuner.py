@@ -1,6 +1,6 @@
 import os
 import re
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 
 import evaluate
 import numpy as np
@@ -33,7 +33,7 @@ class FineTuner:
         self.__data: Dict = self.__get_eval_data()
         self.__model: PreTrainedModel = self.__get_model()
         self.__optimizer_name: str = "adamw_torch_fused" if self.__use_gpu else "adamw_torch"
-        self.__trainer: Trainer = None
+        self.__trainer: Optional[Trainer] = None
 
     def run(self):
         training_args = TrainingArguments(

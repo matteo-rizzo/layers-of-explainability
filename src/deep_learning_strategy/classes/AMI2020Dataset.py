@@ -1,10 +1,10 @@
 import re
 
-from dataset.ami2020_misogyny_detection.scripts.dataset_handling import train_val_test
+from src.utils.ami_2020_scripts.dataset_handling import train_val_test
 from src.feature_extraction.text_features import separate_html_entities
 
 
-class HuggingFaceDataset:
+class AMI2020Dataset:
 
     def __init__(self, augment_training=False, target="M"):
         self.split_data = train_val_test(target=target, add_synthetic_train=augment_training,

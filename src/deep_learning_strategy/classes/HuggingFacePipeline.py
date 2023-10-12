@@ -12,7 +12,7 @@ class HuggingFacePipeline:
     def __init__(self, model_name: str, batch_size: int = 4, top_k=1):
         config = load_yaml(os.path.join("src", "deep_learning_strategy", "config.yml"))
         self.pipeline = pipeline(task="text-classification", model=model_name, batch_size=batch_size, top_k=top_k,
-                                 device=0 if config["use_gpu"] else "cpu", )
+                                 device=0 if config["use_gpu"] else "cpu")
 
     def test(self, data: np.ndarray, target_label: str) -> List:
         predictions = self.pipeline(data)
