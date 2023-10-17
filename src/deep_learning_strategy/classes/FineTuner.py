@@ -8,7 +8,7 @@ from datasets import Dataset
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, TrainingArguments, Trainer, \
     EarlyStoppingCallback, PreTrainedModel, PreTrainedTokenizer
 
-from src.deep_learning_strategy.classes.HuggingFaceDataset import HuggingFaceDataset
+from src.deep_learning_strategy.classes.HuggingFaceAMI2020Dataset import HuggingFaceAMI2020Dataset
 
 
 class FineTuner:
@@ -29,7 +29,8 @@ class FineTuner:
         self.__augment_training: bool = hyperparameters["training"]["add_synthetic"]
         self.__use_gpu: bool = hyperparameters["use_gpu"]
         self.__tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(self.__model_name)
-        self.__train_data: Dataset = HuggingFaceDataset(augment_training=self.__augment_training).get_train_data()
+        self.__train_data: Dataset = HuggingFaceAMI2020Dataset(
+            augment_training=self.__augment_training).get_train_data()
         self.__data: Dict = self.__get_eval_data()
         self.__model: PreTrainedModel = self.__get_model()
         self.__optimizer_name: str = "adamw_torch_fused" if self.__use_gpu else "adamw_torch"

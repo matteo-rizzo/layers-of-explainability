@@ -1,4 +1,5 @@
 import argparse
+import os
 import re
 
 import numpy as np
@@ -40,9 +41,17 @@ DEVICE = get_device()
 
 
 # --- Print bash input parameters ---
+
 def print_namespace(namespace: argparse.Namespace):
     print("\n" + SEPARATOR["dashes"])
     print("\n\t *** INPUT NAMESPACE PARAMETERS *** \n")
     for arg in vars(namespace):
         print(("\t - {} " + "".join(["."] * (25 - len(arg))) + " : {}").format(arg, getattr(namespace, arg)))
     print("\n" + SEPARATOR["dashes"] + "\n")
+
+
+# --- GLOBAL VARIABLES ---
+
+RANDOM_SEED = 0
+PATH_TO_CONFIG = os.path.join("src", "deep_learning_strategy", "config.yml")
+BASE_AMI_DATASET = os.path.join("dataset", "ami2020_misogyny_detection", "data")

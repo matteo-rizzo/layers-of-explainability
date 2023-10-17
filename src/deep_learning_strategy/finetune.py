@@ -3,15 +3,14 @@ import os
 
 from src.deep_learning_strategy.classes.FineTuner import FineTuner
 from src.deep_learning_strategy.classes.GridSearchFineTuner import GridSearchFineTuner
-from src.deep_learning_strategy.settings import make_deterministic, print_namespace
+from src.deep_learning_strategy.settings import make_deterministic, print_namespace, RANDOM_SEED, PATH_TO_CONFIG
 from src.utils.yaml_manager import load_yaml
 
-RANDOM_SEED = 0
 DO_GRID_SEARCH = False
 
 
 def main(ns: argparse.Namespace):
-    config = load_yaml(os.path.join("src", "deep_learning_strategy", "config.yml"))
+    config = load_yaml(os.path.join(PATH_TO_CONFIG))
     GridSearchFineTuner(config).run() if ns.do_grid_search else FineTuner(config).run()
 
 
