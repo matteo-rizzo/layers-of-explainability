@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import itertools
 import os
-import re
 from pathlib import Path
 
 import torch
@@ -11,14 +10,10 @@ from transformers import AutoTokenizer
 from transformers import TrainingArguments
 from transformers.trainer import Trainer
 
-from src.deep_learning_strategy.utils import create_hf_dataset, compute_metrics, get_next_run_name, log_results, \
-    delete_checkpoints
 from src.feature_extraction.text_features import deep_preprocessing
 from src.utils.yaml_manager import load_yaml, dump_yaml
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
-
-# os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
 
 DO_GRID_SEARCH: bool = False
 
@@ -55,7 +50,6 @@ def finetune(hyperparameters) -> Trainer:
         return tokenizer(examples["text"], padding="max_length", truncation=True, max_length=model_max_length)
 
     tokenized_train_ds = train_ds.map(tokenize_function, batched=True)
-    # tokenized_test_ds = test_ds.map(tokenize_function, batched=True) # test set not used here
 
     print(f"Using {int(tokenized_train_ds.num_rows * eval_size)} examples as validation set")
     train_eval_dataset = tokenized_train_ds.train_test_split(test_size=eval_size, shuffle=True, seed=39,
