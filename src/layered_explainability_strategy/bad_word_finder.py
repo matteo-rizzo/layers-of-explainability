@@ -8,6 +8,7 @@ def examine_single_doc(tokenized_doc: list[str], bad_words: list[str]) -> float:
     if length == 0:
         return 0.0
     num_bad_words: int = sum([w in bad_words for w in tokenized_doc])  # Number of bad words
+    # return 1 if num_bad_words > 0 else 0
     return num_bad_words / length
 
 

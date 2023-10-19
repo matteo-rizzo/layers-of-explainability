@@ -34,7 +34,7 @@ def load_data(df: pd.DataFrame,
     vectors_X = (vectorizer.fit_transform(text) if fit_vectorizer else vectorizer.transform(text)).toarray()
     if bad_words:
         bad_word_count: list[float] = examine_docs(text)
-        np.hstack((np.array(bad_word_count)[:, np.newaxis], features_X))
+        features_X = np.hstack((np.array(bad_word_count)[:, np.newaxis], features_X))
     return vectors_X, features_X, y
 
 
