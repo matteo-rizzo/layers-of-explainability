@@ -111,17 +111,17 @@ def fit_predict_metric(clf, train_X, test_X, train_y, test_y):
     return f1, acc, preds
 
 
-def grid_search(clf, params, train_X, test_X, train_y, test_y):
-    gs = GridSearchCV(clf, n_jobs=4,
+def grid_search(clf, params, train_X, test_X, train_y, test_y, name=""):
+    gs = GridSearchCV(clf(), n_jobs=4,
                       param_grid=params, verbose=0, refit=True)
     gs.fit(X=train_X, y=train_y)
-    predictions = gs.predict(X=test_X, axis=1)
+    predictions = gs.predict(X=test_X)
 
     aggregate_f1 = f1_score(y_true=test_y, y_pred=predictions)
     aggregate_acc = accuracy_score(y_true=test_y, y_pred=predictions)
     print("---------------------------------------")
-    print(gs.best_params_)
-    print(f"[Pred + Pred] f1: {aggregate_f1:.3f} acc: {aggregate_acc:.3f}")
+    # print(gs.best_params_)
+    print(f"{name} f1: {aggregate_f1:.3f} acc: {aggregate_acc:.3f}")
 
 
 def mini_ensemble():
@@ -171,14 +171,16 @@ def mini_ensemble():
                 train_X=np.stack((train_feature_predictions, train_vector_predictions), axis=1),
                 test_X=np.stack((test_feature_predictions, test_vector_predictions), axis=1),
                 train_y=train_y,
-                test_y=test_y)
+                test_y=test_y,
+                name="[PRED + PRED]")
     # -----------------------------------------------
     # Ensemble - Feat + Pred
     grid_search(DecisionTreeClassifier, params["gs"]["DecisionTreeClassifier"],
                 train_X=np.hstack((train_features_x, train_feature_predictions[:, np.newaxis])),
                 test_X=np.hstack((test_features_x, test_vector_predictions[:, np.newaxis])),
                 train_y=train_y,
-                test_y=test_y)
+                test_y=test_y,
+                name="[PRED + FEAT]")
     # -----------------------------------------------
 
 
