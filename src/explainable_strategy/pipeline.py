@@ -21,7 +21,7 @@ def predict_scores(pipeline: Pipeline, samples: list[str]) -> np.ndarray:
 
 
 def make_pipeline(sk_classifier: ClassifierMixin) -> Pipeline:
-    fex = TextFeatureExtractor()
+    fex = TextFeatureExtractor(language="en")
     bow_vectorizer = TfidfVectorizer(tokenizer=fex.preprocessing_tokenizer,
                                      ngram_range=(1, 3),
                                      max_features=10000,

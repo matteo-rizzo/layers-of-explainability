@@ -1,4 +1,5 @@
 """ Script to GS and fit a classifier on review dataset, to use as feature extractor """
+from __future__ import annotations
 
 from pathlib import Path
 from pprint import pprint
@@ -9,6 +10,7 @@ import numpy as np
 import pandas as pd
 from sklearn.base import ClassifierMixin
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.pipeline import Pipeline
 
@@ -86,25 +88,54 @@ def grid_search_best_params(sk_classifier_type: Type[ClassifierMixin], data: pd.
     pprint(best_params)
 
 
+def final_ensemble(train_config: dict, feature_file: Path | str, tfidf_clf: RandomForestClassifier, all_data: pd.DataFrame) -> None:
+    # Load feature vectors
+    f_df = pd.read_csv(feature_file)
+
+    # Add clf predictions
+    # probs = tfidf_clf.predict_proba(all_data["text_"].tolist())
+    #
+    # feature_clf = {
+    #     "score_0": probs[:, 0].tolist(),
+    #     "score_1": probs[:, 1].tolist()
+    # }
+    #
+    # f_df.update(feature_clf)
+
+    train_df, test_df, train_y, test_y = train_test_split(f_df, all_data["label"], random_state=31, shuffle=True, stratify=all_data["label"], test_size=0.25)
+
+    clf = DecisionTreeClassifier(**train_config["DecisionTreeClassifier"])
+
+    clf.fit(train_df, y=train_y.tolist())
+
+    y_pred = clf.predict(test_df).tolist()
+
+    print("Metrics AFTER ensemble")
+    compute_metrics(y_pred, test_y.tolist(), sk_classifier_name="Final ENSEMBLE")
+
+
 def main():
     train_config: dict = load_yaml("src/text_classification/config/classifier.yml")
     data_path = Path("dataset") / "fake_reviews_dataset.csv"
 
     data = pd.read_csv(data_path)
 
-    train_df, test_df = train_test_split(data, random_state=31, shuffle=True, stratify=data["label"], test_size=0.25)
-
-    # grid_search_best_params(RandomForestClassifier, train_df, train_config)
+    # train_df, test_df = train_test_split(data, random_state=31, shuffle=True, stratify=data["label"], test_size=0.25)
+    #
+    # # grid_search_best_params(RandomForestClassifier, train_df, train_config)
 
     # Setup and train classifier
-    _, clf = naive_classifier(RandomForestClassifier(**train_config["RandomForestClassifier"], n_jobs=-1), train_df)
+    # _, clf = naive_classifier(RandomForestClassifier(**train_config["RandomForestClassifier"], n_jobs=-1), train_df)
+    #
+    # y_pred = clf.predict(test_df["text_"]).tolist()
+    #
+    # joblib.dump(clf, "dumps/text_classification/clf_pipeline.pkl", compress=1)
+    #
+    # # Calculate metrics
+    # print("Metrics before ensemble")
+    # compute_metrics(y_pred, test_df["label"], sk_classifier_name="Final RF")
 
-    y_pred = clf.predict(test_df["text_"]).tolist()
-
-    joblib.dump(clf, "dumps/text_classification/clf_pipeline.pkl", compress=1)
-
-    # Calculate metrics
-    compute_metrics(y_pred, test_df["label"], sk_classifier_name="Final RF")
+    final_ensemble(train_config, "dataset/fake_reviews_features.csv", None, data)
 
 
 if __name__ == "__main__":
