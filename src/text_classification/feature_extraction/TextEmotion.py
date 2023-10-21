@@ -7,7 +7,7 @@ from src.text_classification.feature_extraction.Feature import Feature
 
 
 class TextEmotion(Feature):
-    def __init__(self, use_gpu: bool = True, batch_size: int = 512):
+    def __init__(self, use_gpu: bool = True, batch_size: int = 128):
         self.pipe = pipeline("text-classification", model="SamLowe/roberta-base-go_emotions", device="cuda" if use_gpu else "cpu", top_k=None, batch_size=batch_size)
 
     def extract(self, texts: list[str]) -> dict[str, list[float]]:

@@ -14,7 +14,7 @@ def compute_features():
 
     texts = data["text_"].tolist()
 
-    feature_transforms = [TextPolarity, TextGrammarErrors, TextEmotion]
+    feature_transforms = [TextEmotion, TextPolarity, TextGrammarErrors]
     feature_transforms = [f() for f in feature_transforms]
 
     all_features = dict()

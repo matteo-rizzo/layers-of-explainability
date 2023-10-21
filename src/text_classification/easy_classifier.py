@@ -97,7 +97,7 @@ def main():
     # grid_search_best_params(RandomForestClassifier, train_df, train_config)
 
     # Setup and train classifier
-    _, clf = naive_classifier(RandomForestClassifier(train_config["RandomForestClassifier"]), train_df)
+    _, clf = naive_classifier(RandomForestClassifier(**train_config["RandomForestClassifier"], n_jobs=-1), train_df)
 
     y_pred = clf.predict(test_df["text_"]).tolist()
 
