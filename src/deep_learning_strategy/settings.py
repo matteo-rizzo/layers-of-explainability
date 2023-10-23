@@ -54,4 +54,3 @@ def print_namespace(namespace: argparse.Namespace):
 
 RANDOM_SEED = 0
 PATH_TO_CONFIG = os.path.join("src", "deep_learning_strategy", "config.yml")
-BASE_AMI_DATASET = os.path.join("dataset", "ami2020_misogyny_detection", "data")

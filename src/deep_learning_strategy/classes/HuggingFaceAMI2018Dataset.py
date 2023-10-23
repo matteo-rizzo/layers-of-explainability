@@ -3,10 +3,10 @@ from __future__ import annotations
 import numpy as np
 from datasets import Features, Value, ClassLabel, NamedSplit, Dataset
 
-from src.deep_learning_strategy.classes.AMI2020Dataset import AMI2020Dataset
+from src.deep_learning_strategy.classes.AMI2018Dataset import AMI2018Dataset
 
 
-class HuggingFaceAMI2020Dataset(AMI2020Dataset):
+class HuggingFaceAMI2018Dataset(AMI2018Dataset):
 
     def __init__(self, augment_training=False, target="M"):
         super().__init__(augment_training, target)
@@ -25,5 +25,5 @@ class HuggingFaceAMI2020Dataset(AMI2020Dataset):
     def get_test_groundtruth(self) -> np.ndarray[int]:
         return np.asarray(self.hf_data["test"]["label"])
 
-    def get_train_data(self):
+    def get_train_data(self) -> Dataset:
         return self.train_data
