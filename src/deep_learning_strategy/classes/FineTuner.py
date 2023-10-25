@@ -1,5 +1,6 @@
 import os
 import re
+from pathlib import Path
 from typing import Dict, Tuple, Optional
 
 import evaluate
@@ -8,7 +9,8 @@ from datasets import Dataset
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, TrainingArguments, Trainer, \
     EarlyStoppingCallback, PreTrainedModel, PreTrainedTokenizer
 
-from src.deep_learning_strategy.classes.HuggingFaceDataset import HuggingFaceDataset
+from src.deep_learning_strategy.classes.HuggingFaceAMI2018Dataset import HuggingFaceAMI2018Dataset
+from src.deep_learning_strategy.classes.HuggingFaceAMI2020Dataset import HuggingFaceAMI2020Dataset
 
 
 class FineTuner:
@@ -29,11 +31,24 @@ class FineTuner:
         self.__augment_training: bool = hyperparameters["training"]["add_synthetic"]
         self.__use_gpu: bool = hyperparameters["use_gpu"]
         self.__tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(self.__model_name)
-        self.__train_data: Dataset = HuggingFaceDataset(augment_training=self.__augment_training).get_train_data()
+
+        if hyperparameters["dataset"] == "AMI2018":
+            self.__train_data: Dataset = (HuggingFaceAMI2018Dataset(
+                augment_training=self.__augment_training).get_train_data())
+        elif hyperparameters["dataset"] == "AMI2020":
+            self.__train_data: Dataset = (HuggingFaceAMI2020Dataset(
+                augment_training=self.__augment_training).get_train_data())
+        else:
+            raise ValueError(f"Unsupported dataset with name: {hyperparameters['dataset']}")
+
         self.__data: Dict = self.__get_eval_data()
         self.__model: PreTrainedModel = self.__get_model()
-        self.__optimizer_name: str = "adamw_torch_fused" if self.__use_gpu else "adamw_torch"
+        # Note: adamw_torch_fused has a bug and cannot be reloaded once trained, as workaraound use normal version
+        # self.__optimizer_name: str = "adamw_torch_fused" if self.__use_gpu else "adamw_torch"
+        self.__optimizer_name: str = "adamw_torch"
         self.__trainer: Optional[Trainer] = None
+        self.__dataset: Optional[Trainer] = None
+        self.__dump_path: Path = Path("dumps") / "nlp_models"
 
     def run(self):
         training_args = TrainingArguments(
@@ -73,7 +88,7 @@ class FineTuner:
         return data.train_test_split(test_size=self.__eval_size, shuffle=True, seed=39, stratify_by_column="label")
 
     def __get_checkpoint_path(self) -> str:
-        base_path = os.path.join("src", "deep_learning_strategy", "saved_models")
+        base_path = self.__dump_path  # os.path.join("src", "deep_learning_strategy", "saved_models")
         os.makedirs(base_path, exist_ok=True)
         return self.__checkpoint_path if self.__resume else self.__next_checkpoint_path(base_path, self.__model_name)
 
@@ -89,7 +104,7 @@ class FineTuner:
             # If there are matches, extract the maximum number X and return "path_{X+1}"
             max_num = max(int(re.search(r"\d+", match).group()) for match in matches)
 
-        return os.path.join("base_path", f"{model_name.replace('/', '_')}_{max_num + 1}")
+        return os.path.join(base_path, f"{model_name.replace('/', '_')}_{max_num + 1}")
 
     def __tokenize_data(self) -> Dataset:
         def __tokenize_fun(examples):
@@ -117,9 +132,10 @@ class FineTuner:
 
     def __log_results(self, train_results):
         metrics = train_results.metrics
-        self.__trainer.log_metrics(self=None, split="train", metrics=metrics)
-        self.__trainer.save_metrics(self=None, split="train", metrics=metrics)
+        # Pls do NOT add "self=None" here. PyCharm is wrong, do not trust him :D
+        self.__trainer.log_metrics(split="train", metrics=metrics)
+        self.__trainer.save_metrics(split="train", metrics=metrics)
 
         metrics = self.__trainer.evaluate()
-        self.__trainer.log_metrics(self=None, split="eval", metrics=metrics)
-        self.__trainer.save_metrics(self=None, split="eval", metrics=metrics)
+        self.__trainer.log_metrics(split="eval", metrics=metrics)
+        self.__trainer.save_metrics(split="eval", metrics=metrics)

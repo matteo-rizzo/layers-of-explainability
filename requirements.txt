@@ -8,11 +8,11 @@ matplotlib~=3.8.0
 tqdm~=4.66.1
 scipy==1.11.3
 torchmetrics==1.2.0
-shap>=0.42.1
-spacy~=3.6.1
+shap==0.43.0
+spacy==3.7.2
 treetaggerwrapper~=2.3
 accelerate
-evaluate~=0.4.0
+evaluate==0.4.1
 datasets~=2.14.5
 seaborn~=0.13.0
 bertopic~=0.15.0
