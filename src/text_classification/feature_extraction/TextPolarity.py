@@ -9,11 +9,11 @@ from textblob import TextBlob
 
 
 class TextPolarity(Feature):
-    def __init__(self, use_gpu: bool = True, batch_size: int = 512):
+    def __init__(self, use_gpu: bool = True, batch_size: int = 512, *args, **kwargs):
         self.pipe = TextBlob
         # self.pipe = pipeline("text-classification", model="fabriceyhc/bert-base-uncased-amazon_polarity", device="cuda" if use_gpu else "cpu", top_k=None, batch_size=batch_size)
 
-    def extract(self, texts: list[str]) -> Any:
+    def extract(self, texts: list[str]) -> dict[str, list[float]]:
         feature_df: dict[str, list[float]] = defaultdict(list)
         for t in tqdm(texts, desc="polarity analysis"):
             processed_text = self.pipe(t, tokenizer=SentenceTokenizer())

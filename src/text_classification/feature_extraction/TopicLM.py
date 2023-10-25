@@ -1,13 +1,15 @@
 from collections import defaultdict
+from typing import Any
 
 from transformers import pipeline
 
 from src.text_classification.feature_extraction.Feature import Feature
 
 
-class TextEmotion(Feature):
-    def __init__(self, use_gpu: bool = True, batch_size: int = 128, *args, **kwargs):
-        self.pipe = pipeline("text-classification", model="SamLowe/roberta-base-go_emotions", device="cuda" if use_gpu else "cpu", top_k=None, batch_size=batch_size)
+class TopicLM(Feature):
+    def __init__(self, use_gpu: bool = True, batch_size: int = 512, *args, **kwargs):
+        self.pipe = pipeline("text-classification", model="cardiffnlp/tweet-topic-21-multi", device="cuda" if use_gpu else "cpu",
+                             top_k=None, batch_size=batch_size)
 
     def extract(self, texts: list[str]) -> dict[str, list[float]]:
         labels_and_score = self.pipe(texts, truncation=True)

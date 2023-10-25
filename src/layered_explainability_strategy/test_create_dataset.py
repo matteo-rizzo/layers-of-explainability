@@ -14,7 +14,7 @@ logging.set_verbosity_error()
 def get_pred(model, all_texts, opposite: bool = False, task: str = ""):
     batch_size = 4
     tokenizer = AutoTokenizer.from_pretrained(model)
-    model = AutoModelForSequenceClassification.from_pretrained(model).to("cuda:0")
+    model = AutoModelForSequenceClassification.from_pretrained(model).to("cpu")
     texts = [preprocess(t) for t in all_texts]
 
     scores = []
@@ -24,7 +24,7 @@ def get_pred(model, all_texts, opposite: bool = False, task: str = ""):
         current_batch = texts[low:high]
         if not current_batch:
             continue
-        encoded_input = tokenizer(current_batch, return_tensors='pt', padding=True).to("cuda:0")
+        encoded_input = tokenizer(current_batch, return_tensors='pt', padding=True).to("cpu")
         output = model(**encoded_input)
         scores.extend(output[0].cpu().detach().tolist())
     scores = softmax(scores, axis=1)
@@ -65,7 +65,7 @@ def create_compound_df(ds):
 
 def create_compound_dataset():
     train = pd.read_table("dataset/ami2018_misogyny_detection/en_training_anon.tsv")
-    test = pd.read_table("dataset/ami2018_  misogyny_detection/en_testing_labeled_anon.tsv")
+    test = pd.read_table("dataset/ami2018_misogyny_detection/en_testing_labeled_anon.tsv")
 
     print("Generating train dataset...")
     train_df = create_compound_df(train)
