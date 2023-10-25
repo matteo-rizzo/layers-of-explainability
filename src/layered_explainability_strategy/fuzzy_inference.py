@@ -1,7 +1,8 @@
+from pyfume import *
 from simpful import *
 
 
-def test():
+def madness():
     FS = FuzzySystem(show_banner=False)
 
     # -------------------------------------------------------------------------------------------
@@ -98,44 +99,100 @@ def test():
     FS.add_linguistic_variable("Evidence", LinguisticVariable(Es, concept="Evidence types",
                                                               universe_of_discourse=[0, 1]))
     # -------------------------------------------------------------------------------------------
+    print(FS.get_rules())
 
 
-def main():
-    # A simple fuzzy inference system for the tipping problem
-    # Create a fuzzy system object
-    FS = FuzzySystem()
+def pyfuming_and_chill():
+    # NOTE: takes a ton of time
+    # Set the path to the data and choose the number of clusters
+    path = 'data/Feature_data.csv'
+    nr_clus = 3
 
-    # Define fuzzy sets and linguistic variables
-    S_1 = FuzzySet(function=Triangular_MF(a=0, b=0, c=5), term="poor")
-    S_2 = FuzzySet(function=Triangular_MF(a=0, b=5, c=10), term="good")
-    S_3 = FuzzySet(function=Triangular_MF(a=5, b=10, c=10), term="excellent")
-    FS.add_linguistic_variable("Service", LinguisticVariable([S_1, S_2, S_3], concept="Service quality",
-                                                             universe_of_discourse=[0, 10]))
+    # Load and normalize the data using min-max normalization
+    dl = DataLoader(path, normalize='minmax')
+    variable_names = dl.variable_names
 
-    F_1 = FuzzySet(function=Triangular_MF(a=0, b=0, c=10), term="rancid")
-    F_2 = FuzzySet(function=Triangular_MF(a=0, b=10, c=10), term="delicious")
-    FS.add_linguistic_variable("Food",
-                               LinguisticVariable([F_1, F_2], concept="Food quality", universe_of_discourse=[0, 10]))
+    # Split the data using the hold-out method in a training (default: 75%)
+    # and test set (default: 25%).
+    ds = DataSplitter()
+    x_train, y_train, x_test, y_test = ds.holdout(dataX=dl.dataX, dataY=dl.dataY)
 
-    # Define output fuzzy sets and linguistic variable
-    T_1 = FuzzySet(function=Triangular_MF(a=0, b=0, c=10), term="small")
-    T_2 = FuzzySet(function=Triangular_MF(a=0, b=10, c=20), term="average")
-    T_3 = FuzzySet(function=Trapezoidal_MF(a=10, b=20, c=25, d=25), term="generous")
-    FS.add_linguistic_variable("Tip", LinguisticVariable([T_1, T_2, T_3], universe_of_discourse=[0, 25]))
+    # Select features relevant to the problem
+    fs = FeatureSelector(dataX=x_train, dataY=y_train, nr_clus=nr_clus, variable_names=variable_names)
+    selected_feature_indices, variable_names = fs.wrapper()
 
-    # Define fuzzy rules
-    R1 = "IF (Service IS poor) OR (Food IS rancid) THEN (Tip IS small)"
-    R2 = "IF (Service IS good) THEN (Tip IS average)"
-    R3 = "IF (Service IS excellent) OR (Food IS delicious) THEN (Tip IS generous)"
-    FS.add_rules([R1, R2, R3])
+    # Adapt the training and test input data after feature selection
+    x_train = x_train[:, selected_feature_indices]
+    x_test = x_test[:, selected_feature_indices]
 
-    # Set antecedents values
-    FS.set_variable("Service", 4)
-    FS.set_variable("Food", 8)
+    # Cluster the training data (in input-output space) using FCM with default settings
+    cl = Clusterer(x_train=x_train, y_train=y_train, nr_clus=nr_clus)
+    cluster_centers, partition_matrix, _ = cl.cluster(method="fcm")
 
-    # Perform Mamdani inference and print output
-    print(FS.Mamdani_inference(["Tip"]))
+    # Estimate the membership funtions of the system (default: mf_shape = gaussian)
+    ae = AntecedentEstimator(x_train=x_train, partition_matrix=partition_matrix)
+    antecedent_parameters = ae.determineMF()
+
+    # Calculate the firing strength of each rule for each data instance
+    fsc = FireStrengthCalculator(antecedent_parameters=antecedent_parameters, nr_clus=nr_clus,
+                                 variable_names=variable_names)
+    firing_strengths = fsc.calculate_fire_strength(data=x_train)
+
+    # Estimate the parameters of the consequent functions
+    ce = ConsequentEstimator(x_train=x_train, y_train=y_train, firing_strengths=firing_strengths)
+    consequent_parameters = ce.suglms()
+
+    # Build a first-order Takagi-Sugeno model using Simpful. Specify the optional
+    # 'extreme_values' argument to specify the universe of discourse of the input
+    # variables if you which to use Simpful's membership function plot functionalities.
+    simpbuilder = SugenoFISBuilder(antecedent_sets=antecedent_parameters,
+                                   consequent_parameters=consequent_parameters,
+                                   variable_names=variable_names)
+    model = simpbuilder.get_model()
+
+    # Calculate the mean squared error (MSE) of the model using the test data set
+    test = SugenoFISTester(model=model, test_data=x_test, variable_names=variable_names, golden_standard=y_test)
+    MSE = test.calculate_MSE()
+
+    print('The mean squared error of the created model is', MSE)
+
+
+# def main():
+#     # A simple fuzzy inference system for the tipping problem
+#     # Create a fuzzy system object
+#     FS = FuzzySystem()
+#
+#     # Define fuzzy sets and linguistic variables
+#     S_1 = FuzzySet(function=Triangular_MF(a=0, b=0, c=5), term="poor")
+#     S_2 = FuzzySet(function=Triangular_MF(a=0, b=5, c=10), term="good")
+#     S_3 = FuzzySet(function=Triangular_MF(a=5, b=10, c=10), term="excellent")
+#     FS.add_linguistic_variable("Service", LinguisticVariable([S_1, S_2, S_3], concept="Service quality",
+#                                                              universe_of_discourse=[0, 10]))
+#
+#     F_1 = FuzzySet(function=Triangular_MF(a=0, b=0, c=10), term="rancid")
+#     F_2 = FuzzySet(function=Triangular_MF(a=0, b=10, c=10), term="delicious")
+#     FS.add_linguistic_variable("Food",
+#                                LinguisticVariable([F_1, F_2], concept="Food quality", universe_of_discourse=[0, 10]))
+#
+#     # Define output fuzzy sets and linguistic variable
+#     T_1 = FuzzySet(function=Triangular_MF(a=0, b=0, c=10), term="small")
+#     T_2 = FuzzySet(function=Triangular_MF(a=0, b=10, c=20), term="average")
+#     T_3 = FuzzySet(function=Trapezoidal_MF(a=10, b=20, c=25, d=25), term="generous")
+#     FS.add_linguistic_variable("Tip", LinguisticVariable([T_1, T_2, T_3], universe_of_discourse=[0, 25]))
+#
+#     # Define fuzzy rules
+#     R1 = "IF (Service IS poor) OR (Food IS rancid) THEN (Tip IS small)"
+#     R2 = "IF (Service IS good) THEN (Tip IS average)"
+#     R3 = "IF (Service IS excellent) OR (Food IS delicious) THEN (Tip IS generous)"
+#     FS.add_rules([R1, R2, R3])
+#
+#     # Set antecedents values
+#     FS.set_variable("Service", 4)
+#     FS.set_variable("Food", 8)
+#
+#     # Perform Mamdani inference and print output
+#     print(FS.Mamdani_inference(["Tip"]))
 
 
 if __name__ == "__main__":
-    main()
+    madness()
