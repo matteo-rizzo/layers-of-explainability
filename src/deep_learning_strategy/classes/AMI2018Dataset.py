@@ -1,7 +1,4 @@
-from __future__ import annotations
-
 import os
-from pathlib import Path
 from typing import Dict, Tuple, List
 
 import numpy as np
@@ -11,11 +8,15 @@ from src.deep_learning_strategy.classes.AMI2020Dataset import AMI2020Dataset
 
 
 class AMI2018Dataset(AMI2020Dataset):
-    BASE_DATASET = os.path.join("dataset", "ami2018_misogyny_detection")
+    BASE_AMI_DATASET = os.path.join("dataset", "ami2018_misogyny_detection")
 
-    def __init__(self, augment_training=False, target="misogynous", validation: float = .0):
-        assert target == "misogynous", f"We don't currently support targets other than 'misogynous', got target={target}"
+    def __init__(self, augment_training=False, target="M", validation: float = .0):
         super().__init__(augment_training, target, validation)
+        self._target = "misogynous" if target == "M" else None
+        assert target == "M", f"We don't currently support targets other than M, got target={target}"
+        self._augment_training = augment_training
+        self._validation = validation
+        self._split_data = self._train_val_test()
 
     def get_synthetic_test_data(self) -> np.ndarray:
         raise NotImplementedError("AMI2018 has no synthetic data")
@@ -25,17 +26,13 @@ class AMI2018Dataset(AMI2020Dataset):
 
     @staticmethod
     def get_path_to_testset() -> str:
-        return str(Path(AMI2018Dataset.BASE_DATASET) / "en_testing_labeled_anon.tsv")
-
-    @staticmethod
-    def get_path_to_trainset() -> str:
-        return str(Path(AMI2018Dataset.BASE_DATASET) / "en_training_anon.tsv")
+        return AMI2018Dataset.BASE_AMI_DATASET
 
     def __fetch_train_test(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
-        path_to_train_raw_gt = os.path.join(AMI2018Dataset.BASE_DATASET, "en_training_anon.tsv")
+        path_to_train_raw_gt = os.path.join(AMI2018Dataset.BASE_AMI_DATASET, "en_training_anon.tsv")
         train_df = pd.read_csv(path_to_train_raw_gt, sep="\t", usecols=["id", "text", self._target])
 
-        path_to_test_raw_gt = os.path.join(AMI2018Dataset.BASE_DATASET, "en_testing_labeled_anon.tsv")
+        path_to_test_raw_gt = os.path.join(AMI2018Dataset.BASE_AMI_DATASET, "en_testing_labeled_anon.tsv")
         test_df = pd.read_csv(path_to_test_raw_gt, sep="\t", usecols=["id", "text", self._target])
 
         return train_df, test_df
@@ -58,7 +55,7 @@ class AMI2018Dataset(AMI2020Dataset):
             validation = {"val": {"x": val_x, "y": val_y, "ids": val_ids}}
 
         return {
-            "test_set_path": os.path.join(AMI2018Dataset.BASE_DATASET),
+            "test_set_path": os.path.join(AMI2018Dataset.BASE_AMI_DATASET),
             "train": {"x": train_x, "y": train_y, "ids": train_ids},
             "test": {"x": test_x, "y": test_y, "ids": test_ids},
             **validation
