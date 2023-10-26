@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-from pathlib import Path
-
 import pandas as pd
-from datasets import Dataset
 
 from src.deep_learning_strategy.classes.AMI2018Dataset import AMI2020Dataset, AMI2018Dataset
 from src.text_classification.feature_extraction.ChatGPTDetector import ChatGPTDetector
@@ -27,9 +24,9 @@ def compute_features(dataset_: AMI2020Dataset):
     train_texts.extend(test_texts)
 
     feature_transforms = [TextEmotion, TextPolarity, TextGrammarErrors, EvidenceType, TopicLM, Wellformedness, ChatGPTDetector, ParrotAdequacy, GibberishDetector]
-    feature_transforms = [f(use_gpu=False) for f in feature_transforms]
+    feature_transforms = [f(use_gpu=True) for f in feature_transforms]
 
-    all_features = dict()
+    all_features: dict[str, list[float]] = dict()
     for f in feature_transforms:
         res = f.extract(train_texts)
         all_features.update(res)

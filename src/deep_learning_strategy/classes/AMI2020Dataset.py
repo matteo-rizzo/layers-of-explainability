@@ -12,7 +12,7 @@ from src.feature_extraction.text_features import separate_html_entities
 
 
 class AMI2020Dataset:
-    BASE_AMI_DATASET = os.path.join("dataset", "ami2020_misogyny_detection", "data")
+    BASE_DATASET = os.path.join("dataset", "ami2020_misogyny_detection", "data")
 
     def __init__(self, augment_training=False, target="M", validation: float = .0):
         self._target = "misogynous" if target == "M" else "aggressiveness"
@@ -40,7 +40,7 @@ class AMI2020Dataset:
 
     @staticmethod
     def get_path_to_testset() -> str:
-        return AMI2020Dataset.BASE_AMI_DATASET
+        return AMI2020Dataset.BASE_DATASET
 
     @staticmethod
     def preprocessing(text_string: str) -> str:
@@ -54,20 +54,20 @@ class AMI2020Dataset:
         return re.sub(" +", " ", text_string).strip()
 
     def __fetch_train_test(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
-        path_to_train_raw_gt = os.path.join(AMI2020Dataset.BASE_AMI_DATASET, "training_raw_groundtruth.tsv")
+        path_to_train_raw_gt = os.path.join(AMI2020Dataset.BASE_DATASET, "training_raw_groundtruth.tsv")
         train_df = pd.read_csv(path_to_train_raw_gt, sep="\t", usecols=["id", "text", self._target])
 
-        path_to_test_raw_gt = os.path.join(AMI2020Dataset.BASE_AMI_DATASET, "test_raw_groundtruth.tsv")
+        path_to_test_raw_gt = os.path.join(AMI2020Dataset.BASE_DATASET, "test_raw_groundtruth.tsv")
         test_df = pd.read_csv(path_to_test_raw_gt, sep="\t", usecols=["id", "text", self._target])
 
         return train_df, test_df
 
     def __fetch_synt_data(self) -> Tuple[pd.DataFrame, List, List, List]:
-        path_to_train_synt_gt = os.path.join(AMI2020Dataset.BASE_AMI_DATASET, "training_synt_groundtruth.tsv")
+        path_to_train_synt_gt = os.path.join(AMI2020Dataset.BASE_DATASET, "training_synt_groundtruth.tsv")
         synt_train = pd.read_csv(path_to_train_synt_gt, sep="\t", usecols=["id", "text", "misogynous"])
         synt_train["id"] = "s_" + synt_train["id"].astype(str)
 
-        path_to_test_synt_gt = os.path.join(AMI2020Dataset.BASE_AMI_DATASET, "test_synt_groundtruth.tsv")
+        path_to_test_synt_gt = os.path.join(AMI2020Dataset.BASE_DATASET, "test_synt_groundtruth.tsv")
         synt_test = pd.read_csv(path_to_test_synt_gt, sep="\t", usecols=["id", "text", "misogynous"])
 
         return synt_train, synt_test["text"].tolist(), synt_test[self._target].tolist(), synt_test["id"].tolist()
@@ -110,7 +110,7 @@ class AMI2020Dataset:
             synt_test = {"test_synt": {"x": synt_test_x, "y": synt_test_y, "ids": synt_test_ids}}
 
         return {
-            "test_set_path": os.path.join(AMI2020Dataset.BASE_AMI_DATASET),
+            "test_set_path": os.path.join(AMI2020Dataset.BASE_DATASET),
             "train": {"x": train_x, "y": train_y, "ids": train_ids},
             "test": {"x": test_x, "y": test_y, "ids": test_ids},
             **validation,

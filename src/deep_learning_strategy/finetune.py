@@ -8,6 +8,8 @@ from src.utils.yaml_manager import load_yaml
 
 DO_GRID_SEARCH = False
 
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 
 def main(ns: argparse.Namespace):
     config = load_yaml(os.path.join(PATH_TO_CONFIG))

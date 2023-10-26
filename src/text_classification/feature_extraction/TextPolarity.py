@@ -17,8 +17,8 @@ class TextPolarity(Feature):
         feature_df: dict[str, list[float]] = defaultdict(list)
         for t in tqdm(texts, desc="polarity analysis"):
             processed_text = self.pipe(t, tokenizer=SentenceTokenizer())
-            feature_df["polarity"] = processed_text.sentiment_assessments.polarity
-            feature_df["subjectivity"] = processed_text.sentiment_assessments.subjectivity
-            feature_df["word_count"] = len(processed_text.words)
-            feature_df["sentence_len"] = sum([len(s.words) for s in processed_text.sentences]) / len(processed_text.sentences)
+            feature_df["polarity"].append(processed_text.sentiment_assessments.polarity)
+            feature_df["subjectivity"].append(processed_text.sentiment_assessments.subjectivity)
+            feature_df["word_count"].append(len(processed_text.words))
+            feature_df["sentence_len"].append(sum([len(s.words) for s in processed_text.sentences]) / len(processed_text.sentences))
         return feature_df
