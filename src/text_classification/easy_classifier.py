@@ -13,10 +13,12 @@ from sklearn.base import ClassifierMixin
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import LabelEncoder
 from sklearn.tree import DecisionTreeClassifier
 from torch import nn
 
 from src.deep_learning_strategy.classes.AMI2018Dataset import AMI2018Dataset
+from src.deep_learning_strategy.classes.CGReviewDataset import CGReviewDataset
 from src.deep_learning_strategy.classes.Dataset import AbcDataset
 from src.explainable_strategy.pipeline import make_pipeline
 from src.text_classification.classes.MLP import MLP
@@ -24,7 +26,7 @@ from src.text_classification.main import compute_metrics
 from src.utils.yaml_manager import load_yaml
 
 sk_classifier_type = RandomForestClassifier
-dataset: AbcDataset = AMI2018Dataset()
+dataset: AbcDataset = CGReviewDataset()  # AMI2018Dataset()
 
 
 def naive_classifier(sk_classifier: ClassifierMixin, training_data: pd.DataFrame, params=dict()) -> np.ndarray | tuple[np.ndarray, Pipeline]:
@@ -121,9 +123,14 @@ def neural_classifier(train_data: pd.DataFrame, test_data: pd.DataFrame) -> None
 
     network_model = MLP(input_dim=len(train_data.columns), layers=layers)
 
+    # Binary encoding of labels
+    encoder = LabelEncoder()
+    encoder.fit(y_train)
+    y_test = encoder.transform(y_test)
+
     # Convert to 2D PyTorch tensors
     x_train = torch.tensor(train_data.values, dtype=torch.float32)
-    y_train = torch.tensor(y_train, dtype=torch.float32)
+    y_train = torch.tensor(encoder.transform(y_train), dtype=torch.float32)
 
     x_test = torch.tensor(test_data.values, dtype=torch.float32)
     # y_test = torch.tensor(y_test, dtype=torch.float32)
