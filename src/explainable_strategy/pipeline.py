@@ -9,7 +9,6 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 
 from src.feature_extraction.text_features import TextFeatureExtractor
-from src.utils.ami_2020_scripts.dataset_handling import train_val_test, compute_metrics
 from src.utils.yaml_manager import load_yaml
 
 

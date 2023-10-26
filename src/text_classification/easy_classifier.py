@@ -5,14 +5,13 @@ from pathlib import Path
 from pprint import pprint
 from typing import Type
 
-import joblib
 import numpy as np
 import pandas as pd
 from sklearn.base import ClassifierMixin
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.pipeline import Pipeline
+from sklearn.tree import DecisionTreeClassifier
 
 from src.explainable_strategy.pipeline import make_pipeline
 from src.text_classification.main import compute_metrics
@@ -114,11 +113,31 @@ def final_ensemble(train_config: dict, feature_file: Path | str, tfidf_clf: Rand
     compute_metrics(y_pred, test_y.tolist(), sk_classifier_name="Final ENSEMBLE")
 
 
+def all_classifier(train_config, training_data: pd.DataFrame, testing_data: pd.DataFrame):
+    base_clf = DecisionTreeClassifier(**train_config["DecisionTreeClassifier"])
+    clf = AdaBoostClassifier(n_estimators=5000, random_state=11, estimator=base_clf)
+
+    y_train = training_data.pop("y")
+    y_test = testing_data.pop("y")
+
+    clf.fit(training_data, y=y_train.tolist())
+
+    y_pred = clf.predict(testing_data).tolist()
+
+    print("Metrics AFTER AdaBoost")
+    compute_metrics(y_pred, y_test.tolist(), sk_classifier_name="Final ENSEMBLE")
+
+
 def main():
     train_config: dict = load_yaml("src/text_classification/config/classifier.yml")
-    data_path = Path("dataset") / "fake_reviews_dataset.csv"
+    data_path_train = Path("dataset") / "ami2018_misogyny_detection" / "AMI2018Dataset_train_features.csv"
+    data_path_test = Path("dataset") / "ami2018_misogyny_detection" / "AMI2018Dataset_test_features.csv"
 
-    data = pd.read_csv(data_path)
+    data_train = pd.read_csv(data_path_train)
+    data_test = pd.read_csv(data_path_test)
+
+    data_train["y"] = pd.read_csv(data_path_train.parent / "en_training_anon.tsv", sep="\t")["misogynous"]
+    data_test["y"] = pd.read_csv(data_path_test.parent / "en_testing_labeled_anon.tsv", sep="\t")["misogynous"]
 
     # train_df, test_df = train_test_split(data, random_state=31, shuffle=True, stratify=data["label"], test_size=0.25)
     #
@@ -135,7 +154,9 @@ def main():
     # print("Metrics before ensemble")
     # compute_metrics(y_pred, test_df["label"], sk_classifier_name="Final RF")
 
-    final_ensemble(train_config, "dataset/fake_reviews_features.csv", None, data)
+    all_classifier(train_config, data_train, data_test)
+
+    # final_ensemble(train_config, "dataset/fake_reviews_features.csv", None, data)
 
 
 if __name__ == "__main__":
