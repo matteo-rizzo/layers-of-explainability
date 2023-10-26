@@ -11,6 +11,7 @@ class AMI2018Dataset(AMI2020Dataset):
     BASE_AMI_DATASET = os.path.join("dataset", "ami2018_misogyny_detection")
 
     def __init__(self, augment_training=False, target="M", validation: float = .0):
+        super().__init__(augment_training, target, validation)
         self._target = "misogynous" if target == "M" else None
         assert target == "M", f"We don't currently support targets other than M, got target={target}"
         self._augment_training = augment_training
