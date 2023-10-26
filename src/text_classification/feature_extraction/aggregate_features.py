@@ -27,7 +27,7 @@ def compute_features(dataset_: AbcDataset):
     len_train: int = len(train_texts)
     train_texts.extend(test_texts)
 
-    feature_transforms = [TextEmotion, TextPolarity, TextGrammarErrors, EvidenceType, TopicLM, Wellformedness, ChatGPTDetector, ParrotAdequacy, GibberishDetector]
+    feature_transforms = [EvidenceType, TopicLM, Wellformedness, ChatGPTDetector, ParrotAdequacy, GibberishDetector, TextEmotion, TextPolarity, TextGrammarErrors]
     feature_transforms = [f(use_gpu=True) for f in feature_transforms]
 
     all_features: dict[str, list[float]] = dict()

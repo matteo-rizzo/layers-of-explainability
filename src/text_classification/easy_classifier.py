@@ -1,21 +1,25 @@
 """ Script to GS and fit a classifier on review dataset, to use as feature extractor """
 from __future__ import annotations
 
+import pickle
 from pathlib import Path
 from pprint import pprint
 from typing import Type
 
 import numpy as np
 import pandas as pd
+import torch
 from sklearn.base import ClassifierMixin
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.tree import DecisionTreeClassifier
+from torch import nn
 
 from src.deep_learning_strategy.classes.AMI2018Dataset import AMI2018Dataset
 from src.deep_learning_strategy.classes.Dataset import AbcDataset
 from src.explainable_strategy.pipeline import make_pipeline
+from src.text_classification.classes.MLP import MLP
 from src.text_classification.main import compute_metrics
 from src.utils.yaml_manager import load_yaml
 
@@ -90,6 +94,67 @@ def grid_search_best_params(sk_classifier_type: Type[ClassifierMixin], data: pd.
     pprint(best_params)
 
 
+def target_conversion(x: torch.Tensor):
+    return np.round(torch.sigmoid(x).detach().numpy())
+
+
+def neural_classifier(train_data: pd.DataFrame, test_data: pd.DataFrame) -> None:
+    from skorch import NeuralNetBinaryClassifier
+    from skorch.callbacks import EarlyStopping, Checkpoint, EpochScoring
+
+    layers = [
+        (512, 0.3, True, nn.ReLU()),
+        (256, 0.4, True, nn.ReLU()),
+        (128, 0.3, True, nn.ReLU()),
+        (64, 0.4, True, nn.ReLU()),
+        (32, 0.3, True, nn.ReLU()),
+        (64, 0.4, True, nn.ReLU()),
+        (128, 0.3, True, nn.ReLU()),
+        (32, 0.4, True, nn.ReLU()),
+        (16, 0.3, True, nn.ReLU()),
+        (8, 0.2, True, nn.ReLU()),
+        (1, 0.0, False, None)
+    ]
+
+    y_train = train_data.pop("y")
+    y_test = test_data.pop("y")
+
+    network_model = MLP(input_dim=len(train_data.columns), layers=layers)
+
+    # Convert to 2D PyTorch tensors
+    x_train = torch.tensor(train_data.values, dtype=torch.float32)
+    y_train = torch.tensor(y_train, dtype=torch.float32)
+
+    x_test = torch.tensor(test_data.values, dtype=torch.float32)
+    # y_test = torch.tensor(y_test, dtype=torch.float32)
+
+    classifier = NeuralNetBinaryClassifier(
+        network_model,
+        callbacks=[EarlyStopping(),
+                   Checkpoint(f_params="params_{last_epoch[epoch]}.pt",
+                              dirname=Path("dumps") / "nlp_models" / "checkpoints"),
+                   # EpochScoring("f1", name="valid_f1", lower_is_better=False, target_extractor=target_conversion)
+                   ],
+        criterion=torch.nn.BCEWithLogitsLoss,
+        optimizer=torch.optim.AdamW,
+        optimizer__weight_decay=1e-2,
+        lr=1e-5,
+        max_epochs=300,
+        batch_size=8,
+        verbose=True
+    )
+
+    classifier.fit(x_train, y_train)
+    y_pred = classifier.predict(x_test).tolist()
+
+    # saving
+    with open(Path("dumps") / "nlp_models" / "test_nn.pkl", "wb") as f:
+        pickle.dump(classifier, f)
+
+    print("Metrics of MLP")
+    compute_metrics(y_pred, y_test.tolist(), sk_classifier_name="MLP Classifier")
+
+
 def final_ensemble(feature_classifier: ClassifierMixin,
                    train_data: pd.DataFrame, test_data: pd.DataFrame,
                    tfidf_clf: RandomForestClassifier = None) -> None:
@@ -161,7 +226,9 @@ def main():
 
     # adaboost_classifier(train_config, data_train, data_test)
 
-    final_ensemble(clf, data_train, data_test)
+    # final_ensemble(clf, data_train, data_test)
+
+    neural_classifier(data_train, data_test)
 
 
 if __name__ == "__main__":
