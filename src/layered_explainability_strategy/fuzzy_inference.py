@@ -1,3 +1,4 @@
+import numpy as np
 from pyfume import *
 from simpful import *
 
