@@ -4,7 +4,7 @@ from src.deep_learning_strategy.classes.HuggingFaceAMI2020Dataset import Hugging
 from src.deep_learning_strategy.classes.HuggingFacePipeline import HuggingFacePipeline
 from src.deep_learning_strategy.classes.ShapExplainer import ShapExplainer
 from src.deep_learning_strategy.classes.TranShapExplainer import TranShapExplainer
-from src.deep_learning_strategy.settings import make_deterministic, print_namespace, RANDOM_SEED, PATH_TO_CONFIG
+from src.utils.setup import PATH_TO_CONFIG, RANDOM_SEED, make_deterministic, print_namespace
 from src.utils.yaml_manager import load_yaml
 
 NUM_EXPLANATIONS = 100

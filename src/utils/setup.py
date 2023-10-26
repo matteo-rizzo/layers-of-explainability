@@ -1,38 +1,56 @@
-import random
+import argparse
+import os
 import re
 
 import numpy as np
 import torch
 
+SEPARATOR = {"stars": "".join(["*"] * 100), "dashes": "".join(["-"] * 100), "dots": "".join(["."] * 100)}
 
-def set_random_seed(seed: int, device: torch.device):
-    """
-    Set specific seed for reproducibility.
 
-    :param seed: int, the seed to set
-    :param device: torch.device, cuda:number or cpu
-    :return:
-    """
+# --- Determinism (for reproducibility) ---
+
+def make_deterministic(seed: int):
     torch.manual_seed(seed)
-    if device.type == 'cuda:3':
-        torch.cuda.manual_seed_all(seed)
     np.random.seed(seed)
-    random.seed(seed)
+    torch.backends.cudnn.benchmark = False
 
 
-def get_device(device_type: str) -> torch.device:
-    """
-    Returns the device specified in the experiments parameters (if available, else fallback to a "cpu" device)
-    :param device_type: the id of the selected device (if cuda device, must match the regex "cuda:\d"
-    :return: the device specified in the experiments parameters (if available, else fallback to a "cpu" device)
-    """
-    if device_type == "cpu":
+# --- Device (cpu or cuda:n) ---
+
+DEVICE_TYPE = "cuda:0"
+
+
+def get_device() -> torch.device:
+    if DEVICE_TYPE == "cpu":
+        print("\n Running on device 'cpu' \n")
         return torch.device("cpu")
 
-    if re.match(r"\bcuda:\b\d+", device_type):
+    if re.match(r"\bcuda:\b\d+", DEVICE_TYPE):
         if not torch.cuda.is_available():
-            print(f"WARNING: running on cpu since device {device_type} is not available")
+            print("\n WARNING: running on cpu since device {} is not available \n".format(DEVICE_TYPE))
             return torch.device("cpu")
-        return torch.device(device_type)
 
-    raise ValueError(f"ERROR: {device_type} is not a valid device! Supported device are 'cpu' and 'cuda:n'")
+        print("\n Running on device '{}' \n".format(DEVICE_TYPE))
+        return torch.device(DEVICE_TYPE)
+
+    raise ValueError("ERROR: {} is not a valid device! Supported device are 'cpu' and 'cuda:n'".format(DEVICE_TYPE))
+
+
+DEVICE = get_device()
+
+
+# --- Print bash input parameters ---
+
+def print_namespace(namespace: argparse.Namespace):
+    print("\n" + SEPARATOR["dashes"])
+    print("\n\t *** INPUT NAMESPACE PARAMETERS *** \n")
+    for arg in vars(namespace):
+        print(("\t - {} " + "".join(["."] * (25 - len(arg))) + " : {}").format(arg, getattr(namespace, arg)))
+    print("\n" + SEPARATOR["dashes"] + "\n")
+
+
+# --- GLOBAL VARIABLES ---
+
+RANDOM_SEED = 0
+PATH_TO_CONFIG = os.path.join("src", "deep_learning_strategy", "config.yml")
