@@ -13,11 +13,14 @@ from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.tree import DecisionTreeClassifier
 
+from src.deep_learning_strategy.classes.AMI2018Dataset import AMI2018Dataset
+from src.deep_learning_strategy.classes.Dataset import AbcDataset
 from src.explainable_strategy.pipeline import make_pipeline
 from src.text_classification.main import compute_metrics
 from src.utils.yaml_manager import load_yaml
 
 sk_classifier_type = RandomForestClassifier
+dataset: AbcDataset = AMI2018Dataset()
 
 
 def naive_classifier(sk_classifier: ClassifierMixin, training_data: pd.DataFrame, params=dict()) -> np.ndarray | tuple[np.ndarray, Pipeline]:
@@ -87,10 +90,9 @@ def grid_search_best_params(sk_classifier_type: Type[ClassifierMixin], data: pd.
     pprint(best_params)
 
 
-def final_ensemble(train_config: dict, feature_file: Path | str, tfidf_clf: RandomForestClassifier, all_data: pd.DataFrame) -> None:
-    # Load feature vectors
-    f_df = pd.read_csv(feature_file)
-
+def final_ensemble(feature_classifier: ClassifierMixin,
+                   train_data: pd.DataFrame, test_data: pd.DataFrame,
+                   tfidf_clf: RandomForestClassifier = None) -> None:
     # Add clf predictions
     # probs = tfidf_clf.predict_proba(all_data["text_"].tolist())
     #
@@ -101,19 +103,20 @@ def final_ensemble(train_config: dict, feature_file: Path | str, tfidf_clf: Rand
     #
     # f_df.update(feature_clf)
 
-    train_df, test_df, train_y, test_y = train_test_split(f_df, all_data["label"], random_state=31, shuffle=True, stratify=all_data["label"], test_size=0.25)
+    # train_df, test_df, train_y, test_y = train_test_split(f_df, all_data["label"], random_state=31, shuffle=True, stratify=all_data["label"], test_size=0.25)
 
-    clf = DecisionTreeClassifier(**train_config["DecisionTreeClassifier"])
+    y_train = train_data.pop("y")
+    y_test = test_data.pop("y")
 
-    clf.fit(train_df, y=train_y.tolist())
+    feature_classifier.fit(train_data, y=y_train.tolist())
 
-    y_pred = clf.predict(test_df).tolist()
+    y_pred = feature_classifier.predict(test_data).tolist()
 
     print("Metrics AFTER ensemble")
-    compute_metrics(y_pred, test_y.tolist(), sk_classifier_name="Final ENSEMBLE")
+    compute_metrics(y_pred, y_test.tolist(), sk_classifier_name="Final ENSEMBLE")
 
 
-def all_classifier(train_config, training_data: pd.DataFrame, testing_data: pd.DataFrame):
+def adaboost_classifier(train_config, training_data: pd.DataFrame, testing_data: pd.DataFrame):
     base_clf = DecisionTreeClassifier(**train_config["DecisionTreeClassifier"])
     clf = AdaBoostClassifier(n_estimators=5000, random_state=11, estimator=base_clf)
 
@@ -130,14 +133,16 @@ def all_classifier(train_config, training_data: pd.DataFrame, testing_data: pd.D
 
 def main():
     train_config: dict = load_yaml("src/text_classification/config/classifier.yml")
-    data_path_train = Path("dataset") / "ami2018_misogyny_detection" / "AMI2018Dataset_train_features.csv"
-    data_path_test = Path("dataset") / "ami2018_misogyny_detection" / "AMI2018Dataset_test_features.csv"
+    data_path_train = Path(dataset.BASE_DATASET) / f"{dataset.__class__.__name__}_train_features.csv"
+    data_path_test = Path(dataset.BASE_DATASET) / f"{dataset.__class__.__name__}_test_features.csv"
 
     data_train = pd.read_csv(data_path_train)
     data_test = pd.read_csv(data_path_test)
 
-    data_train["y"] = pd.read_csv(data_path_train.parent / "en_training_anon.tsv", sep="\t")["misogynous"]
-    data_test["y"] = pd.read_csv(data_path_test.parent / "en_testing_labeled_anon.tsv", sep="\t")["misogynous"]
+    data_train["y"] = dataset.get_train_labels()
+    data_test["y"] = dataset.get_test_labels()
+
+    clf = sk_classifier_type(**train_config[sk_classifier_type.__name__])
 
     # train_df, test_df = train_test_split(data, random_state=31, shuffle=True, stratify=data["label"], test_size=0.25)
     #
@@ -154,9 +159,9 @@ def main():
     # print("Metrics before ensemble")
     # compute_metrics(y_pred, test_df["label"], sk_classifier_name="Final RF")
 
-    all_classifier(train_config, data_train, data_test)
+    # adaboost_classifier(train_config, data_train, data_test)
 
-    # final_ensemble(train_config, "dataset/fake_reviews_features.csv", None, data)
+    final_ensemble(clf, data_train, data_test)
 
 
 if __name__ == "__main__":

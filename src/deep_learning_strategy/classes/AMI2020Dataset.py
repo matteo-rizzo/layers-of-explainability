@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import re
+from pathlib import Path
 from typing import Dict, Tuple, List, Union
 
 import numpy as np
@@ -17,7 +18,7 @@ from src.feature_extraction.text_features import separate_html_entities
 class AMI2020Dataset(AbcDataset):
     BASE_DATASET = os.path.join("dataset", "ami2020_misogyny_detection", "data")
 
-    def __init__(self, augment_training=False, target="M", validation: float = .0):
+    def __init__(self, augment_training=False, target="misogynous", validation: float = .0):
         super().__init__(target, validation)
         self._augment_training = augment_training
         self._split_data = self._train_val_test()
@@ -36,7 +37,11 @@ class AMI2020Dataset(AbcDataset):
 
     @staticmethod
     def get_path_to_testset() -> str:
-        return AMI2020Dataset.BASE_DATASET
+        return str(Path(AMI2020Dataset.BASE_DATASET) / "test_raw_groundtruth.tsv")
+
+    @staticmethod
+    def get_path_to_trainset() -> str:
+        return str(Path(AMI2020Dataset.BASE_DATASET) / "training_raw_groundtruth.tsv")
 
     @staticmethod
     def preprocessing(text_string: str) -> str:

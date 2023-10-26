@@ -22,7 +22,11 @@ class CGReviewDataset(AbcDataset):
 
     @staticmethod
     def get_path_to_testset() -> str:
-        return CGReviewDataset.BASE_DATASET
+        return CGReviewDataset.BASE_DATASET / "fake_reviews_dataset.csv"
+
+    @staticmethod
+    def get_path_to_trainset() -> str:
+        return CGReviewDataset.get_path_to_testset()
 
     @staticmethod
     def preprocessing(text_string: str) -> str:

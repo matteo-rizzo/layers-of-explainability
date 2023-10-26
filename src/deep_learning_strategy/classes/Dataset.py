@@ -15,6 +15,10 @@ class AbcDataset(abc.ABC):
         self._validation = validation
         self._split_data = None
 
+    @property
+    def target(self) -> str:
+        return self._target
+
     def get_test_data(self) -> np.ndarray | list:
         return self._split_data["test"]["x"]
 
@@ -33,7 +37,12 @@ class AbcDataset(abc.ABC):
     @staticmethod
     @abc.abstractmethod
     def get_path_to_testset() -> str:
-        raise NotImplementedError()
+        pass
+
+    @staticmethod
+    @abc.abstractmethod
+    def get_path_to_trainset() -> str:
+        pass
 
     @staticmethod
     def preprocessing(text_string: str) -> str:
