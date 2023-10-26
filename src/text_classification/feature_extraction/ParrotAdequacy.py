@@ -1,5 +1,4 @@
 from collections import defaultdict
-from typing import Any
 
 from transformers import pipeline
 

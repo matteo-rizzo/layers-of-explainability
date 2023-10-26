@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import pandas as pd
 
 from src.deep_learning_strategy.classes.AMI2018Dataset import AMI2020Dataset, AMI2018Dataset
@@ -34,8 +36,8 @@ def compute_features(dataset_: AMI2020Dataset):
     train_features = {k: f[:len_train] for k, f in all_features.items()}
     test_features = {k: f[len_train:] for k, f in all_features.items()}
 
-    pd.DataFrame.from_dict(train_features).to_csv(dataset_.BASE_AMI_DATASET / "fake_reviews_features.csv", index=False)
-    pd.DataFrame.from_dict(test_features).to_csv(dataset_.BASE_AMI_DATASET / "fake_reviews_features.csv", index=False)
+    pd.DataFrame.from_dict(train_features).to_csv(Path(dataset_.BASE_DATASET) / f"{dataset_.__class__.__name__}_train_features.csv", index=False)
+    pd.DataFrame.from_dict(test_features).to_csv(Path(dataset_.BASE_DATASET) / f"{dataset_.__class__.__name__}_test_features.csv", index=False)
 
 
 if __name__ == "__main__":

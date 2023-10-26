@@ -75,7 +75,10 @@ class AMI2020Dataset:
     def _preprocess(self, corpora: List) -> Union[Tuple, None]:
         if not corpora:
             return None
-        return tuple([[self.preprocessing(text) for text in corpus] if corpus is not None else None for corpus in corpora])
+        prepr_ds = tuple([[self.preprocessing(text).strip() for text in corpus] if corpus is not None else None for corpus in corpora])
+        # Remove texts with no content (e.g., only mentions). For new we deal with missing text in feature extraction modules
+        # prepr_ds = tuple([[text for text in texts if text] if texts is not None else None for texts in prepr_ds])
+        return prepr_ds
 
     def _make_val_data(self, train_x: List, train_y: List, train_ids: List) -> Tuple:
         return train_test_split(train_x, train_y, train_ids, test_size=self._validation,
