@@ -10,8 +10,8 @@ import torch.cuda
 from src.deep_learning_strategy.classes.AMI2020Dataset import AMI2020Dataset
 from src.deep_learning_strategy.classes.HuggingFaceAMI2020Dataset import HuggingFaceAMI2020Dataset
 from src.deep_learning_strategy.classes.HuggingFacePipeline import HuggingFacePipeline
-from src.deep_learning_strategy.settings import make_deterministic, print_namespace, PATH_TO_CONFIG, RANDOM_SEED
 from src.utils.ami_2020_scripts.evaluation_submission import read_gold, evaluate_task_b_singlefile
+from src.utils.setup import PATH_TO_CONFIG, RANDOM_SEED, make_deterministic, print_namespace
 from src.utils.yaml_manager import load_yaml
 
 BATCH_SIZE = 4
