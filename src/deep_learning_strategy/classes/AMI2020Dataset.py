@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import re
 from typing import Dict, Tuple, List, Union
@@ -7,27 +9,21 @@ import pandas as pd
 from sklearn.metrics import precision_recall_fscore_support, accuracy_score
 from sklearn.model_selection import train_test_split
 
+from src.deep_learning_strategy.classes.Dataset import AbcDataset
 from src.deep_learning_strategy.settings import RANDOM_SEED
 from src.feature_extraction.text_features import separate_html_entities
 
 
-class AMI2020Dataset:
+class AMI2020Dataset(AbcDataset):
     BASE_DATASET = os.path.join("dataset", "ami2020_misogyny_detection", "data")
 
     def __init__(self, augment_training=False, target="M", validation: float = .0):
-        self._target = "misogynous" if target == "M" else "aggressiveness"
+        super().__init__(target, validation)
         self._augment_training = augment_training
-        self._validation = validation
         self._split_data = self._train_val_test()
-
-    def get_test_data(self) -> np.ndarray | list:
-        return self._split_data["test"]["x"]
 
     def get_train_val_test_split(self) -> Dict:
         return self._split_data
-
-    def get_test_groundtruth(self) -> np.ndarray[int]:
-        return np.asarray(self._split_data["test"]["y"])
 
     def get_synthetic_test_data(self) -> np.ndarray:
         return np.asarray(self._split_data["test_synt"]["y"])
@@ -119,15 +115,3 @@ class AMI2020Dataset:
             **validation,
             **synt_test
         }
-
-    @staticmethod
-    def compute_metrics(y_pred: np.ndarray, y_true: np.ndarray, sk_classifier_name: str = None) -> Dict:
-        precision, recall, f1_score, _ = precision_recall_fscore_support(y_true, y_pred, average="macro", pos_label=1)
-        acc = accuracy_score(y_true, y_pred)
-        if sk_classifier_name:
-            print(f"{sk_classifier_name} accuracy: {acc:.3f}")
-            print(f"{sk_classifier_name} precision: {precision:.3f}")
-            print(f"{sk_classifier_name} recall: {recall:.3f}")
-            print(f"{sk_classifier_name} F1-score: {f1_score:.3f}")
-
-        return {"f1": f1_score, "accuracy": acc, "precision": precision, "recall": recall}
