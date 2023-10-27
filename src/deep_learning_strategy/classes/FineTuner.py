@@ -11,6 +11,7 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trai
 
 from src.deep_learning_strategy.classes.HuggingFaceAMI2018Dataset import HuggingFaceAMI2018Dataset
 from src.deep_learning_strategy.classes.HuggingFaceAMI2020Dataset import HuggingFaceAMI2020Dataset
+from src.deep_learning_strategy.classes.HuggingFaceCGReviewDataset import HuggingFaceCGReviewDataset
 
 
 class FineTuner:
@@ -38,12 +39,14 @@ class FineTuner:
         elif hyperparameters["dataset"] == "AMI2020":
             self.__train_data: Dataset = (HuggingFaceAMI2020Dataset(
                 augment_training=self.__augment_training).get_train_data())
+        elif hyperparameters["dataset"] == "CGReviews":
+            self.__train_data: Dataset = (HuggingFaceCGReviewDataset().get_train_data())
         else:
             raise ValueError(f"Unsupported dataset with name: {hyperparameters['dataset']}")
 
         self.__data: Dict = self.__get_eval_data()
         self.__model: PreTrainedModel = self.__get_model()
-        # Note: adamw_torch_fused has a bug and cannot be reloaded once trained, as workaraound use normal version
+        # Note: adamw_torch_fused has a bug and cannot be reloaded once trained, as workaround use normal version
         # self.__optimizer_name: str = "adamw_torch_fused" if self.__use_gpu else "adamw_torch"
         self.__optimizer_name: str = "adamw_torch"
         self.__trainer: Optional[Trainer] = None

@@ -5,7 +5,7 @@ task: B # A or B
 training:
   model_name: cardiffnlp/twitter-roberta-base-2022-154m # google/flan-t5-base # MilaNLProc/hate-ita
 
-  add_synthetic: false # Add also synthetic examples to training set
+  add_synthetic: false # Add also synthetic examples to a training set
   eval_size: 0.20
   model_max_length: 256 # max is 512 for XMLRoberta, so it depends on the backbone model
 

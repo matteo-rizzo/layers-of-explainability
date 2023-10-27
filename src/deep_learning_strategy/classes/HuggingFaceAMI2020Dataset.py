@@ -25,5 +25,5 @@ class HuggingFaceAMI2020Dataset(AMI2020Dataset):
     def get_test_labels(self) -> np.ndarray[int]:
         return np.asarray(self.hf_data["test"]["label"])
 
-    def get_train_data(self):
+    def get_train_data(self) -> Dataset:
         return self.train_data

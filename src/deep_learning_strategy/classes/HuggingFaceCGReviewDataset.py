@@ -16,7 +16,7 @@ class HuggingFaceCGReviewDataset(CGReviewDataset):
 
         features = Features({
             "text": Value("string"),
-            "label": ClassLabel(num_classes=2, names=["no", "yes"], names_file=None, id=None)}
+            "label": ClassLabel(num_classes=2, names=["CG", "OR"], names_file=None, id=None)}
         )
 
         self.train_data = Dataset.from_dict(self.hf_data["train"], split=NamedSplit("train"), features=features)
@@ -25,5 +25,5 @@ class HuggingFaceCGReviewDataset(CGReviewDataset):
     def get_test_labels(self) -> np.ndarray[int]:
         return np.asarray(super().get_test_labels())
 
-    def get_train_data(self):
+    def get_train_data(self) -> Dataset:
         return self.train_data

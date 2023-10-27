@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 import torch
-from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
 from sklearn.tree import DecisionTreeClassifier
 from skorch import NeuralNetBinaryClassifier
@@ -107,7 +107,7 @@ def load_encode_dataset() -> tuple[pd.DataFrame, pd.DataFrame]:
 
 
 DATASET: AbcDataset = CGReviewDataset()
-DO_GRID_SEARCH = True
+DO_GRID_SEARCH = False
 
 
 def main():
@@ -116,12 +116,12 @@ def main():
 
     # SETTINGS:
     # ------------- SK learn classifiers
-    # SK_CLASSIFIER_TYPE: type = AdaBoostClassifier
-    # SK_CLASSIFIER_PARAMS: dict = dict(estimator=LogisticRegression())
+    SK_CLASSIFIER_TYPE: type = RandomForestClassifier
+    SK_CLASSIFIER_PARAMS: dict = dict()  # dict(estimator=LogisticRegression())
 
     # ------------- TORCH with SKORCH
-    SK_CLASSIFIER_TYPE: type = NeuralNetBinaryClassifier
-    SK_CLASSIFIER_PARAMS: dict = create_skorch_model_arguments(data_train)
+    # SK_CLASSIFIER_TYPE: type = NeuralNetBinaryClassifier
+    # SK_CLASSIFIER_PARAMS: dict = create_skorch_model_arguments(data_train)
 
     update_params_composite_classifiers(train_config, SK_CLASSIFIER_TYPE, SK_CLASSIFIER_PARAMS)
 
