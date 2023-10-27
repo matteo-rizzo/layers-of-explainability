@@ -62,17 +62,13 @@ def create_skorch_model_arguments(train_data: pd.DataFrame) -> dict:
         module=network_model,
         callbacks=[EarlyStopping(),
                    Checkpoint(f_params="params_{last_epoch[epoch]}.pt",
-                              dirname=Path("dumps") / "nlp_models" / "checkpoints"),
+                              dirname=Path("dumps") / "nlp_models" / "checkpoints")
                    # EpochScoring("f1", name="valid_f1", lower_is_better=False, target_extractor=target_conversion)
                    ],
         criterion=torch.nn.BCEWithLogitsLoss,
         optimizer=torch.optim.AdamW,
-        optimizer__weight_decay=1e-2,
-        lr=1e-5,
-        max_epochs=300,
-        batch_size=8,
         verbose=True,
-        device='cuda'
+        device="cuda"
     )
 
     return classifier

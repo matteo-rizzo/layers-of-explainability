@@ -14,11 +14,13 @@ class BaseUtility:
         self._base_classifier_type: type = base_classifier_type
 
     def preprocess_x_data(self, x: pd.DataFrame) -> Any:
+        """ Stub called before feeding features to the model. By default, convert to tensor if using skorch. """
         if issubclass(self._base_classifier_type, NeuralNet):
             x = torch.tensor(x.values, dtype=torch.float32)
         return x
 
     def preprocess_y_data(self, y: Any) -> Any:
+        """ Stub called before feeding target labels to the model. By default, convert to tensor if using skorch. """
         if issubclass(self._base_classifier_type, NeuralNet):
             y = torch.tensor(y.values, dtype=torch.float32)
         return y

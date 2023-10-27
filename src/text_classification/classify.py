@@ -16,7 +16,7 @@ from sklearn.tree import DecisionTreeClassifier
 
 from src.explainable_strategy.pipeline import make_pipeline
 from src.text_classification.classes.FeatureSelector import FeatureSelector
-from src.text_classification.main import compute_metrics
+from src.text_classification.test_topic_model import compute_metrics
 from src.utils.yaml_manager import load_yaml
 
 sk_classifier_type = RandomForestClassifier
