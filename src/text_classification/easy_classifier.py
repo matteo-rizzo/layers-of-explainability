@@ -10,10 +10,9 @@ import numpy as np
 import pandas as pd
 import torch
 from sklearn.base import ClassifierMixin
-from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, HistGradientBoostingClassifier
-from sklearn.linear_model import RidgeClassifier, LogisticRegression
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import GridSearchCV, train_test_split
-from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder
 from sklearn.tree import DecisionTreeClassifier
 from torch import nn
@@ -31,7 +30,7 @@ DATASET: AbcDataset = CGReviewDataset()  # AMI2018Dataset()
 DO_GRID_SEARCH = True
 
 
-def grid_search_best_params(training_data: pd.DataFrame, train_config):
+def grid_search_best_params(training_data: pd.DataFrame, train_config) -> ClassifierMixin:
     """
     Perform grid search of the selected classifier (see 'SK_CLASSIFIER_TYPE').
 
@@ -93,7 +92,7 @@ def grid_search_best_params(training_data: pd.DataFrame, train_config):
     print("-----------------------------------------------------------")
     pprint(best_params)
 
-    return best_params
+    return gs.best_estimator_
 
 
 def update_params_composite_classifiers(train_config: dict) -> dict:
@@ -121,17 +120,17 @@ def neural_classifier(train_data: pd.DataFrame, test_data: pd.DataFrame) -> None
     from skorch.callbacks import EarlyStopping, Checkpoint
 
     layers = [
-        (512, 0.3, True, nn.ReLU()),
-        (256, 0.4, True, nn.ReLU()),
-        (128, 0.3, True, nn.ReLU()),
-        (64, 0.4, True, nn.ReLU()),
-        (32, 0.3, True, nn.ReLU()),
-        (64, 0.4, True, nn.ReLU()),
-        (128, 0.3, True, nn.ReLU()),
-        (32, 0.4, True, nn.ReLU()),
-        (16, 0.3, True, nn.ReLU()),
-        (8, 0.2, True, nn.ReLU()),
-        (1, 0.0, False, None)
+        (512, 0.1, True, nn.ReLU()),
+        (512, 0.2, True, nn.ReLU()),
+        (256, 0.1, True, nn.ReLU()),
+        (256, 0.1, True, nn.ReLU()),
+        (128, 0.1, True, nn.ReLU()),
+        (128, 0.2, True, nn.ReLU()),
+        (64, 0.1, True, nn.ReLU()),
+        (32, 0.1, True, nn.ReLU()),
+        (16, 0.1, True, nn.ReLU()),
+        (8, 0.1, True, nn.ReLU()),
+        (1, 0.1, False, None)
     ]
 
     y_train = train_data.pop("y")
