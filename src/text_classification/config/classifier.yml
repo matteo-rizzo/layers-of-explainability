@@ -80,6 +80,9 @@ HistGradientBoostingClassifier:
   max_iter: 100
   l2_regularization: 0.0
 
+NeuralNetBinaryClassifier: { }
+
+
 
 grid_search_params:
   num_seeds: 1
@@ -172,6 +175,10 @@ grid_search_params:
     learning_rate: [ 0.1, 0.8, 1.0 ]
     max_iter: [ 100, 200, 300 ]
     l2_regularization: [ 0, 0.1, 0.01 ]
+
+  NeuralNetBinaryClassifier:
+    optimizer__weight_decay: [ 1.0e-2, 1.0e-1, 0.0 ]
+    lr: [ 1.0e-3, 1.0e-4, 1.0e-5 ]
 
 #  BNClassifier:
 #    learningMethod: ['GHC', 'MIIC']

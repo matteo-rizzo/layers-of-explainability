@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import yaml
 
-from src.text_classification.classes.Document import Document
+from src.text_classification.classes.other.Document import Document
 
 
 def expand_scores(keywords_dict: dict[int, list[tuple[str, float]]]) -> dict[int, list[str]]:

@@ -2,12 +2,12 @@ from collections import defaultdict
 
 from transformers import pipeline
 
-from src.text_classification.feature_extraction.Feature import Feature
+from src.text_classification.classes.features.Feature import Feature
 
 
-class ChatGPTDetector(Feature):
+class EvidenceType(Feature):
     def __init__(self, use_gpu: bool = True, batch_size: int = 64, *args, **kwargs):
-        self.pipe = pipeline("text-classification", model="Hello-SimpleAI/chatgpt-detector-roberta", device="cuda" if use_gpu else "cpu",
+        self.pipe = pipeline("text-classification", model="marieke93/MiniLM-evidence-types", device="cuda" if use_gpu else "cpu",
                              top_k=None, batch_size=batch_size)
 
     def extract(self, texts: list[str]) -> dict[str, list[float]]:

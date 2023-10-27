@@ -4,18 +4,17 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.deep_learning_strategy.classes.AMI2018Dataset import AMI2018Dataset
 from src.deep_learning_strategy.classes.CGReviewDataset import CGReviewDataset
 from src.deep_learning_strategy.classes.Dataset import AbcDataset
-from src.text_classification.feature_extraction.ChatGPTDetector import ChatGPTDetector
-from src.text_classification.feature_extraction.EvidenceType import EvidenceType
-from src.text_classification.feature_extraction.GibberishDetector import GibberishDetector
-from src.text_classification.feature_extraction.ParrotAdequacy import ParrotAdequacy
-from src.text_classification.feature_extraction.TextEmotion import TextEmotion
-from src.text_classification.feature_extraction.TextGrammarErrors import TextGrammarErrors
-from src.text_classification.feature_extraction.TextPolarity import TextPolarity
-from src.text_classification.feature_extraction.TopicLM import TopicLM
-from src.text_classification.feature_extraction.Wellformedness import Wellformedness
+from src.text_classification.classes.features.ChatGPTDetector import ChatGPTDetector
+from src.text_classification.classes.features.EvidenceType import EvidenceType
+from src.text_classification.classes.features.GibberishDetector import GibberishDetector
+from src.text_classification.classes.features.ParrotAdequacy import ParrotAdequacy
+from src.text_classification.classes.features.TextEmotion import TextEmotion
+from src.text_classification.classes.features.TextGrammarErrors import TextGrammarErrors
+from src.text_classification.classes.features.TextPolarity import TextPolarity
+from src.text_classification.classes.features.TopicLM import TopicLM
+from src.text_classification.classes.features.Wellformedness import Wellformedness
 
 
 def compute_features(dataset_: AbcDataset):

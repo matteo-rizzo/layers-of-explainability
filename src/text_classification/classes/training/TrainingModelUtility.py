@@ -1,0 +1,50 @@
+from __future__ import annotations
+
+from typing import Callable, Any
+
+import pandas as pd
+from sklearn.base import ClassifierMixin
+from skorch import NeuralNet
+
+from src.text_classification.classes.training.BaseUtility import BaseUtility
+
+
+class TrainingModelUtility(BaseUtility):
+    def __init__(self, configuration_parameters: dict, base_classifier_type: type, base_classifier_kwargs: dict | None = None):
+        super().__init__(configuration_parameters, base_classifier_type, base_classifier_kwargs)
+        self.trained_classifier: ClassifierMixin | None = None
+
+    def train_classifier(self, training_data: pd.DataFrame) -> ClassifierMixin:
+        """
+        Train a scikit-learn classifier on training data and return the fitted object.
+        """
+        clf = self._base_classifier_type(**self._base_classifier_kwargs, **self.train_config[self._base_classifier_type.__name__])
+
+        y_train = training_data.pop("y")
+
+        training_data = self.preprocess_x_data(training_data)
+        y_train = self.preprocess_y_data(y_train)
+
+        clf.fit(training_data, y_train)
+
+        self.trained_classifier = clf
+
+        return clf
+
+    def evaluate(self, testing_data: pd.DataFrame, compute_metrics_fn: Callable[[Any, Any, *Any], dict[str, float]]) -> None:
+        """
+        Evaluate dataset metrics of a scikit-learn classifier on testing data.
+        """
+
+        if self.trained_classifier is None:
+            raise ValueError("Cannot evaluate before training a classifier")
+
+        y_test = testing_data.pop("y")
+
+        y_pred = self.trained_classifier.predict(testing_data).tolist()
+
+        print("Classification metrics")
+        metrics = compute_metrics_fn(y_pred, y_test)
+
+        for k, v in metrics.items():
+            print(f"{self.trained_classifier.__class__.__name__} {k}: {v:.3f}")

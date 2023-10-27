@@ -15,12 +15,12 @@ from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.mixture import GaussianMixture, BayesianGaussianMixture
+from sklearn.mixture import GaussianMixture
 from umap import UMAP
 
-from src.text_classification.classes import Document
-from src.text_classification.classes.BERTopicExtended import BERTopicExtended
-from src.text_classification.classes.BaseTopicExtractor import BaseTopicExtractor
+from src.text_classification.classes.other import Document
+from src.text_classification.classes.other.BERTopicExtended import BERTopicExtended
+from src.text_classification.classes.other.BaseTopicExtractor import BaseTopicExtractor
 from src.text_classification.utils import load_yaml
 from src.text_classification.visualization.visualize_stacked_topics import visualize_stacked_topics
 

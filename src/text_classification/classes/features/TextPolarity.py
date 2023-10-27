@@ -4,7 +4,7 @@ from textblob import TextBlob
 from textblob.tokenizers import SentenceTokenizer
 from tqdm import tqdm
 
-from src.text_classification.feature_extraction.Feature import Feature
+from src.text_classification.classes.features.Feature import Feature
 
 
 class TextPolarity(Feature):

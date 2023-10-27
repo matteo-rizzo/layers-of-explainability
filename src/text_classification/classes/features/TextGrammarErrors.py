@@ -3,7 +3,7 @@ from collections import Counter, defaultdict
 import language_tool_python
 from tqdm import tqdm
 
-from src.text_classification.feature_extraction.Feature import Feature
+from src.text_classification.classes.features.Feature import Feature
 
 
 class TextGrammarErrors(Feature):
