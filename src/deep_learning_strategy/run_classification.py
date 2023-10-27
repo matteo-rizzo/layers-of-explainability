@@ -25,7 +25,7 @@ def task_a() -> float:
     pipeline = HuggingFacePipeline(TASK_A_MODEL_NAME, BATCH_SIZE)
     dataset = HuggingFaceAMI2020Dataset(target="A")
     predictions = pipeline.test(dataset.get_test_data(), TARGET_LABEL)
-    metrics = compute_metrics(y_pred=predictions, y_true=dataset.get_test_groundtruth())
+    metrics = compute_metrics(y_pred=predictions, y_true=dataset.get_test_labels())
     pprint(metrics)
 
     score = metrics["f1"]
@@ -63,7 +63,7 @@ def main():
     pipeline = HuggingFacePipeline(TEST_MODEL_NAME, BATCH_SIZE)
     dataset = HuggingFaceAMI2020Dataset(augment_training=ADD_SYNTHETIC or TASK == "B")
     predictions = pipeline.test(dataset.get_test_data(), TARGET_LABEL)
-    metrics = compute_metrics(y_pred=predictions, y_true=dataset.get_test_groundtruth())
+    metrics = compute_metrics(y_pred=predictions, y_true=dataset.get_test_labels())
     pprint(metrics)
 
     m_f1 = metrics["f1"]

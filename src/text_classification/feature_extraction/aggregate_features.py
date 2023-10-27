@@ -4,7 +4,9 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.deep_learning_strategy.classes.AMI2018Dataset import AMI2020Dataset, AMI2018Dataset
+from src.deep_learning_strategy.classes.AMI2018Dataset import AMI2018Dataset
+from src.deep_learning_strategy.classes.CGReviewDataset import CGReviewDataset
+from src.deep_learning_strategy.classes.Dataset import AbcDataset
 from src.text_classification.feature_extraction.ChatGPTDetector import ChatGPTDetector
 from src.text_classification.feature_extraction.EvidenceType import EvidenceType
 from src.text_classification.feature_extraction.GibberishDetector import GibberishDetector
@@ -16,7 +18,7 @@ from src.text_classification.feature_extraction.TopicLM import TopicLM
 from src.text_classification.feature_extraction.Wellformedness import Wellformedness
 
 
-def compute_features(dataset_: AMI2020Dataset):
+def compute_features(dataset_: AbcDataset):
     data = dataset_.get_train_val_test_split()
 
     train_texts: list[str] = data["train"]["x"]
@@ -25,7 +27,7 @@ def compute_features(dataset_: AMI2020Dataset):
     len_train: int = len(train_texts)
     train_texts.extend(test_texts)
 
-    feature_transforms = [TextEmotion, TextPolarity, TextGrammarErrors, EvidenceType, TopicLM, Wellformedness, ChatGPTDetector, ParrotAdequacy, GibberishDetector]
+    feature_transforms = [EvidenceType, TopicLM, Wellformedness, ChatGPTDetector, ParrotAdequacy, GibberishDetector, TextEmotion, TextPolarity, TextGrammarErrors]
     feature_transforms = [f(use_gpu=True) for f in feature_transforms]
 
     all_features: dict[str, list[float]] = dict()
@@ -42,5 +44,6 @@ def compute_features(dataset_: AMI2020Dataset):
 
 if __name__ == "__main__":
     # data_path = Path("dataset") / "fake_reviews_dataset.csv"
-    dataset = AMI2018Dataset()
+    # dataset = AMI2018Dataset()
+    dataset = CGReviewDataset(test_size=0.25)
     compute_features(dataset)
