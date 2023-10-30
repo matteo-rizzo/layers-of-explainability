@@ -1,8 +1,10 @@
 """ Script to GS and fit a classifier on review dataset, to use as feature extractor """
 from __future__ import annotations
 
+import time
 from pathlib import Path
 
+import joblib
 import pandas as pd
 import torch
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
@@ -134,6 +136,9 @@ def main():
         tmu.evaluate(data_test, DATASET.compute_metrics)
 
     # TO BE DONE: Implement saving if needed
+    save_dir = Path("dumps") / "nlp_models" / clf.__class__.__name__ / f"model_{time.time()}.pkl"
+    save_dir.parent.mkdir(exist_ok=True, parents=True)
+    joblib.dump(clf, save_dir)
 
 
 if __name__ == "__main__":

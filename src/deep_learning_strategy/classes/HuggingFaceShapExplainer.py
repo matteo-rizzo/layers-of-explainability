@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 from shap.models import TransformersPipeline
 
 
-class ShapExplainer:
+class HuggingFaceShapExplainer:
 
     def __init__(self, pipeline, tokenizer, target_label: str):
         self.__pipeline = TransformersPipeline(pipeline, rescale_to_logits=True)
