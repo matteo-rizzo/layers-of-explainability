@@ -35,4 +35,6 @@ class MLP(nn.Module):
         self.dnn = nn.Sequential(*modules)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # This is needed by SHAP, because input is cast to torch.float64, and weights are float32
+        x = torch.as_tensor(x, dtype=torch.float32)
         return self.dnn(x)

@@ -68,17 +68,14 @@ class CategoricalShapExplainer:
             plt.show()
         plt.clf()
 
-    def run(self, train_data: pd.DataFrame, test_data: pd.DataFrame, output_names: list | None = None, show: bool = True, make_tensors: bool = False):
+    def run(self, train_data: pd.DataFrame, test_data: pd.DataFrame, output_names: list | None = None, show: bool = True):
+        # What number of background samples?
         x_train_summary = shap.kmeans(train_data, 50)
 
         target_samples = test_data
-        # if make_tensors:
-        #     TO BE DONE: to work with skorch we need tensors, but SHAP things break with tensors as output
-        #     x_train_summary.data = torch.as_tensor(x_train_summary.data, dtype=torch.float32)
-        #     x_train_summary.weights = torch.as_tensor(x_train_summary.weights, dtype=torch.float32)
-        #     target_samples = torch.as_tensor(target_samples.values, dtype=torch.float32)
+        fx = self.__model.predict_proba
 
-        self.__explainer = shap.KernelExplainer(self.__model.predict_proba, x_train_summary, output_names=output_names)
+        self.__explainer = shap.KernelExplainer(fx, x_train_summary, output_names=output_names)
 
         shap_values = self.__explainer.shap_values(target_samples, nsamples=1000)
         self.__plot_explanations_summary(shap_values, target_samples, output_names, show, target_index=1)
