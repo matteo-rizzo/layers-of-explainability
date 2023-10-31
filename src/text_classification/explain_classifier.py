@@ -4,6 +4,7 @@ from pathlib import Path
 
 import joblib
 from sklearn.ensemble import RandomForestClassifier
+from skorch import NeuralNetBinaryClassifier
 
 from src.deep_learning_strategy.classes.CGReviewDataset import CGReviewDataset
 from src.deep_learning_strategy.classes.CategoricalShapExplainer import CategoricalShapExplainer
