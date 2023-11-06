@@ -144,7 +144,7 @@ def pyfuming_and_chill():
 
     tr_path = 'dataset/ami2018_misogyny_detection/pyfuming/train.csv'
     te_path = 'dataset/ami2018_misogyny_detection/pyfuming/test.csv'
-    nr_clus = 3
+    nr_clus = 2 # 2 is misoginy / not. But maybe there's more; unintentional/hidden misogny? things like that
     # Load and normalize the data using min-max normalization
     train_dl = DataLoader(tr_path, normalize='minmax')
     test_dl = DataLoader(te_path, normalize='minmax')
