@@ -1,4 +1,3 @@
-import numpy as np
 from pyfume import *
 from simpful import *
 
@@ -106,17 +105,19 @@ def madness():
 def pyfuming_and_chill():
     # NOTE: takes a ton of time
     # Set the path to the data and choose the number of clusters
-    path = 'data/Feature_data.csv'
+    tr_path = 'dataset/ami2018_misogyny_detection/big_feat/AMI2018Dataset_train_features.csv'
+    te_path = 'dataset/ami2018_misogyny_detection/big_feat/AMI2018Dataset_test_features.csv'
     nr_clus = 3
 
     # Load and normalize the data using min-max normalization
-    dl = DataLoader(path, normalize='minmax')
-    variable_names = dl.variable_names
-
+    train_dl = DataLoader(tr_path, normalize='minmax')
+    test_dl = DataLoader(tr_path, normalize='minmax')
+    variable_names = train_dl.variable_names
+    x_train, y_train, x_test, y_test = train_dl.dataX, train_dl.dataY, test_dl.dataX, test_dl.dataY
     # Split the data using the hold-out method in a training (default: 75%)
     # and test set (default: 25%).
-    ds = DataSplitter()
-    x_train, y_train, x_test, y_test = ds.holdout(dataX=dl.dataX, dataY=dl.dataY)
+    # ds = DataSplitter()
+    # x_train, y_train, x_test, y_test = ds.holdout(dataX=dl.dataX, dataY=dl.dataY)
 
     # Select features relevant to the problem
     fs = FeatureSelector(dataX=x_train, dataY=y_train, nr_clus=nr_clus, variable_names=variable_names)
@@ -196,4 +197,4 @@ def pyfuming_and_chill():
 
 
 if __name__ == "__main__":
-    madness()
+    pyfuming_and_chill()
