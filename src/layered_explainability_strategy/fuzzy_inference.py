@@ -1,3 +1,4 @@
+import pandas as pd
 from pyfume import *
 from simpful import *
 
@@ -102,16 +103,51 @@ def madness():
     print(FS.get_rules())
 
 
-def pyfuming_and_chill():
-    # NOTE: takes a ton of time
-    # Set the path to the data and choose the number of clusters
+def reduce_dataset():
     tr_path = 'dataset/ami2018_misogyny_detection/big_feat/AMI2018Dataset_train_features.csv'
     te_path = 'dataset/ami2018_misogyny_detection/big_feat/AMI2018Dataset_test_features.csv'
-    nr_clus = 3
 
+    tr_l_p = 'dataset/ami2018_misogyny_detection/processed/en_training_anon.tsv'
+    te_l_p = 'dataset/ami2018_misogyny_detection/processed/en_testing_labeled_anon.tsv'
+
+    a_x = pd.read_csv(tr_path)
+    b_x = pd.read_csv(te_path)
+    a_y = pd.read_table(tr_l_p)
+    b_y = pd.read_table(te_l_p)
+
+    a_x["irony"] = a_y["irony"]
+    a_x["sarcasm"] = a_y["sarcasm"]
+    a_x["offensive"] = a_y["offensive"]
+    a_x["female"] = a_y["female"]
+    a_x["label"] = a_y["label"]
+    a_x.columns = [x.replace("/", "_") for x in a_x.columns]
+    a_x.columns = [x.replace("&", "n") for x in a_x.columns]
+    a_x.columns = [x.replace(" ", "") for x in a_x.columns]
+
+    b_x["irony"] = b_y["irony"]
+    b_x["sarcasm"] = b_y["sarcasm"]
+    b_x["offensive"] = b_y["offensive"]
+    b_x["female"] = b_y["female"]
+    b_x["label"] = b_y["label"]
+    b_x.columns = [x.replace("/", "_") for x in b_x.columns]
+    b_x.columns = [x.replace("&", "n") for x in b_x.columns]
+    a_x.columns = [x.replace(" ", "") for x in a_x.columns]
+
+    a_x[["TextEmotion_anger", "polarity", "subjectivity", "word_count", "irony", "sarcasm", "offensive", "female",
+         "num_errors", "Wellformedness_LABEL_0", "GibberishDetector_clean", "label"]].to_csv(
+        'dataset/ami2018_misogyny_detection/pyfuming/train.csv', index=False)
+    b_x[["TextEmotion_anger", "polarity", "subjectivity", "word_count", "irony", "sarcasm", "offensive", "female",
+         "num_errors", "Wellformedness_LABEL_0", "GibberishDetector_clean", "label"]].to_csv(
+        'dataset/ami2018_misogyny_detection/pyfuming/test.csv', index=False)
+def pyfuming_and_chill():
+    # Set the path to the data and choose the number of clusters
+
+    tr_path = 'dataset/ami2018_misogyny_detection/pyfuming/train.csv'
+    te_path = 'dataset/ami2018_misogyny_detection/pyfuming/test.csv'
+    nr_clus = 3
     # Load and normalize the data using min-max normalization
     train_dl = DataLoader(tr_path, normalize='minmax')
-    test_dl = DataLoader(tr_path, normalize='minmax')
+    test_dl = DataLoader(te_path, normalize='minmax')
     variable_names = train_dl.variable_names
     x_train, y_train, x_test, y_test = train_dl.dataX, train_dl.dataY, test_dl.dataX, test_dl.dataY
     # Split the data using the hold-out method in a training (default: 75%)
@@ -197,4 +233,5 @@ def pyfuming_and_chill():
 
 
 if __name__ == "__main__":
+    reduce_dataset()
     pyfuming_and_chill()
