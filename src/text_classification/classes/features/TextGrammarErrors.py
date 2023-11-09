@@ -7,7 +7,7 @@ from src.text_classification.classes.features.Feature import Feature
 
 
 class TextGrammarErrors(Feature):
-    def __init__(self, use_gpu: bool = True, batch_size: int = 512):
+    def __init__(self, *args, **kwargs):
         self.pipe = language_tool_python.LanguageTool("en-US")
 
     def extract(self, texts: list[str]) -> dict[str, list[float]]:
