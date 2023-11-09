@@ -8,13 +8,14 @@ import joblib
 import pandas as pd
 import torch
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.tree import DecisionTreeClassifier
 from skorch import NeuralNetBinaryClassifier
 from skorch.callbacks import Checkpoint, EarlyStopping
 from torch import nn
 
 from src.deep_learning_strategy.classes.CGReviewDataset import CGReviewDataset
+from src.deep_learning_strategy.classes.AMI2018Dataset import AMI2018Dataset
 from src.deep_learning_strategy.classes.Dataset import AbcDataset
 from src.text_classification.classes.torch_models.MLP import MLP
 from src.text_classification.classes.training.GridSearchUtility import GridSearchUtility
@@ -76,7 +77,7 @@ def create_skorch_model_arguments(train_data: pd.DataFrame) -> dict:
     return classifier
 
 
-def load_encode_dataset() -> tuple[pd.DataFrame, pd.DataFrame]:
+def load_encode_dataset(scale: bool = False) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Load dataset composed of extracted features based on the 'DATASET' global params that must be set to an AbcDataset object.
 
@@ -103,27 +104,38 @@ def load_encode_dataset() -> tuple[pd.DataFrame, pd.DataFrame]:
     y_train = encoder.fit_transform(train_labels)
     y_test = encoder.transform(test_labels)
 
+    # Scaling/normalization
+    if scale:
+        feature_names = data_train.columns.tolist()
+
+        scaler = StandardScaler()
+        data_train = pd.DataFrame(scaler.fit_transform(data_train))
+        data_train.columns = feature_names
+
+        data_test = pd.DataFrame(scaler.transform(data_test))
+        data_test.columns = feature_names
+
     data_train["y"] = y_train
     data_test["y"] = y_test
     return data_train, data_test
 
 
-DATASET: AbcDataset = CGReviewDataset()
+DATASET: AbcDataset = AMI2018Dataset()
 DO_GRID_SEARCH = False
 
 
 def main():
-    data_train, data_test = load_encode_dataset()
+    data_train, data_test = load_encode_dataset(scale=True)
     train_config: dict = load_yaml("src/text_classification/config/classifier.yml")
 
     # SETTINGS:
     # ------------- SK learn classifiers
-    SK_CLASSIFIER_TYPE: type = RandomForestClassifier
-    SK_CLASSIFIER_PARAMS: dict = dict()  # dict(estimator=LogisticRegression())
+    # SK_CLASSIFIER_TYPE: type = RandomForestClassifier
+    # SK_CLASSIFIER_PARAMS: dict = dict()  # dict(estimator=LogisticRegression())
 
     # ------------- TORCH with SKORCH
-    # SK_CLASSIFIER_TYPE: type = NeuralNetBinaryClassifier
-    # SK_CLASSIFIER_PARAMS: dict = create_skorch_model_arguments(data_train)
+    SK_CLASSIFIER_TYPE: type = NeuralNetBinaryClassifier
+    SK_CLASSIFIER_PARAMS: dict = create_skorch_model_arguments(data_train)
 
     update_params_composite_classifiers(train_config, SK_CLASSIFIER_TYPE, SK_CLASSIFIER_PARAMS)
 
