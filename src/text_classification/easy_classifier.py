@@ -1,4 +1,16 @@
-""" Script to GS and fit a classifier on review dataset, to use as feature extractor """
+"""
+Script to GS and fit a classifier on review dataset, to use as feature extractor
+
+INSTRUCTIONS:
+1. Set settings variables
+    - SK_CLASSIFIER_TYPE
+    - SK_CLASSIFIER_PARAMS: dict of parameters that must be passed to the classifier instance
+2. Set dataset in variable DATASET
+3. Set DO_GRID_SEARCH variable
+
+Classifier/grid search configuration is to be set in "src/text_classification/config/classifier.yml"
+"""
+
 from __future__ import annotations
 
 import time
@@ -7,7 +19,7 @@ from pathlib import Path
 import joblib
 import pandas as pd
 import torch
-from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
+from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier, HistGradientBoostingClassifier
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.tree import DecisionTreeClassifier
 from skorch import NeuralNetBinaryClassifier
@@ -130,12 +142,12 @@ def main():
 
     # SETTINGS:
     # ------------- SK learn classifiers
-    # SK_CLASSIFIER_TYPE: type = RandomForestClassifier
-    # SK_CLASSIFIER_PARAMS: dict = dict()  # dict(estimator=LogisticRegression())
+    SK_CLASSIFIER_TYPE: type = RandomForestClassifier
+    SK_CLASSIFIER_PARAMS: dict = dict()  # dict(estimator=LogisticRegression())
 
     # ------------- TORCH with SKORCH
-    SK_CLASSIFIER_TYPE: type = NeuralNetBinaryClassifier
-    SK_CLASSIFIER_PARAMS: dict = create_skorch_model_arguments(data_train)
+    # SK_CLASSIFIER_TYPE: type = NeuralNetBinaryClassifier
+    # SK_CLASSIFIER_PARAMS: dict = create_skorch_model_arguments(data_train)
 
     update_params_composite_classifiers(train_config, SK_CLASSIFIER_TYPE, SK_CLASSIFIER_PARAMS)
 
