@@ -8,6 +8,7 @@ from src.deep_learning_strategy.classes.AMI2018Dataset import AMI2018Dataset
 from src.deep_learning_strategy.classes.CGReviewDataset import CGReviewDataset
 from src.deep_learning_strategy.classes.Dataset import AbcDataset
 from src.text_classification.classes.features.ChatGPTDetector import ChatGPTDetector
+from src.text_classification.classes.features.EmotionLex import EmotionLex
 from src.text_classification.classes.features.EmpathFeatures import EmpathFeatures
 from src.text_classification.classes.features.EvidenceType import EvidenceType
 from src.text_classification.classes.features.GibberishDetector import GibberishDetector
@@ -32,7 +33,7 @@ def compute_features(dataset_: AbcDataset):
     train_texts.extend(test_texts)
 
     feature_transforms = [EvidenceType, TopicLM, Wellformedness, ChatGPTDetector, ParrotAdequacy, GibberishDetector, TextEmotion, TextPolarity, TextGrammarErrors]
-    feature_transforms += [TextStatistics, LIWCFeatures, EmpathFeatures]
+    feature_transforms += [TextStatistics, LIWCFeatures, EmpathFeatures, EmotionLex]
     feature_transforms = [f(use_gpu=True) for f in feature_transforms]
 
     all_features: dict[str, list[float]] = dict()
