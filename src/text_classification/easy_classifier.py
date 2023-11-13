@@ -20,6 +20,7 @@ import joblib
 import pandas as pd
 import torch
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier, HistGradientBoostingClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.tree import DecisionTreeClassifier
 from skorch import NeuralNetBinaryClassifier
@@ -28,6 +29,7 @@ from torch import nn
 
 from src.deep_learning_strategy.classes.CGReviewDataset import CGReviewDataset
 from src.deep_learning_strategy.classes.AMI2018Dataset import AMI2018Dataset
+from src.deep_learning_strategy.classes.CallMeSexistDataset import CallMeSexistDataset
 from src.deep_learning_strategy.classes.Dataset import AbcDataset
 from src.text_classification.classes.torch_models.MLP import MLP
 from src.text_classification.classes.training.GridSearchUtility import GridSearchUtility
@@ -132,7 +134,7 @@ def load_encode_dataset(scale: bool = False) -> tuple[pd.DataFrame, pd.DataFrame
     return data_train, data_test
 
 
-DATASET: AbcDataset = AMI2018Dataset()
+DATASET: AbcDataset = CallMeSexistDataset()
 DO_GRID_SEARCH = False
 
 
