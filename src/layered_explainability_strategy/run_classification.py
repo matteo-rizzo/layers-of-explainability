@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import RidgeClassifier
+from sklearn.linear_model import RidgeClassifier, LogisticRegression
 from sklearn.metrics import f1_score, accuracy_score
 from sklearn.model_selection import GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
@@ -184,7 +184,42 @@ def mini_ensemble():
     # -----------------------------------------------
 
 
+def mini_loader(df: pd.DataFrame):
+    shuffled = df.sample(frac=1)
+    ds = shuffled.to_numpy()
+    # --- Features, labels ---
+    features_X, y = ds[:, 0:-1], ds[:, -1]
+
+    return features_X, y
+
+
+def just_features():
+    # --------------------------------------------------------------------------------------------
+    train: pd.DataFrame = pd.read_csv("dataset/ami2018_misogyny_detection/pyfuming/train.csv")
+    test: pd.DataFrame = pd.read_csv("dataset/ami2018_misogyny_detection/pyfuming/test.csv")
+    params: dict = load_yaml("src/layered_explainability_strategy/config.yml")
+    # --------------------------------------------------------------------------------------------
+    train_features_x, train_y = mini_loader(train)
+    test_features_x, test_y = mini_loader(test)
+    # ----------------------------------------------------------
+    # Classification
+    feature_clf = LogisticRegression()
+    grid_search(LogisticRegression, params["gs"]["LogisticRegression"],
+                train_X=train_features_x,
+                test_X=test_features_x,
+                train_y=train_y,
+                test_y=test_y,
+                name="[GS LR]")
+    feature_f1, feature_acc, feature_predictions = fit_predict_metric(feature_clf,
+                                                                      train_X=train_features_x,
+                                                                      test_X=test_features_x,
+                                                                      train_y=train_y,
+                                                                      test_y=test_y)
+    print("---------------------------------------")
+    print(f"[JUST FEATURES] f1: {feature_f1:.3f} acc: {feature_acc:.3f}\n")
+
+
 if __name__ == "__main__":
     # classify_subfeatures()
     # classify_tfidf()
-    mini_ensemble()
+    just_features()

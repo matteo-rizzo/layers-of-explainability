@@ -24,3 +24,11 @@ gs:
     tol: [ 1.0e-4, 1.0e-5, 1.0e-3, 1.0e-2 ]
     alpha: [ 1.0, 2.5, 5.0, 7.5, 10.0, 15.0 ]
     positive: [ false, true ]
+
+  LogisticRegression:
+    solver: [ liblinear, newton-cg, lbfgs ]
+    tol: [ 1.0e-4, 1.0e-5, 1.0e-3 ]
+    dual: [ true, false ]
+    penalty: [ l1, l2 ]
+    C: [ 0.001, 0.01, 0.1, 1.0, 10, 100, 1000 ]
+    max_iter: [ 500, 1000 ]

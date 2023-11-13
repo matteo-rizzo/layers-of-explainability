@@ -133,21 +133,25 @@ def reduce_dataset():
     b_x.columns = [x.replace("&", "n") for x in b_x.columns]
     a_x.columns = [x.replace(" ", "") for x in a_x.columns]
 
-    a_x[["TextEmotion_anger", "polarity", "subjectivity", "word_count", "irony", "sarcasm", "offensive", "female",
-         "num_errors", "Wellformedness_LABEL_0", "GibberishDetector_clean", "label"]].to_csv(
+    a_x["polarity"] = (a_x["polarity"] - a_x["polarity"].min()) / (a_x["polarity"].max() - a_x["polarity"].min())
+    b_x["polarity"] = (b_x["polarity"] - b_x["polarity"].min()) / (b_x["polarity"].max() - b_x["polarity"].min())
+    a_x[["TextEmotion_anger", "polarity", "subjectivity", "irony", "sarcasm", "offensive", "female",
+         "Wellformedness_LABEL_0", "GibberishDetector_clean", 'ParrotAdequacy_contradiction', "label"]].to_csv(
         'dataset/ami2018_misogyny_detection/pyfuming/train.csv', index=False)
-    b_x[["TextEmotion_anger", "polarity", "subjectivity", "word_count", "irony", "sarcasm", "offensive", "female",
-         "num_errors", "Wellformedness_LABEL_0", "GibberishDetector_clean", "label"]].to_csv(
+    b_x[["TextEmotion_anger", "polarity", "subjectivity", "irony", "sarcasm", "offensive", "female",
+         "Wellformedness_LABEL_0", "GibberishDetector_clean", 'ParrotAdequacy_contradiction', "label"]].to_csv(
         'dataset/ami2018_misogyny_detection/pyfuming/test.csv', index=False)
+
+
 def pyfuming_and_chill():
     # Set the path to the data and choose the number of clusters
 
     tr_path = 'dataset/ami2018_misogyny_detection/pyfuming/train.csv'
     te_path = 'dataset/ami2018_misogyny_detection/pyfuming/test.csv'
-    nr_clus = 2 # 2 is misoginy / not. But maybe there's more; unintentional/hidden misogny? things like that
+    nr_clus = 2  # 2 is misoginy / not. But maybe there's more; unintentional/hidden misogny? things like that
     # Load and normalize the data using min-max normalization
-    train_dl = DataLoader(tr_path, normalize='minmax')
-    test_dl = DataLoader(te_path, normalize='minmax')
+    train_dl = DataLoader(tr_path)
+    test_dl = DataLoader(te_path)
     variable_names = train_dl.variable_names
     x_train, y_train, x_test, y_test = train_dl.dataX, train_dl.dataY, test_dl.dataX, test_dl.dataY
     # Split the data using the hold-out method in a training (default: 75%)
@@ -165,7 +169,7 @@ def pyfuming_and_chill():
 
     # Cluster the training data (in input-output space) using FCM with default settings
     cl = Clusterer(x_train=x_train, y_train=y_train, nr_clus=nr_clus)
-    cluster_centers, partition_matrix, _ = cl.cluster(method="fcm")
+    cluster_centers, partition_matrix, _ = cl.cluster(method="GK")
 
     # Estimate the membership funtions of the system (default: mf_shape = gaussian)
     ae = AntecedentEstimator(x_train=x_train, partition_matrix=partition_matrix)
@@ -190,46 +194,17 @@ def pyfuming_and_chill():
 
     # Calculate the mean squared error (MSE) of the model using the test data set
     test = SugenoFISTester(model=model, test_data=x_test, variable_names=variable_names, golden_standard=y_test)
+
+    test.calculate_AUC(show_plot=True)
     MSE = test.calculate_MSE()
 
     print('The mean squared error of the created model is', MSE)
 
-
-# def main():
-#     # A simple fuzzy inference system for the tipping problem
-#     # Create a fuzzy system object
-#     FS = FuzzySystem()
-#
-#     # Define fuzzy sets and linguistic variables
-#     S_1 = FuzzySet(function=Triangular_MF(a=0, b=0, c=5), term="poor")
-#     S_2 = FuzzySet(function=Triangular_MF(a=0, b=5, c=10), term="good")
-#     S_3 = FuzzySet(function=Triangular_MF(a=5, b=10, c=10), term="excellent")
-#     FS.add_linguistic_variable("Service", LinguisticVariable([S_1, S_2, S_3], concept="Service quality",
-#                                                              universe_of_discourse=[0, 10]))
-#
-#     F_1 = FuzzySet(function=Triangular_MF(a=0, b=0, c=10), term="rancid")
-#     F_2 = FuzzySet(function=Triangular_MF(a=0, b=10, c=10), term="delicious")
-#     FS.add_linguistic_variable("Food",
-#                                LinguisticVariable([F_1, F_2], concept="Food quality", universe_of_discourse=[0, 10]))
-#
-#     # Define output fuzzy sets and linguistic variable
-#     T_1 = FuzzySet(function=Triangular_MF(a=0, b=0, c=10), term="small")
-#     T_2 = FuzzySet(function=Triangular_MF(a=0, b=10, c=20), term="average")
-#     T_3 = FuzzySet(function=Trapezoidal_MF(a=10, b=20, c=25, d=25), term="generous")
-#     FS.add_linguistic_variable("Tip", LinguisticVariable([T_1, T_2, T_3], universe_of_discourse=[0, 25]))
-#
-#     # Define fuzzy rules
-#     R1 = "IF (Service IS poor) OR (Food IS rancid) THEN (Tip IS small)"
-#     R2 = "IF (Service IS good) THEN (Tip IS average)"
-#     R3 = "IF (Service IS excellent) OR (Food IS delicious) THEN (Tip IS generous)"
-#     FS.add_rules([R1, R2, R3])
-#
-#     # Set antecedents values
-#     FS.set_variable("Service", 4)
-#     FS.set_variable("Food", 8)
-#
-#     # Perform Mamdani inference and print output
-#     print(FS.Mamdani_inference(["Tip"]))
+    print('The acc of the created model is', test.calculate_accuracy(0.5))
+    print('The acc of the created model is', test.calculate_accuracy(0.525))
+    print('The acc of the created model is', test.calculate_accuracy(0.55))
+    print('The acc of the created model is', test.calculate_accuracy(0.575))
+    print('The acc of the created model is', test.calculate_accuracy(0.6))
 
 
 if __name__ == "__main__":
