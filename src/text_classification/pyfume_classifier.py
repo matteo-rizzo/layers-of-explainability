@@ -106,7 +106,6 @@ def reduce_features():
         "EmpathFeatures_hate",
         "EmpathFeatures_masculine",
         "EmpathFeatures_nervousness",
-        "TextStatistics_automated_readability",
         "label"]]
     te = te[[
         "Wellformedness_LABEL_0",
@@ -135,7 +134,7 @@ def pyfume_classification():
     # Set the path to the data and choose the number of clusters
     train_path = 'dataset/call_me_sexist_sexism_detection/CallMeSexistDataset_train_features_reduced.csv'
     test_path = 'dataset/call_me_sexist_sexism_detection/CallMeSexistDataset_test_features_reduced.csv'
-    nr_clus = 3
+    nr_clus = 2
 
     # Load and normalize the data using min-max normalization
     train_dl = DataLoader(train_path, normalize='minmax')
@@ -148,7 +147,7 @@ def pyfume_classification():
 
     # Select features relevant to the problem
     fs = FeatureSelector(dataX=x_train, dataY=y_train, nr_clus=nr_clus, variable_names=variable_names)
-    selected_feature_indices, variable_names = fs.wrapper()
+    selected_feature_indices, variable_names = fs.wrapper(fs_number_of_folds=11)
 
     # Adapt the training and test input data after feature selection
     x_train = x_train[:, selected_feature_indices]
@@ -182,11 +181,14 @@ def pyfume_classification():
     # Calculate the mean squared error (MSE) of the model using the test data set
     test = SugenoFISTester(model=model, test_data=x_test, variable_names=variable_names, golden_standard=y_test)
 
-    MSE = test.calculate_MSE()
+    # MSE = test.calculate_MSE()
     ACC = test.calculate_accuracy()
+    (f1_score, precision, recall) = test.calculate_f1_precision_recall()
+    test.calculate_performance()
 
-    print('The mean squared error of the created model is', MSE)
+    # print('The mean squared error of the created model is', MSE)
     print('The accuracy of the created model is', ACC)
+    print(f'f1_score: {f1_score}, precision: {precision}, recall: {recall}')
 
 
 if __name__ == "__main__":

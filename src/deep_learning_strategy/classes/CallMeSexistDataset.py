@@ -45,7 +45,8 @@ class CallMeSexistDataset(AbcDataset):
         prepr_ds = tuple(
             [[self.preprocessing(text).strip() for text in corpus] if corpus is not None else None for corpus in
              corpora])
-        # Remove texts with no content (e.g., only mentions). For new we deal with missing text in feature extraction modules
+        # Remove texts with no content (e.g., only mentions).
+        # For new we deal with missing text in feature extraction modules
         # prepr_ds = tuple([[text for text in texts if text] if texts is not None else None for texts in prepr_ds])
         return prepr_ds
 

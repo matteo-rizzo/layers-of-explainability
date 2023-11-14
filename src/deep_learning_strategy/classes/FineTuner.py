@@ -9,9 +9,11 @@ from datasets import Dataset
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, TrainingArguments, Trainer, \
     EarlyStoppingCallback, PreTrainedModel, PreTrainedTokenizer
 
+from src.deep_learning_strategy.classes.CallMeSexistDataset import CallMeSexistDataset
 from src.deep_learning_strategy.classes.HuggingFaceAMI2018Dataset import HuggingFaceAMI2018Dataset
 from src.deep_learning_strategy.classes.HuggingFaceAMI2020Dataset import HuggingFaceAMI2020Dataset
 from src.deep_learning_strategy.classes.HuggingFaceCGReviewDataset import HuggingFaceCGReviewDataset
+from src.deep_learning_strategy.classes.HuggingFaceCallMeSexistDataset import HuggingFaceCallMeSexistDataset
 
 
 class FineTuner:
@@ -41,6 +43,8 @@ class FineTuner:
                 augment_training=self.__augment_training).get_train_data())
         elif hyperparameters["dataset"] == "CGReviews":
             self.__train_data: Dataset = (HuggingFaceCGReviewDataset().get_train_data())
+        elif hyperparameters["dataset"] == "CallMeSexist":
+            self.__train_data: Dataset = (HuggingFaceCallMeSexistDataset().get_train_data())
         else:
             raise ValueError(f"Unsupported dataset with name: {hyperparameters['dataset']}")
 
