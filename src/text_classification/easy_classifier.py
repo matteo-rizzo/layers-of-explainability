@@ -20,8 +20,9 @@ import joblib
 import pandas as pd
 import torch
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier, HistGradientBoostingClassifier
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, RidgeClassifier
 from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
 from skorch import NeuralNetBinaryClassifier
 from skorch.callbacks import Checkpoint, EarlyStopping
@@ -135,7 +136,7 @@ def load_encode_dataset(scale: bool = False) -> tuple[pd.DataFrame, pd.DataFrame
 
 
 DATASET: AbcDataset = CallMeSexistDataset()
-DO_GRID_SEARCH = False
+DO_GRID_SEARCH = True
 
 
 def main():
@@ -144,7 +145,7 @@ def main():
 
     # SETTINGS:
     # ------------- SK learn classifiers
-    SK_CLASSIFIER_TYPE: type = RandomForestClassifier
+    SK_CLASSIFIER_TYPE: type = LinearSVC
     SK_CLASSIFIER_PARAMS: dict = dict()  # dict(estimator=LogisticRegression())
 
     # ------------- TORCH with SKORCH
