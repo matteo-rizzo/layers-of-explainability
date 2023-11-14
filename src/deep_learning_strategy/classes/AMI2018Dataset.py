@@ -14,7 +14,7 @@ class AMI2018Dataset(AMI2020Dataset):
     BASE_DATASET = os.path.join("dataset", "ami2018_misogyny_detection")
 
     def __init__(self, augment_training=False, target="misogynous", validation: float = .0):
-        assert target == "misogynous", f"We don't currently support targets other than M, got target={target}"
+        assert target == "misogynous", f"We don't currently support targets other than 'misogynous', got target={target}"
         super().__init__(augment_training, target, validation)
 
     def get_synthetic_test_data(self) -> np.ndarray:
