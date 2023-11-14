@@ -23,15 +23,15 @@ DEVICE_TYPE = "cuda:0"
 
 def get_device() -> torch.device:
     if DEVICE_TYPE == "cpu":
-        print("\n Running on device 'cpu' \n")
+        # print("\n Running on device 'cpu' \n")
         return torch.device("cpu")
 
     if re.match(r"\bcuda:\b\d+", DEVICE_TYPE):
         if not torch.cuda.is_available():
-            print("\n WARNING: running on cpu since device {} is not available \n".format(DEVICE_TYPE))
+            # print("\n WARNING: running on cpu since device {} is not available \n".format(DEVICE_TYPE))
             return torch.device("cpu")
 
-        print("\n Running on device '{}' \n".format(DEVICE_TYPE))
+        # print("\n Running on device '{}' \n".format(DEVICE_TYPE))
         return torch.device(DEVICE_TYPE)
 
     raise ValueError("ERROR: {} is not a valid device! Supported device are 'cpu' and 'cuda:n'".format(DEVICE_TYPE))
