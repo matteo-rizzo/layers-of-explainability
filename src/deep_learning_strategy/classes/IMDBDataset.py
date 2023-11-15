@@ -11,11 +11,19 @@ from src.deep_learning_strategy.settings import RANDOM_SEED
 from src.feature_extraction.text_features import separate_html_entities
 
 
-class IMBDDataset(AbcDataset):
+class IMDBDataset(AbcDataset):
 
     def __init__(self, target: str = "label", validation: float = .0):
         super().__init__(target, validation)
         self._split_data = self._train_val_test()
+
+    @staticmethod
+    def get_path_to_trainset() -> str:
+        pass
+
+    @staticmethod
+    def get_path_to_testset() -> str:
+        pass
 
     @staticmethod
     def preprocessing(text_string: str) -> str:
