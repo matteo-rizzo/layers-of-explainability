@@ -32,6 +32,7 @@ from src.deep_learning_strategy.classes.CGReviewDataset import CGReviewDataset
 from src.deep_learning_strategy.classes.AMI2018Dataset import AMI2018Dataset
 from src.deep_learning_strategy.classes.CallMeSexistDataset import CallMeSexistDataset
 from src.deep_learning_strategy.classes.Dataset import AbcDataset
+from src.deep_learning_strategy.classes.IMDBDataset import IMDBDataset
 from src.text_classification.classes.torch_models.MLP import MLP
 from src.text_classification.classes.training.GridSearchUtility import GridSearchUtility
 from src.text_classification.classes.training.TrainingModelUtility import TrainingModelUtility
@@ -135,7 +136,7 @@ def load_encode_dataset(scale: bool = False) -> tuple[pd.DataFrame, pd.DataFrame
     return data_train, data_test
 
 
-DATASET: AbcDataset = CallMeSexistDataset()
+DATASET: AbcDataset = IMDBDataset()
 DO_GRID_SEARCH = True
 
 
@@ -145,7 +146,7 @@ def main():
 
     # SETTINGS:
     # ------------- SK learn classifiers
-    SK_CLASSIFIER_TYPE: type = LinearSVC
+    SK_CLASSIFIER_TYPE: type = LogisticRegression
     SK_CLASSIFIER_PARAMS: dict = dict()  # dict(estimator=LogisticRegression())
 
     # ------------- TORCH with SKORCH
