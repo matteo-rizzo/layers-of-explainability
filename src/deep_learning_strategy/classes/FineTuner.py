@@ -14,6 +14,7 @@ from src.deep_learning_strategy.classes.HuggingFaceAMI2018Dataset import Hugging
 from src.deep_learning_strategy.classes.HuggingFaceAMI2020Dataset import HuggingFaceAMI2020Dataset
 from src.deep_learning_strategy.classes.HuggingFaceCGReviewDataset import HuggingFaceCGReviewDataset
 from src.deep_learning_strategy.classes.HuggingFaceCallMeSexistDataset import HuggingFaceCallMeSexistDataset
+from src.deep_learning_strategy.classes.HuggingFaceIMDBDataset import HuggingFaceIMDBDataset
 
 
 class FineTuner:
@@ -45,6 +46,8 @@ class FineTuner:
             self.__train_data: Dataset = (HuggingFaceCGReviewDataset().get_train_data())
         elif hyperparameters["dataset"] == "CallMeSexist":
             self.__train_data: Dataset = (HuggingFaceCallMeSexistDataset().get_train_data())
+        elif hyperparameters["dataset"] == "IMDB":
+            self.__train_data: Dataset = (HuggingFaceIMDBDataset().get_train_data())
         else:
             raise ValueError(f"Unsupported dataset with name: {hyperparameters['dataset']}")
 
