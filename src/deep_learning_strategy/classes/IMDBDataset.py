@@ -12,6 +12,7 @@ from src.feature_extraction.text_features import separate_html_entities
 
 
 class IMDBDataset(AbcDataset):
+    BASE_DATASET = "dataset/imdb"
 
     def __init__(self, target: str = "label", validation: float = .0):
         super().__init__(target, validation)
@@ -77,5 +78,5 @@ class IMDBDataset(AbcDataset):
 
 
 if __name__ == "__main__":
-    ds = IMBDDataset()
+    ds = IMDBDataset()
     print("")
