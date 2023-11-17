@@ -9,7 +9,7 @@ from src.deep_learning_strategy.classes.CGReviewDataset import CGReviewDataset
 from src.deep_learning_strategy.classes.Dataset import AbcDataset
 
 
-def load_encode_dataset(dataset: AbcDataset, scale: bool = False, features: list[str] | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
+def load_encode_dataset(dataset: AbcDataset, scale: bool = False) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Load dataset composed of extracted features based on the 'DATASET' global params that must be set to an AbcDataset object.
 
@@ -18,8 +18,8 @@ def load_encode_dataset(dataset: AbcDataset, scale: bool = False, features: list
     data_path_train = Path(dataset.BASE_DATASET) / f"{dataset.__class__.__name__}_train_features.csv"
     data_path_test = Path(dataset.BASE_DATASET) / f"{dataset.__class__.__name__}_test_features.csv"
 
-    data_train = pd.read_csv(data_path_train, usecols=features)
-    data_test = pd.read_csv(data_path_test, usecols=features)
+    data_train = pd.read_csv(data_path_train)
+    data_test = pd.read_csv(data_path_test)
 
     if dataset.__class__ == CGReviewDataset:
         print("Removed CHATGpt detector features from the CGReviewDataset")
