@@ -21,7 +21,7 @@ from umap import UMAP
 from src.text_classification.classes.other import Document
 from src.text_classification.classes.other.BERTopicExtended import BERTopicExtended
 from src.text_classification.classes.other.BaseTopicExtractor import BaseTopicExtractor
-from src.text_classification.utils import load_yaml
+from src.utils.yaml_manager import load_yaml
 from src.text_classification.visualization.visualize_stacked_topics import visualize_stacked_topics
 
 T = TypeVar("T")
