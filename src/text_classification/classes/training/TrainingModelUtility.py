@@ -4,7 +4,6 @@ from typing import Callable, Any
 
 import pandas as pd
 from sklearn.base import ClassifierMixin
-from skorch import NeuralNet
 
 from src.text_classification.classes.training.BaseUtility import BaseUtility
 
@@ -31,7 +30,8 @@ class TrainingModelUtility(BaseUtility):
 
         return clf
 
-    def evaluate(self, testing_data: pd.DataFrame, compute_metrics_fn: Callable[[Any, Any, *Any], dict[str, float]]) -> None:
+    def evaluate(self, testing_data: pd.DataFrame, compute_metrics_fn: Callable[[Any, Any, *Any], dict[str, float]],
+                 print_metrics: bool = True) -> dict[str, float]:
         """
         Evaluate dataset metrics of a scikit-learn classifier on testing data.
         """
@@ -44,8 +44,11 @@ class TrainingModelUtility(BaseUtility):
         testing_data = self.preprocess_x_data(testing_data)
         y_pred = self.trained_classifier.predict(testing_data).tolist()
 
-        print("Classification metrics on test data")
         metrics = compute_metrics_fn(y_pred, y_test)
 
-        for k, v in metrics.items():
-            print(f"{self.trained_classifier.__class__.__name__} {k}: {v:.3f}")
+        if print_metrics:
+            print("Classification metrics on test data")
+            for k, v in metrics.items():
+                print(f"{self.trained_classifier.__class__.__name__} {k}: {v:.3f}")
+
+        return metrics

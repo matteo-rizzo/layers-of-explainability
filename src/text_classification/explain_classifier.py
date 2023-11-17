@@ -10,7 +10,7 @@ from src.deep_learning_strategy.classes.CGReviewDataset import CGReviewDataset
 from src.deep_learning_strategy.classes.CategoricalShapExplainer import CategoricalShapExplainer
 from src.deep_learning_strategy.classes.Dataset import AbcDataset
 from src.text_classification.classes.training.TrainingModelUtility import TrainingModelUtility
-from src.text_classification.easy_classifier import load_encode_dataset
+from src.text_classification.utils import load_encode_dataset
 from src.utils.yaml_manager import load_yaml
 
 DATASET: AbcDataset = CGReviewDataset()

@@ -11,7 +11,7 @@ from sklearn import metrics
 from sklearn.linear_model import RidgeClassifier
 
 from src.text_classification.classes.other.TopicExtractor import TopicExtractor
-from src.text_classification.utils import load_yaml
+from src.utils.yaml_manager import load_yaml
 
 pd.set_option("display.max_columns", None)
 
