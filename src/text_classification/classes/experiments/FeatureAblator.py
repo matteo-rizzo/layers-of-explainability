@@ -34,7 +34,7 @@ class FeatureAblator:
         Returns the relative importance of each removed feature, based on the performance drop/increase obtaining after removing it.
         """
         self.training_utility.train_classifier(self.data_train.copy())
-        baseline_metrics = self.training_utility.evaluate(self.data_test.copy(), self.dataset_object.compute_metrics)
+        baseline_metrics = self.training_utility.evaluate(self.data_test.copy(), self.dataset_object.compute_metrics, print_metrics=False)
         metric_names: list[str] = [m[0] for m in sorted(list(baseline_metrics.items()), key=lambda x: x[0])]
 
         all_metrics: dict[str, list[float]] = dict()
@@ -48,11 +48,13 @@ class FeatureAblator:
             metric_list: list[float] = [metrics[k] for k in metric_names]
             all_metrics[f] = metric_list
 
-        all_metrics_df: pd.DataFrame = pd.DataFrame.from_dict(all_metrics, orient="index", columns=metric_names)
-        baseline_series: pd.Series = all_metrics_df.iloc[0, :]
-        all_metrics_df_ratio: pd.DataFrame = ((baseline_series - all_metrics_df) / baseline_series).round(3)
+        all_metrics_df: pd.DataFrame = pd.DataFrame.from_dict(all_metrics, orient="index", columns=metric_names).round(5)
+        baseline_series: pd.Series = all_metrics_df.loc["base", :]
+        # Sort both dataframes by drop descending
+        all_metrics_df_ratio: pd.DataFrame = ((baseline_series - all_metrics_df) / baseline_series).sort_values(by=metric_names, ascending=False)
+        all_metrics_df = all_metrics_df.loc[all_metrics_df_ratio.index, :]
 
         self.output_path.mkdir(exist_ok=True, parents=True)
-        with pd.ExcelWriter(self.output_path / f"ablation_features.ods", engine="odf") as exc_writer:
+        with pd.ExcelWriter(self.output_path / f"ablation_features_{self.dataset_object.__class__.__name__}.ods", engine="odf") as exc_writer:
             all_metrics_df_ratio.to_excel(exc_writer, sheet_name="drop_ratio", index=True)
             all_metrics_df.to_excel(exc_writer, sheet_name="metrics", index=True)

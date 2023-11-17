@@ -15,13 +15,14 @@ from __future__ import annotations
 from sklearn.linear_model import LogisticRegression
 
 from src.deep_learning_strategy.classes.AMI2018Dataset import AMI2018Dataset
+from src.deep_learning_strategy.classes.CallMeSexistDataset import CallMeSexistDataset
 from src.deep_learning_strategy.classes.Dataset import AbcDataset
 from src.deep_learning_strategy.classes.IMDBDataset import IMDBDataset
 from src.text_classification.classes.experiments.FeatureAblator import FeatureAblator
 from src.text_classification.easy_classifier import update_params_composite_classifiers
 from src.utils.yaml_manager import load_yaml
 
-DATASET: AbcDataset = IMDBDataset()
+DATASET: AbcDataset = CallMeSexistDataset()
 
 
 def main():

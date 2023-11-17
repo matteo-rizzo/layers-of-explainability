@@ -89,11 +89,17 @@ def create_skorch_model_arguments(train_data: pd.DataFrame) -> dict:
 
 
 DATASET: AbcDataset = IMDBDataset()
-DO_GRID_SEARCH = True
+DO_GRID_SEARCH = False
 
 
 def main():
-    data_train, data_test = load_encode_dataset(dataset=DATASET, scale=True)
+    # Define which feature to use, or None to use everything
+    keep_features = None
+    # ['TextEmotion_admiration', 'TextEmotion_annoyance', 'TextEmotion_pride',
+    #              'polarity', 'EmpathFeatures_fun', 'EmpathFeatures_lust',
+    #              'EmpathFeatures_messaging',
+    #              'EmotionLex_NRC-Hashtag-Emotion-Lexicon-v0.2_sadness_avgLexVal']
+    data_train, data_test = load_encode_dataset(dataset=DATASET, scale=True, features=keep_features)
     train_config: dict = load_yaml("src/text_classification/config/classifier.yml")
 
     # SETTINGS:
