@@ -15,10 +15,12 @@ from src.deep_learning_strategy.classes.IMDBDataset import IMDBDataset
 from src.text_classification.classes.training.TrainingModelUtility import TrainingModelUtility
 from src.text_classification.utils import load_encode_dataset
 from src.utils.yaml_manager import load_yaml
+from xgboost import XGBClassifier
 
-DATASET: AbcDataset = IMDBDataset()
-SK_CLASSIFIER_TYPE: type = LogisticRegression
-LOAD_MODEL_DUMP = Path("dumps") / "nlp_models" / "LogisticRegression" / "model_1700476850.319165.pkl"
+
+DATASET: AbcDataset = CallMeSexistDataset()
+SK_CLASSIFIER_TYPE: type = XGBClassifier
+LOAD_MODEL_DUMP = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_1700493780.8528767.pkl"
 
 
 # SK_CLASSIFIER_TYPE: type = NeuralNetBinaryClassifier
@@ -40,7 +42,7 @@ def main():
     tmu.evaluate(data_test, DATASET.compute_metrics)
 
     explainer = CategoricalShapExplainer(clf)
-    explainer.run(data_train, data_test.iloc[0:500, :], output_names=["real", "fake"])
+    explainer.run_tree(data_train, data_test.iloc[0:500, :], output_names=["0", "1"])
 
 
 if __name__ == "__main__":
