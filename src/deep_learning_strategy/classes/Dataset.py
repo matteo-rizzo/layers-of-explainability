@@ -53,7 +53,7 @@ class AbcDataset(abc.ABC):
         pass
 
     @staticmethod
-    def compute_metrics(y_pred: np.ndarray, y_true: np.ndarray, sk_classifier_name: str = None) -> dict:
+    def compute_metrics(y_true: np.ndarray, y_pred: np.ndarray, sk_classifier_name: str = None) -> dict:
         precision, recall, f1_score, _ = precision_recall_fscore_support(y_true, y_pred, average="macro", pos_label=1)
         acc = accuracy_score(y_true, y_pred)
         if sk_classifier_name:

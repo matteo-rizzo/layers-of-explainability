@@ -57,7 +57,7 @@ class GridSearchUtility(BaseUtility):
             y_pred = gs.predict(val_df).tolist()
 
             # Calculate metrics
-            metrics = compute_metrics_fn(y_pred, y_val)
+            metrics = compute_metrics_fn(y_true=y_val, y_pred=y_pred)
 
             # Print results
             print(f"Random Seed {rs} - Validation Metrics:")
