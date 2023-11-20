@@ -21,7 +21,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--do_grid_search", type=bool, default=DO_GRID_SEARCH)
     parser.add_argument("--random_seed", type=int, default=RANDOM_SEED)
-    parser.add_argument("--dataset", type=str, default="CallMeSexist")
+    parser.add_argument("--dataset", type=str, default="IMDB")
     namespace = parser.parse_args()
     make_deterministic(namespace.random_seed)
     print_namespace(namespace)
