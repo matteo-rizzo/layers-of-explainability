@@ -14,7 +14,7 @@ class CategoricalShapExplainer:
 
     def __init__(self, model: object):
         self.__model = model
-        self.__target_dir = Path("plots") / "CategoricalShap" / f"shap_{model.__class__.__name__}_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+        self.__target_dir = Path("plots") / "CategoricalShap" / f"shap_{model.__class__.__name__}_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%s')}"
         self.__explainer = None
         os.makedirs(self.__target_dir, exist_ok=True)
 
