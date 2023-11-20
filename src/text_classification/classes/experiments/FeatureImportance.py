@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from collections import defaultdict
 from pathlib import Path
 from typing import Callable
@@ -10,13 +11,9 @@ from matplotlib import pyplot as plt
 from scipy.cluster import hierarchy
 from scipy.spatial.distance import squareform
 from scipy.stats import spearmanr
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.inspection import permutation_importance
-from sklearn.metrics import make_scorer
-from tqdm import tqdm
 
 from src.deep_learning_strategy.classes.Dataset import AbcDataset
-from src.text_classification.classes.training.TrainingModelUtility import TrainingModelUtility
 from src.text_classification.utils import load_encode_dataset
 
 
@@ -69,9 +66,13 @@ class FeatureImportance:
         if not decorrelate:
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(60, 30))
 
-            plot_permutation_importance(clf, self.data_train, y_train, ax1, scorer=scorer, metric_name=metric)
+            # Remove constant columns (Spear Rank Coeff is undefined and will give nan)
+            data_train = self.data_train.loc[:, (self.data_train != self.data_train.iloc[0]).any()]
+            data_test = self.data_test.loc[:, (self.data_test != self.data_test.iloc[0]).any()]
+
+            plot_permutation_importance(clf, data_train, y_train, ax1, scorer=scorer, metric_name=metric)
             ax1.set_xlabel("Decrease in accuracy score (train set)")
-            plot_permutation_importance(clf, self.data_test, y_test, ax2, scorer=scorer, metric_name=metric)
+            plot_permutation_importance(clf, data_test, y_test, ax2, scorer=scorer, metric_name=metric)
             ax2.set_xlabel("Decrease in accuracy score (test set)")
             fig.suptitle(f"Permutation importance on {self.dataset_object.__class__.__name__} features ({metric})")
             _ = fig.tight_layout()
@@ -84,7 +85,11 @@ class FeatureImportance:
         else:
             # Create hierarchy
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(100, 50))
-            corr = spearmanr(pd.concat([self.data_train, self.data_test], axis=0).to_numpy()).correlation
+            all_data = pd.concat([self.data_train, self.data_test])
+            # remove constant columns
+            all_data = all_data.loc[:, (all_data != all_data.iloc[0]).any()]
+
+            corr = spearmanr(all_data).correlation
 
             # Ensure the correlation matrix is symmetric
             corr = (corr + corr.T) / 2
@@ -95,7 +100,7 @@ class FeatureImportance:
             distance_matrix = 1 - np.abs(corr)
             dist_linkage = hierarchy.ward(squareform(distance_matrix))
             dendro = hierarchy.dendrogram(
-                dist_linkage, labels=self.data_train.columns.to_list(), ax=ax1, leaf_rotation=90
+                dist_linkage, labels=all_data.columns.to_list(), ax=ax1, leaf_rotation=90
             )
             dendro_idx = np.arange(0, len(dendro["ivl"]))
 
@@ -113,12 +118,17 @@ class FeatureImportance:
 
             # Clustering
 
-            cluster_ids = hierarchy.fcluster(dist_linkage, 1.5, criterion="distance")
+            cluster_ids = hierarchy.fcluster(dist_linkage, 1.2, criterion="distance")
             cluster_id_to_feature_ids = defaultdict(list)
             for idx, cluster_id in enumerate(cluster_ids):
                 cluster_id_to_feature_ids[cluster_id].append(idx)
             selected_features = [v[0] for v in cluster_id_to_feature_ids.values()]
             selected_features_names = self.data_train.columns[selected_features]
+
+            # Write feature clusters to JSON
+            feature_subsets: dict[str, list[str]] = {self.data_train.columns[fs[0]]: [self.data_train.columns[f] for f in fs[1:]] for fs in cluster_id_to_feature_ids.values()}
+            with open(self.output_path / f"features_{self.dataset_object.__class__.__name__}_{clf.__class__.__name__}.json", mode="w") as fo:
+                json.dump(feature_subsets, fo)
 
             X_train_sel = self.data_train[selected_features_names]
             X_test_sel = self.data_test[selected_features_names]

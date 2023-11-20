@@ -12,6 +12,7 @@ Classifier/grid search configuration is to be set in "src/text_classification/co
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import joblib
@@ -29,6 +30,7 @@ from src.utils.yaml_manager import load_yaml
 DATASET: AbcDataset = IMDBDataset()
 MODE: str = "importance"  # "ablation"
 MODEL_DIR = Path("dumps") / "nlp_models" / "LogisticRegression" / "model_1700476850.319165.pkl"
+FEATURE: str = "GenderBiasDetector_LABEL_1"
 
 
 def main():
@@ -46,7 +48,10 @@ def main():
         update_params_composite_classifiers(train_config, SK_CLASSIFIER_TYPE, SK_CLASSIFIER_PARAMS)
 
         abl = FeatureAblator(dataset=DATASET, train_config=train_config, classifier_type=SK_CLASSIFIER_TYPE, classifier_kwargs=SK_CLASSIFIER_PARAMS, out_path="dumps/ablation")
-        abl.run_ablation()
+        with open(Path("dumps") / "ablation" / f"features_{DATASET.__class__.__name__}_{SK_CLASSIFIER_TYPE.__name__}.json", mode="r") as fo:
+            feature_excluded = json.load(fo)[FEATURE] + [FEATURE]
+
+        abl.run_ablation(k_folds=5, use_all_data=True, exclude_feature_set=feature_excluded)
     else:
         clf = joblib.load(MODEL_DIR)
         abl = FeatureImportance(dataset=DATASET, out_path="dumps/ablation")
