@@ -12,6 +12,9 @@ Classifier/grid search configuration is to be set in "src/text_classification/co
 
 from __future__ import annotations
 
+from pathlib import Path
+
+import joblib
 from sklearn.linear_model import LogisticRegression
 
 from src.deep_learning_strategy.classes.AMI2018Dataset import AMI2018Dataset
@@ -19,28 +22,35 @@ from src.deep_learning_strategy.classes.CallMeSexistDataset import CallMeSexistD
 from src.deep_learning_strategy.classes.Dataset import AbcDataset
 from src.deep_learning_strategy.classes.IMDBDataset import IMDBDataset
 from src.text_classification.classes.experiments.FeatureAblator import FeatureAblator
+from src.text_classification.classes.experiments.FeatureImportance import FeatureImportance
 from src.text_classification.easy_classifier import update_params_composite_classifiers
 from src.utils.yaml_manager import load_yaml
 
-DATASET: AbcDataset = CallMeSexistDataset()
+DATASET: AbcDataset = IMDBDataset()
+MODE: str = "importance"  # "ablation"
+MODEL_DIR = Path("dumps") / "nlp_models" / "LogisticRegression" / "model_1700476850.319165.pkl"
 
 
 def main():
     train_config: dict = load_yaml("src/text_classification/config/classifier.yml")
 
-    # SETTINGS:
-    # ------------- SK learn classifiers
-    SK_CLASSIFIER_TYPE: type = LogisticRegression
-    SK_CLASSIFIER_PARAMS: dict = dict()  # dict(estimator=LogisticRegression())
+    if MODE == "ablation":
+        # SETTINGS:
+        # ------------- SK learn classifiers
+        SK_CLASSIFIER_TYPE: type = LogisticRegression
+        SK_CLASSIFIER_PARAMS: dict = dict()  # dict(estimator=LogisticRegression())
 
-    # ------------- TORCH with SKORCH
-    # SK_CLASSIFIER_TYPE: type = NeuralNetBinaryClassifier
-    # SK_CLASSIFIER_PARAMS: dict = create_skorch_model_arguments(data_train)
+        # ------------- TORCH with SKORCH
+        # SK_CLASSIFIER_TYPE: type = NeuralNetBinaryClassifier
+        # SK_CLASSIFIER_PARAMS: dict = create_skorch_model_arguments(data_train)
+        update_params_composite_classifiers(train_config, SK_CLASSIFIER_TYPE, SK_CLASSIFIER_PARAMS)
 
-    update_params_composite_classifiers(train_config, SK_CLASSIFIER_TYPE, SK_CLASSIFIER_PARAMS)
-
-    abl = FeatureAblator(dataset=DATASET, train_config=train_config, classifier_type=SK_CLASSIFIER_TYPE, classifier_kwargs=SK_CLASSIFIER_PARAMS, out_path="dumps/ablation")
-    abl.run_ablation()
+        abl = FeatureAblator(dataset=DATASET, train_config=train_config, classifier_type=SK_CLASSIFIER_TYPE, classifier_kwargs=SK_CLASSIFIER_PARAMS, out_path="dumps/ablation")
+        abl.run_ablation()
+    else:
+        clf = joblib.load(MODEL_DIR)
+        abl = FeatureImportance(dataset=DATASET, out_path="dumps/ablation")
+        abl.run_importance_test(clf, metric="accuracy", decorrelate=True)
 
 
 if __name__ == "__main__":

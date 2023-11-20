@@ -44,7 +44,7 @@ class TrainingModelUtility(BaseUtility):
         testing_data = self.preprocess_x_data(testing_data)
         y_pred = self.trained_classifier.predict(testing_data).tolist()
 
-        metrics = compute_metrics_fn(y_pred, y_test)
+        metrics = compute_metrics_fn(y_true=y_test, y_pred=y_pred)
 
         if print_metrics:
             print("Classification metrics on test data")
