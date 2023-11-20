@@ -19,12 +19,13 @@ from pathlib import Path
 import joblib
 import pandas as pd
 import torch
-from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import AdaBoostClassifier, HistGradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from skorch.callbacks import Checkpoint, EarlyStopping
 from torch import nn
 
+from src.deep_learning_strategy.classes.CallMeSexistDataset import CallMeSexistDataset
 from src.deep_learning_strategy.classes.Dataset import AbcDataset
 from src.deep_learning_strategy.classes.IMDBDataset import IMDBDataset
 from src.text_classification.classes.torch_models.MLP import MLP
@@ -32,7 +33,7 @@ from src.text_classification.classes.training.GridSearchUtility import GridSearc
 from src.text_classification.classes.training.TrainingModelUtility import TrainingModelUtility
 from src.text_classification.utils import load_encode_dataset
 from src.utils.yaml_manager import load_yaml
-
+from xgboost import XGBClassifier
 
 def update_params_composite_classifiers(train_config: dict, SK_CLASSIFIER_TYPE: type, SK_CLASSIFIER_PARAMS: dict) -> dict:
     """
@@ -88,7 +89,7 @@ def create_skorch_model_arguments(train_data: pd.DataFrame) -> dict:
     return classifier
 
 
-DATASET: AbcDataset = IMDBDataset()
+DATASET: AbcDataset = CallMeSexistDataset()
 DO_GRID_SEARCH = False
 
 
@@ -104,7 +105,7 @@ def main():
 
     # SETTINGS:
     # ------------- SK learn classifiers
-    SK_CLASSIFIER_TYPE: type = LogisticRegression
+    SK_CLASSIFIER_TYPE: type = HistGradientBoostingClassifier
     SK_CLASSIFIER_PARAMS: dict = dict()  # dict(estimator=LogisticRegression())
 
     # ------------- TORCH with SKORCH
