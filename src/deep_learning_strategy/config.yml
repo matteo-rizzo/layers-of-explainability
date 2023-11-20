@@ -3,7 +3,7 @@ add_synthetic: true
 task: B # A or B
 
 training:
-  model_name: cardiffnlp/twitter-roberta-base-2022-154m # google/flan-t5-base # MilaNLProc/hate-ita
+  model_name: roberta-base # google/flan-t5-base # MilaNLProc/hate-ita
 
   add_synthetic: false # Add also synthetic examples to a training set
   eval_size: 0.20
@@ -11,15 +11,15 @@ training:
 
   batch_size: 64
   test_batch_size: 128
-  learning_rate: 5.0e-4
+  learning_rate: 2.0e-5
   decay: 0.01
   freeze_base: false
-  epochs: 5
+  epochs: 20
   es_patience: 2
   keep_n_best_models: 2
 
   resume: false
-  checkpoint: dumps/nlp_models/cardiffnlp_twitter-roberta-base-2022-154m_1 # path to folder with checkpoints (last epoch will be loaded)
+  checkpoint: roberta-base_1 # path to folder with checkpoints (last epoch will be loaded)
 
 testing:
   task_m_model_name: dumps/nlp_models/MilaNLProc_hate-ita_1/checkpoint-1654 # "Hate-speech-CNERG/dehatebert-mono-italian OR path to existing checkpoint

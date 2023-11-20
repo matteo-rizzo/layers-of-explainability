@@ -43,7 +43,7 @@ class GridSearchUtility(BaseUtility):
             params = self.train_config["grid_search_params"][self._base_classifier_type.__name__]
             base_estimator_params = self.train_config[self._base_classifier_type.__name__]
 
-            gs = GridSearchCV(self._base_classifier_type(**self._base_classifier_kwargs), param_grid=params, verbose=10, refit=True, n_jobs=-1, cv=5)
+            gs = GridSearchCV(self._base_classifier_type(**self._base_classifier_kwargs), param_grid=params, verbose=10, refit=True, n_jobs=8, cv=5)
             # Set base parameters in the estimator inside GS
             gs.estimator.set_params(**base_estimator_params)
 

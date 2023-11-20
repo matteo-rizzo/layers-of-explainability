@@ -6,7 +6,7 @@ from src.text_classification.classes.features.Feature import Feature
 
 
 class TopicLM(Feature):
-    def __init__(self, use_gpu: bool = True, batch_size: int = 64, *args, **kwargs):
+    def __init__(self, use_gpu: bool = True, batch_size: int = 256, *args, **kwargs):
         self.pipe = pipeline("text-classification", model="cardiffnlp/tweet-topic-21-multi", device="cuda" if use_gpu else "cpu",
                              top_k=None, batch_size=batch_size)
 

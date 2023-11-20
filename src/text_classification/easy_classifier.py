@@ -19,9 +19,10 @@ from pathlib import Path
 import joblib
 import pandas as pd
 import torch
-from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier, HistGradientBoostingClassifier
+from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier, HistGradientBoostingClassifier, \
+    GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression, RidgeClassifier
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.preprocessing import LabelEncoder, StandardScaler, Normalizer
 from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
 from skorch import NeuralNetBinaryClassifier
@@ -37,9 +38,11 @@ from src.text_classification.classes.torch_models.MLP import MLP
 from src.text_classification.classes.training.GridSearchUtility import GridSearchUtility
 from src.text_classification.classes.training.TrainingModelUtility import TrainingModelUtility
 from src.utils.yaml_manager import load_yaml
+from xgboost import XGBClassifier, XGBRFClassifier
 
 
-def update_params_composite_classifiers(train_config: dict, SK_CLASSIFIER_TYPE: type, SK_CLASSIFIER_PARAMS: dict) -> dict:
+def update_params_composite_classifiers(train_config: dict, SK_CLASSIFIER_TYPE: type,
+                                        SK_CLASSIFIER_PARAMS: dict) -> dict:
     """
     Some classifiers (ensemble, boosting, etc.) may need specific configuration depending on the type.
     For instance, AdaBoost takes an "estimator" argument to set the base estimator.
@@ -49,7 +52,8 @@ def update_params_composite_classifiers(train_config: dict, SK_CLASSIFIER_TYPE: 
     if SK_CLASSIFIER_TYPE in [AdaBoostClassifier]:  # potentially works for other "nested" cases
         base_est_name = SK_CLASSIFIER_PARAMS.setdefault("estimator", DecisionTreeClassifier()).__class__.__name__
         base_est_config = {f"estimator__{k}": v for k, v in train_config[base_est_name].items()}
-        base_est_gs_config = {f"estimator__{k}": vs for k, vs in train_config["grid_search_params"][base_est_name].items()}
+        base_est_gs_config = {f"estimator__{k}": vs for k, vs in
+                              train_config["grid_search_params"][base_est_name].items()}
         train_config[f"{SK_CLASSIFIER_TYPE.__name__}"].update(base_est_config)
         train_config["grid_search_params"][f"{SK_CLASSIFIER_TYPE.__name__}"].update(base_est_gs_config)
     return train_config
@@ -125,10 +129,13 @@ def load_encode_dataset(scale: bool = False) -> tuple[pd.DataFrame, pd.DataFrame
         feature_names = data_train.columns.tolist()
 
         scaler = StandardScaler()
+        normalizer = Normalizer()
         data_train = pd.DataFrame(scaler.fit_transform(data_train))
+        # data_train = pd.DataFrame(normalizer.fit_transform(data_train))
         data_train.columns = feature_names
 
         data_test = pd.DataFrame(scaler.transform(data_test))
+#         data_test = pd.DataFrame(normalizer.transform(data_test))
         data_test.columns = feature_names
 
     data_train["y"] = y_train
@@ -136,8 +143,8 @@ def load_encode_dataset(scale: bool = False) -> tuple[pd.DataFrame, pd.DataFrame
     return data_train, data_test
 
 
-DATASET: AbcDataset = IMDBDataset()
-DO_GRID_SEARCH = True
+DATASET: AbcDataset = CallMeSexistDataset()
+DO_GRID_SEARCH = False
 
 
 def main():
@@ -146,7 +153,7 @@ def main():
 
     # SETTINGS:
     # ------------- SK learn classifiers
-    SK_CLASSIFIER_TYPE: type = LogisticRegression
+    SK_CLASSIFIER_TYPE: type = XGBClassifier
     SK_CLASSIFIER_PARAMS: dict = dict()  # dict(estimator=LogisticRegression())
 
     # ------------- TORCH with SKORCH

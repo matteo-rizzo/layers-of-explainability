@@ -57,5 +57,5 @@ def compute_features(dataset_: AbcDataset, do_label: bool = False):
 
 
 if __name__ == "__main__":
-    dataset = IMDBDataset()
+    dataset = CallMeSexistDataset()
     compute_features(dataset, do_label=False)

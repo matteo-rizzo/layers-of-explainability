@@ -8,7 +8,7 @@ max_features: 10000
 RidgeClassifier:
   solver: auto # lbfgs when positive = True
   tol: 0.0001
-  alpha: 5.0
+  alpha: 1.0
   positive: false
 
 RidgePriorClassifier:
@@ -36,11 +36,11 @@ BayesianRidgeClassifier:
 
 LogisticRegression:
   solver: liblinear
-  tol: 1.0e-4
-  dual: true
-  penalty: l2
-  C: 1.0
-  max_iter: 10000
+  tol: 0.001
+  dual: false
+  penalty: l1
+  C: 0.1
+  max_iter: 1000
 
 DecisionTreeClassifier:
   criterion: "entropy"
@@ -77,8 +77,30 @@ AdaBoostClassifier:
 
 HistGradientBoostingClassifier:
   learning_rate: 0.1
-  max_iter: 200
-  l2_regularization: 0.0
+  max_iter: 100
+  l2_regularization: 0.01
+
+XGBClassifier:
+  objective: "binary:logistic"
+  n_estimators: 500
+#  min_child_weight: 10
+#  gamma: 0.5
+#  subsample: 1.0
+#  max_depth: 4
+#  device: "cuda"
+
+XGBRFClassifier:
+  objective: "binary:logistic"
+
+
+GradientBoostingClassifier:
+  loss: "log_loss"
+  learning_rate: 0.1
+  n_estimators: 100
+  subsample: 1.0
+  criterion: "friedman_mse"
+  max_depth: 3
+  ccp_alpha: 0.0
 
 NeuralNetBinaryClassifier:
   optimizer__weight_decay: 1.0e-2
@@ -87,9 +109,17 @@ NeuralNetBinaryClassifier:
   max_epochs: 1000
 
 grid_search_params:
-  num_seeds: 1
+  num_seeds: 2
   test_size: 0.2
 
+  GradientBoostingClassifier:
+    loss: [ "log_loss", "exponential" ]
+    learning_rate: [ 0.1, 0.001 ]
+    n_estimators: [ 100, 200 ]
+    subsample: [ 1.0, 0.5 ]
+    criterion: [ "friedman_mse", "squared_error" ]
+    max_depth: [ 3,6 ]
+    ccp_alpha: [ 0.0, 0.01 ]
   #  RidgeClassifier:
   #    solver: [ auto, lsqr, sparse_cg ]
   #    tol: [ 1.0e-4, 1.0e-5, 1.0e-3 ]
@@ -108,17 +138,17 @@ grid_search_params:
 
   LogisticRegression:
     solver: [ liblinear, newton-cg, lbfgs ]
-    tol: [ 1.0e-4, 1.0e-5, 1.0e-3 ]
+    tol: [ 1.0e-4, 1.0e-5, 1.0e-3, 1.0e-3 ]
     dual: [ true, false ]
     penalty: [ l1, l2 ]
-    C: [ 0.001, 0.01, 0.1, 1.0, 10, 100, 1000 ]
+    C: [ 0.001, 0.01, 0.1, 1.0, 10, 100, 500 ]
     max_iter: [ 500, 1000 ]
 
   LinearSVC:
-    #    penalty: [l1, l2]
-    #    loss: [hinge, squared_hinge]
+    penalty: [ l1, l2 ]
+    loss: [ hinge, squared_hinge ]
     tol: [ 1.0e-4, 1.0e-5, 1.0e-3 ]
-    C: [ 0.001, 0.01, 0.1, 1.0, 10, 50, 100, 200, 500, 1000 ]
+    C: [ 0.001, 0.01, 0.1, 1.0, 10, 100, 200, 500 ]
     max_iter: [ 50000, 100000 ]
     dual: [ auto ]
 
@@ -147,6 +177,15 @@ grid_search_params:
     kernel: [ 'linear', 'rbf' ]
     gamma: [ 'scale', 'auto' ]
     tol: [ 1.0e-4, 1.0e-5, 1.0e-3 ]
+
+  XGBClassifier:
+    objective: ["binary:logistic"]
+    n_estimators: [100, 500]
+    min_child_weight: [ 1, 5, 10 ]
+    gamma: [ 0.5, 1.5, 5 ]
+    subsample: [ 0.8, 1.0 ]
+    max_depth: [ 3, 4 ]
+    device: ["cuda"]
 
   DecisionTreeClassifier:
     # The function to measure the quality of a split
