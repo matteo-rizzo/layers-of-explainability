@@ -5,6 +5,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from joblib import Parallel, delayed
 from sklearn.model_selection import RepeatedStratifiedKFold
 from tqdm import tqdm
 
@@ -31,17 +32,37 @@ class FeatureAblator:
 
         self.training_utility = TrainingModelUtility(self.config, self.classifier_class, self.classifier_kwargs)
 
-    def _k_fold_training(self, rskf: RepeatedStratifiedKFold, data: pd.DataFrame) -> dict[str, list[float]]:
+    def _k_fold_training_testing(self, rskf: RepeatedStratifiedKFold, data: pd.DataFrame, n_jobs: int = -1) -> dict[str, list[float]]:
         all_metrics: dict[str, list[float]] = defaultdict(list)
-        for i, (train_index, test_index) in enumerate(rskf.split(data, data["y"])):
+
+        def process_fold(train_index, test_index) -> dict[str, float]:
             train_data = data.iloc[train_index, :]
             test_data = data.iloc[test_index, :]
 
             self.training_utility.train_classifier(train_data)
-            baseline_metrics = self.training_utility.evaluate(test_data, self.dataset_object.compute_metrics, print_metrics=False)
-            for k, v in baseline_metrics.items():
+            metr = self.training_utility.evaluate(test_data, self.dataset_object.compute_metrics, print_metrics=False)
+            return metr
+
+        results = Parallel(n_jobs=n_jobs)(delayed(process_fold)(train_index, test_index) for train_index, test_index in rskf.split(data, data["y"]))
+
+        for metrics in results:
+            for k, v in metrics.items():
                 all_metrics[k].append(v)
+
         return all_metrics
+
+    # Sequential version
+    # def _k_fold_training_testing(self, rskf: RepeatedStratifiedKFold, data: pd.DataFrame) -> dict[str, list[float]]:
+    #     all_metrics: dict[str, list[float]] = defaultdict(list)
+    #     for i, (train_index, test_index) in enumerate(rskf.split(data, data["y"])):
+    #         train_data = data.iloc[train_index, :]
+    #         test_data = data.iloc[test_index, :]
+    #
+    #         self.training_utility.train_classifier(train_data)
+    #         baseline_metrics = self.training_utility.evaluate(test_data, self.dataset_object.compute_metrics, print_metrics=False)
+    #         for k, v in baseline_metrics.items():
+    #             all_metrics[k].append(v)
+    #     return all_metrics
 
     def run_ablation(self, exclude_feature_set: list[str] = None, k_folds: int = None, use_all_data: bool = True):
         """
@@ -52,11 +73,11 @@ class FeatureAblator:
 
         all_data = self.data_train
         if use_all_data:
-            all_data = pd.concat([self.data_train, self.data_test], axis=0).sample(frac=1)
+            all_data = pd.concat([self.data_train, self.data_test], axis=0).sample(frac=1, random_state=19)
 
-        baseline_metrics = self._k_fold_training(rskf, all_data.copy())
+        baseline_metrics = self._k_fold_training_testing(rskf, all_data.copy(), n_jobs=12)
         avg_metrics = {k: float(np.mean(vs)) for k, vs in baseline_metrics.items()}
-        metric_names: list[str] = [m[0] for m in sorted(list(avg_metrics.items()), key=lambda x: x[0])]
+        metric_names: list[str] = list(sorted(avg_metrics.keys()))
 
         all_metrics: dict[str, list[float]] = dict()
         all_metrics["base"] = [avg_metrics[k] for k in metric_names]
@@ -64,7 +85,7 @@ class FeatureAblator:
         if exclude_feature_set is not None:
             # remove feature set
             data_train = all_data.copy().drop(columns=exclude_feature_set)
-            metrics = self._k_fold_training(rskf, data_train)
+            metrics = self._k_fold_training_testing(rskf, data_train, n_jobs=12)
             avg_metrics = {k: float(np.mean(vs)) for k, vs in metrics.items()}
             metric_list: list[float] = [avg_metrics[k] for k in metric_names]
             all_metrics["excluded_set"] = metric_list
@@ -72,7 +93,7 @@ class FeatureAblator:
             # remove all features one by one
             for f in tqdm(self.feature_names, desc="Feature removal"):
                 data_train = all_data.copy().drop(columns=f)
-                metrics = self._k_fold_training(rskf, data_train)
+                metrics = self._k_fold_training_testing(rskf, data_train, n_jobs=12)
                 avg_metrics = {k: float(np.mean(vs)) for k, vs in metrics.items()}
                 # Select metrics in correct order and add it to the dictionary {feature_removed -> results}
                 metric_list: list[float] = [avg_metrics[k] for k in metric_names]
