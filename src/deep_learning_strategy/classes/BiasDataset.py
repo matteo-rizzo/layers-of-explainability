@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import re
+from pathlib import Path
 from typing import Dict, Tuple, List, Union
 
 import pandas as pd
@@ -13,7 +14,7 @@ from src.feature_extraction.text_features import separate_html_entities
 
 
 class BiasDataset(AbcDataset):
-    BASE_DATASET = os.path.join("dataset", "bias")
+    BASE_DATASET = Path("dataset") / "bias"
 
     def __init__(self, target: str = "label", validation: float = None):
         super().__init__(target, validation)

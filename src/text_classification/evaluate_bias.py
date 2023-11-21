@@ -5,8 +5,9 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 
 from src.deep_learning_strategy.classes.BiasDataset import BiasDataset
-from src.deep_learning_strategy.classes.CallMeSexistDataset import CallMeSexistDataset
 from src.text_classification.classes.training.TrainingModelUtility import TrainingModelUtility
+from src.text_classification.dataset_utils.bias_madlibs import _read_word_list
+from src.text_classification.dataset_utils.model_bias_analysis import add_subgroup_columns_from_text
 from src.text_classification.utils import load_encode_dataset
 from src.utils.yaml_manager import load_yaml
 
@@ -36,7 +37,27 @@ def main():
     tmu.trained_classifier = clf
     tmu.evaluate(data_train, bias_dataset.compute_metrics)
 
+    # Generate DF with subgroups
+
+    data_train["text"] = bias_dataset.get_train_data()
+    base_dir = bias_dataset.BASE_DATASET / "words"
+
+    jobs = _read_word_list(base_dir, 'occupations.txt')
+    groups = _read_word_list(base_dir, 'group_people.txt')
+    adjectives_people = _read_word_list(base_dir, 'adjectives_people.txt')
+    subgroups: list[str] = jobs + groups + adjectives_people
+
+    mapping_ = dict(zip(groups, adjectives_people))
+
+    add_subgroup_columns_from_text(data_train, text_column="text", subgroups=subgroups, expect_spaces_around_words=False)
+
+    for k, v in mapping_.items():
+        data_train[v] |= data_train[k]
+    data_train.drop(columns=groups, inplace=True)
+    # ADD TARGET AND PREDICTIONS
+
     # TODO: write script to evaluate subgroups
+
 
 if __name__ == "__main__":
     main()
