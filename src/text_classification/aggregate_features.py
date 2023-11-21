@@ -6,6 +6,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from src.deep_learning_strategy.classes.AMI2018Dataset import AMI2018Dataset
+from src.deep_learning_strategy.classes.BiasDataset import BiasDataset
 from src.deep_learning_strategy.classes.CGReviewDataset import CGReviewDataset
 from src.deep_learning_strategy.classes.CallMeSexistDataset import CallMeSexistDataset
 from src.deep_learning_strategy.classes.Dataset import AbcDataset
@@ -29,7 +30,7 @@ def compute_features(dataset_: AbcDataset, do_label: bool = False):
 
     feature_transforms = [GenderBiasDetector, IronyDetector, OffensivenessDetector, SarcasmDetector]
     feature_transforms += [EvidenceType, TopicLM, Wellformedness, ChatGPTDetector,
-                          ParrotAdequacy, GibberishDetector, TextEmotion, TextPolarity, TextGrammarErrors]
+                           ParrotAdequacy, GibberishDetector, TextEmotion, TextPolarity, TextGrammarErrors]
     feature_transforms += [TextStatistics, LIWCFeatures, EmpathFeatures, EmotionLex]
     feature_transforms = [f(use_gpu=True) for f in feature_transforms]
 
@@ -57,5 +58,5 @@ def compute_features(dataset_: AbcDataset, do_label: bool = False):
 
 
 if __name__ == "__main__":
-    dataset = IMDBDataset()
+    dataset = BiasDataset()
     compute_features(dataset, do_label=False)
