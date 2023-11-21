@@ -80,55 +80,71 @@ class CategoricalShapExplainer:
         shap_values = self.explainer.shap_values(target_samples, nsamples=1000)
         self.__plot_explanations_summary(shap_values, target_samples, output_names, show, target_index=1)
 
-    def __plot_explanations_summary_tree(self, shap_values: np.ndarray, data: pd.DataFrame, out_names: list, show: bool):
-        # FORCE PLOT
-        # out = shap.force_plot(self.explainer.expected_value[target_index], shap_values[target_index], data.values,
-        #                       feature_names=data.columns, matplotlib=False, out_names=out_names[target_index],
-        #                       contribution_threshold=0.1)
-        # #  Only features that the magnitude of their shap value is larger than contribution_threshold * (sum of all abs shap values) will be displayed
-        # shap.save_html(str(self.__target_dir / "shap_force.htm"), out, full_html=True)
+    def run_kernel_xgb(self, train_data: pd.DataFrame, test_data: pd.DataFrame, output_names: list | None = None, show: bool = True):
+        # What number of background samples?
+        x_train_summary = shap.kmeans(train_data, 50)
 
-        # SCATTERPLOT
-        shap.summary_plot(
-            shap_values=shap_values,
-            features=data.values,
-            feature_names=data.columns,
-            plot_type="violin",
-            # color="coolwarm",
-            show=False,
-            max_display=50,
-            plot_size="auto",
-            class_names=out_names
-        )
+        target_samples = test_data
+        # fx = self.__model.predict_proba
 
-        plt.title(f"Impact of features on predicted class")
-        plt.gcf().set_size_inches(10, 15)
-        plt.tight_layout()
-        plt.gcf().savefig(os.path.join(self.__target_dir, "shap_violin.png"), dpi=400)
-        if show:
-            plt.show()
-        plt.clf()
+        def xgb_predict(data_asarray):
+            data_asframe = pd.DataFrame(data_asarray, columns=train_data.columns)
+            return self.__model.predict_proba(data_asframe)
 
-        # BARPLOT
-        shap.summary_plot(
-            shap_values=shap_values,
-            features=data.values,
-            feature_names=data.columns,
-            alpha=0,
-            plot_type="bar",
-            show=False,
-            max_display=50,
-            plot_size="auto",
-            class_names=out_names
-        )
+        self.explainer = shap.KernelExplainer(xgb_predict, x_train_summary)
 
-        plt.title(f"Multi-output Barplot")
-        plt.gcf().set_size_inches(10, 15)
-        plt.tight_layout()
-        plt.gcf().savefig(os.path.join(self.__target_dir, "shap_bar.png"), dpi=400)
-        if show:
-            plt.show()
-        plt.clf()
+        shap_values = self.explainer.shap_values(target_samples)
+        self.__plot_explanations_summary(shap_values, target_samples, output_names, show, target_index=1)
+
+    # def __plot_explanations_summary_tree(self, shap_values: np.ndarray, data: pd.DataFrame, out_names: list, show: bool):
+    #     # FORCE PLOT
+    #     # out = shap.force_plot(self.explainer.expected_value[target_index], shap_values[target_index], data.values,
+    #     #                       feature_names=data.columns, matplotlib=False, out_names=out_names[target_index],
+    #     #                       contribution_threshold=0.1)
+    #     # #  Only features that the magnitude of their shap value is larger than contribution_threshold * (sum of all abs shap values) will be displayed
+    #     # shap.save_html(str(self.__target_dir / "shap_force.htm"), out, full_html=True)
+    #
+    #     # SCATTERPLOT
+    #     shap.summary_plot(
+    #         shap_values=shap_values,
+    #         features=data.values,
+    #         feature_names=data.columns,
+    #         plot_type="violin",
+    #         # color="coolwarm",
+    #         show=False,
+    #         max_display=50,
+    #         plot_size="auto",
+    #         class_names=out_names
+    #     )
+    #
+    #     plt.title(f"Impact of features on predicted class")
+    #     plt.gcf().set_size_inches(10, 15)
+    #     plt.tight_layout()
+    #     plt.gcf().savefig(os.path.join(self.__target_dir, "shap_violin.png"), dpi=400)
+    #     if show:
+    #         plt.show()
+    #     plt.clf()
+    #
+    #     # BARPLOT
+    #     shap.summary_plot(
+    #         shap_values=shap_values,
+    #         features=data.values,
+    #         feature_names=data.columns,
+    #         alpha=0,
+    #         plot_type="bar",
+    #         show=False,
+    #         max_display=50,
+    #         plot_size="auto",
+    #         class_names=out_names
+    #     )
+    #
+    #     plt.title(f"Multi-output Barplot")
+    #     plt.gcf().set_size_inches(10, 15)
+    #     plt.tight_layout()
+    #     plt.gcf().savefig(os.path.join(self.__target_dir, "shap_bar.png"), dpi=400)
+    #     if show:
+    #         plt.show()
+    #     plt.clf()
 
     def run_tree(self, train_data: pd.DataFrame, test_data: pd.DataFrame, output_names: list | None = None, show: bool = True):
         # What number of background samples?
@@ -136,7 +152,28 @@ class CategoricalShapExplainer:
 
         target_samples = test_data
 
-        self.explainer = shap.TreeExplainer(self.__model, x_train_summary, output_names=output_names)
+        self.explainer = shap.TreeExplainer(self.__model)
 
         shap_values = self.explainer.shap_values(target_samples)
-        self.__plot_explanations_summary_tree(shap_values, target_samples, output_names, show)
+        out = shap.force_plot(base_value=self.explainer.expected_value, shap_values=shap_values, features=target_samples)
+        shap.save_html(str(self.__target_dir / "shap_force.htm"), out, full_html=True)
+
+        shap.summary_plot(
+            shap_values=shap_values,
+            features=target_samples,
+            feature_names=train_data.columns,
+            plot_type="violin",
+            # color="coolwarm",
+            show=False,
+            max_display=50,
+            plot_size="auto",
+            class_names=output_names
+        )
+        plt.title(f"Impact of features on predicted class")
+        plt.gcf().set_size_inches(10, 15)
+        plt.tight_layout()
+        plt.gcf().savefig(os.path.join(self.__target_dir, "shap_violin.png"), dpi=400)
+
+        plt.show()
+        plt.clf()
+        # self.__plot_explanations_summary_tree(shap_values.expected, target_samples, output_names, show)
