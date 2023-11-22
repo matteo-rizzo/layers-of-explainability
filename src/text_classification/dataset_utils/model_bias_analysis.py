@@ -217,7 +217,8 @@ def compute_negative_cross_auc(df, subgroup, label, model_name):
     """Computes the AUC of the within-subgroup negative examples and the background positive examples."""
     subgroup_negative_examples = df[df[subgroup] & ~df[label]]
     non_subgroup_positive_examples = df[~df[subgroup] & df[label]]
-    examples = subgroup_negative_examples.append(non_subgroup_positive_examples)
+    # examples = subgroup_negative_examples.append(non_subgroup_positive_examples)
+    examples = pd.concat([subgroup_negative_examples, non_subgroup_positive_examples])
     return compute_auc(examples[label], examples[model_name])
 
 
@@ -225,7 +226,8 @@ def compute_positive_cross_auc(df, subgroup, label, model_name):
     """Computes the AUC of the within-subgroup positive examples and the background negative examples."""
     subgroup_positive_examples = df[df[subgroup] & df[label]]
     non_subgroup_negative_examples = df[~df[subgroup] & ~df[label]]
-    examples = subgroup_positive_examples.append(non_subgroup_negative_examples)
+    # examples = subgroup_positive_examples.append(non_subgroup_negative_examples)
+    examples = pd.concat([subgroup_positive_examples, non_subgroup_negative_examples])
     return compute_auc(examples[label], examples[model_name])
 
 
