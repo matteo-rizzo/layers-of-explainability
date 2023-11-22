@@ -4,6 +4,7 @@ import joblib
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
+from xgboost import XGBClassifier
 
 from src.deep_learning_strategy.classes.BiasDataset import BiasDataset
 from src.text_classification.classes.training.TrainingModelUtility import TrainingModelUtility
@@ -14,9 +15,10 @@ from src.text_classification.utils import load_encode_dataset
 from src.utils.yaml_manager import load_yaml
 
 # Path to a trained models on sexism dataset
-MODEL_DIR = Path("dumps") / "nlp_models" / "LogisticRegression" / "model_1700476850.319165.pkl"
+MODEL_DIR = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_1700654112.8961604.pkl"
+# MODEL_DIR = Path("dumps") / "nlp_models" / "LogisticRegression" / "model_1700654336.495044.pkl"
 
-SK_CLASSIFIER_TYPE: type = LogisticRegression
+SK_CLASSIFIER_TYPE: type = XGBClassifier
 
 
 def get_final_metric(bias_df, overall_auc_test, model_name):
@@ -84,8 +86,6 @@ def main():
     model_name = "sexist_pred"
     data_train[model_name] = y_pred_probs
     data_train["y"] = data_test["y"]
-
-    # TODO: write script to evaluate subgroups
 
     bias_metrics = compute_bias_metrics_for_model(data_train, subgroups, model_name, "y")
 

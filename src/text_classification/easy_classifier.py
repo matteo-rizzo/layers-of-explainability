@@ -26,6 +26,8 @@ from skorch import NeuralNetBinaryClassifier
 from skorch.callbacks import Checkpoint, EarlyStopping
 from torch import nn
 
+from src.deep_learning_strategy.classes.BiasDataset import BiasDataset
+from src.deep_learning_strategy.classes.CallMeSexistDataset import CallMeSexistDataset
 from src.deep_learning_strategy.classes.Dataset import AbcDataset
 from src.deep_learning_strategy.classes.IMDBDataset import IMDBDataset
 from src.text_classification.classes.torch_models.MLP import MLP

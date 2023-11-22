@@ -33,8 +33,7 @@ class BiasDataset(AbcDataset):
         all_data_path = os.path.join(self.BASE_DATASET, "samples.csv")
         train_df = pd.read_csv(all_data_path)
 
-        # TODO: 0 = bad, but should be inverted
-        train_df["y"] = train_df["Label"].replace({"BAD": 0, "NOT_BAD": 1})
+        train_df["y"] = train_df["Label"].replace({"BAD": 1, "NOT_BAD": 0})
         train_df.drop(columns="Label", inplace=True)
         train_y = train_df.pop("y").tolist()
         train_x = train_df["Text"].tolist()
