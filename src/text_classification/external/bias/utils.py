@@ -45,7 +45,7 @@ def bias_computation(data: pd.DataFrame, y_pred_probs: list[float], bias_dataset
         data[v] |= data[k]
 
     # FOR NOW ONLY PEOPLE
-    subgroups = adjectives_people
+    subgroups = adjectives_people + jobs
 
     data = data.loc[:, subgroups]
 

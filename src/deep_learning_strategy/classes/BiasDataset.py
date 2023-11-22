@@ -16,7 +16,7 @@ from src.feature_extraction.text_features import separate_html_entities
 class BiasDataset(AbcDataset):
     BASE_DATASET = Path("dataset") / "bias"
 
-    def __init__(self, target: str = "label", validation: float = None):
+    def __init__(self, target: str = "Label", validation: float = None):
         super().__init__(target, validation)
         self._split_data = self._train_val_test()
 
@@ -33,8 +33,8 @@ class BiasDataset(AbcDataset):
         all_data_path = os.path.join(self.BASE_DATASET, "samples.csv")
         train_df = pd.read_csv(all_data_path)
 
-        train_df["y"] = train_df["Label"].replace({"BAD": 1, "NOT_BAD": 0})
-        train_df.drop(columns="Label", inplace=True)
+        train_df["y"] = train_df[self._target].replace({"BAD": 1, "NOT_BAD": 0})
+        train_df.drop(columns=self._target, inplace=True)
         train_y = train_df.pop("y").tolist()
         train_x = train_df["Text"].tolist()
 
