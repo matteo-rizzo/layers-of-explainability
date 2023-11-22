@@ -92,8 +92,8 @@ def create_skorch_model_arguments(train_data: pd.DataFrame) -> dict:
     return classifier
 
 
-DATASET: AbcDataset = IMDBDataset()
-DO_GRID_SEARCH = True
+DATASET: AbcDataset = CallMeSexistDataset()
+DO_GRID_SEARCH = False
 
 
 def main():
