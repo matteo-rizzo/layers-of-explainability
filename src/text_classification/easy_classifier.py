@@ -19,14 +19,12 @@ from pathlib import Path
 import joblib
 import pandas as pd
 import torch
-from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import AdaBoostClassifier, HistGradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
-from skorch import NeuralNetBinaryClassifier
 from skorch.callbacks import Checkpoint, EarlyStopping
 from torch import nn
 
-from src.deep_learning_strategy.classes.BiasDataset import BiasDataset
 from src.deep_learning_strategy.classes.CallMeSexistDataset import CallMeSexistDataset
 from src.deep_learning_strategy.classes.Dataset import AbcDataset
 from src.deep_learning_strategy.classes.IMDBDataset import IMDBDataset
@@ -36,7 +34,6 @@ from src.text_classification.classes.training.TrainingModelUtility import Traini
 from src.text_classification.utils import load_encode_dataset
 from src.utils.yaml_manager import load_yaml
 from xgboost import XGBClassifier
-
 
 def update_params_composite_classifiers(train_config: dict, SK_CLASSIFIER_TYPE: type, SK_CLASSIFIER_PARAMS: dict) -> dict:
     """
@@ -97,12 +94,18 @@ DO_GRID_SEARCH = False
 
 
 def main():
-    data_train, data_test = load_encode_dataset(dataset=DATASET, scale=True)
+    # Define which feature to use, or None to use everything
+    keep_features = None
+    # ['TextEmotion_admiration', 'TextEmotion_annoyance', 'TextEmotion_pride',
+    #              'polarity', 'EmpathFeatures_fun', 'EmpathFeatures_lust',
+    #              'EmpathFeatures_messaging',
+    #              'EmotionLex_NRC-Hashtag-Emotion-Lexicon-v0.2_sadness_avgLexVal']
+    data_train, data_test = load_encode_dataset(dataset=DATASET, scale=True, features=keep_features)
     train_config: dict = load_yaml("src/text_classification/config/classifier.yml")
 
     # SETTINGS:
     # ------------- SK learn classifiers
-    SK_CLASSIFIER_TYPE: type = XGBClassifier
+    SK_CLASSIFIER_TYPE: type = HistGradientBoostingClassifier
     SK_CLASSIFIER_PARAMS: dict = dict()  # dict(estimator=LogisticRegression())
 
     # ------------- TORCH with SKORCH
