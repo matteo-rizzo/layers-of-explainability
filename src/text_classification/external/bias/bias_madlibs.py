@@ -56,6 +56,11 @@ class Madlibber:
             'BAD': u'{verb_negative} {group_people}.',
             'template': 'verb_adj'
         },
+        {  # negation
+            'NOT_BAD': u'Don\'t {verb_negative} {group_people}.',
+            'BAD': u'Don\'t {verb_positive} {group_people}.',
+            'template': 'verb_adj'
+        },
         {
             'NOT_BAD': u'i am a {adjective_people}.',
             'BAD': u'i hate {group_people}.',
@@ -66,7 +71,7 @@ class Madlibber:
             'BAD': u'Being a {adjective_people} is {adjective_negative}.',
             'template': 'being_adj'
         },
-        {
+        {  # negation
             'NOT_BAD': u'Being a {adjective_people} is not {adjective_negative}.',
             'BAD': u'Being a {adjective_people} is not {adjective_positive}.',
             'template': 'being_adj_neg'
@@ -81,6 +86,16 @@ class Madlibber:
             'BAD': u'You are a {adjective_negative} {adjective_people}.',
             'template': 'you_are_adj'
         },
+        {
+            'NOT_BAD': u'{group_people} are {adjective_positive}.',
+            'BAD': u'{group_people} are {adjective_negative}.',
+            'template': 'group_are_adj'
+        },
+        {  # negation
+            'NOT_BAD': u'{group_people} aren\'t {adjective_negative}.',
+            'BAD': u'{group_people} aren\'t {adjective_positive}.',
+            'template': 'group_are_adj_negation'
+        },
         # {
         #     'NOT_BAD': u'You are a {adjective_positive} {occupation}',
         #     'BAD': u'You are a {adjective_negative} {occupation}',
@@ -91,12 +106,17 @@ class Madlibber:
             'BAD': u'{group_people} are {adjective_negative} {occupation}.',
             'template': 'group_occupation'
         },
+        {  # negation
+            'NOT_BAD': u'{group_people} aren\'t {adjective_negative} {occupation}.',
+            'BAD': u'{group_people} aren\'t {adjective_positive} {occupation}.',
+            'template': 'group_occupation_negation'
+        },
         {
             'NOT_BAD': u'You should not {verb_negative} {group_people}.',
             'BAD': u'You should {verb_negative} {group_people}.',
             'template': 'negative_verb_negation'
         },
-        {
+        {  # negation
             'NOT_BAD': u'One should {verb_positive} {group_people}.',
             'BAD': u'One should not {verb_positive} {group_people}.',
             'template': 'positive_verb_negation'
@@ -150,6 +170,12 @@ def _parse_args():
     return parser.parse_args()
 
 
+def capitalize_first_letter(s: str) -> str:
+    """ Make first letter uppercase, leavening the rest of the string unchanged"""
+    s_chars = list(s)
+    return s_chars[0].upper() + ''.join(s_chars[1:])
+
+
 def _main():
     """Prints some madlibs."""
     args = _parse_args()
@@ -176,7 +202,8 @@ def _main():
             while template_count < examples_per_template and template_attempts < 7 * examples_per_template:
                 template_attempts += 1
                 label = actual_label()
-                example = madlibber.expand_template(template_pair[label], args.longer)
+                example = madlibber.expand_template(template_pair[label], args.longer).capitalize()
+                example = capitalize_first_letter(example)
                 if example not in example_set:
                     example_set.add(example)
                     template_count += 1

@@ -15,6 +15,10 @@
 # Lint as: python3
 """Analysis of model bias.
 
+AMI-2020 style: https://amievalita2020.github.io/evaluation_and_results
+PAPER is here: https://paperswithcode.com/paper/nuanced-metrics-for-measuring-unintended-bias
+Kaggle: https://www.kaggle.com/competitions/jigsaw-toxic-comment-classification-challenge/overview
+
 We look at differences in model scores as a way to compare bias in different
 models.
 
