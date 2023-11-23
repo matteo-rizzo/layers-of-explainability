@@ -3,26 +3,18 @@ from __future__ import annotations
 from pathlib import Path
 
 import joblib
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression
-from skorch import NeuralNetBinaryClassifier
 
-from src.deep_learning_strategy.classes.CGReviewDataset import CGReviewDataset
 from src.deep_learning_strategy.classes.CallMeSexistDataset import CallMeSexistDataset
-from src.deep_learning_strategy.classes.CategoricalShapExplainer import CategoricalShapExplainer
+from src.explainable_strategy.SHAP.CategoricalShapExplainer import CategoricalShapExplainer
 from src.deep_learning_strategy.classes.Dataset import AbcDataset
-from src.deep_learning_strategy.classes.IMDBDataset import IMDBDataset
 from src.text_classification.classes.training.TrainingModelUtility import TrainingModelUtility
 from src.text_classification.utils import load_encode_dataset
 from src.utils.yaml_manager import load_yaml
-from xgboost.sklearn import XGBClassifier
 
 DATASET: AbcDataset = CallMeSexistDataset()
-SK_CLASSIFIER_TYPE: type = XGBClassifier
-LOAD_MODEL_DUMP = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_1700559611.7600822.pkl"
+LOAD_MODEL_DUMP = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_1700735225.8083348.pkl"
 
 
-# SK_CLASSIFIER_TYPE: type = NeuralNetBinaryClassifier
 # LOAD_MODEL_DUMP = Path("dumps") / "nlp_models" / "NeuralNetBinaryClassifier" / "model_1698674139.4118443.pkl"
 
 
@@ -34,9 +26,10 @@ def main():
 
     # Load model
     clf = joblib.load(LOAD_MODEL_DUMP)
+    sk_classifier_type = clf.__class__
 
     # Test evaluation
-    tmu = TrainingModelUtility(train_config, SK_CLASSIFIER_TYPE, dict())
+    tmu = TrainingModelUtility(train_config, sk_classifier_type, dict())
     tmu.trained_classifier = clf
     tmu.evaluate(data_test, DATASET.compute_metrics)
 
