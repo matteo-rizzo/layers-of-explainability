@@ -42,19 +42,20 @@ def compute_features(dataset_: AbcDataset, do_label: bool = False):
     train_features = {k: f[:len_train] for k, f in all_features.items()}
     test_features = {k: f[len_train:] for k, f in all_features.items()}
 
-    if do_label:
-        df = pd.DataFrame.from_dict(train_features)
-        df["label"] = data["train"]["y"]
-        df.to_csv(Path(dataset_.BASE_DATASET) / f"{dataset_.__class__.__name__}_train_features.csv", index=False)
+    df_train = pd.DataFrame.from_dict(train_features)
+    df_test = pd.DataFrame.from_dict(test_features)
 
-        df = pd.DataFrame.from_dict(test_features)
-        df["label"] = data["test"]["y"]
-        df.to_csv(Path(dataset_.BASE_DATASET) / f"{dataset_.__class__.__name__}_test_features.csv", index=False)
-    else:
-        pd.DataFrame.from_dict(train_features).to_csv(
-            Path(dataset_.BASE_DATASET) / f"{dataset_.__class__.__name__}_train_features.csv", index=False)
-        pd.DataFrame.from_dict(test_features).to_csv(
-            Path(dataset_.BASE_DATASET) / f"{dataset_.__class__.__name__}_test_features.csv", index=False)
+    # Remove columns with constant values from the train set
+    df_train = df_train.loc[:, (df_train != df_train.iloc[0]).any()]
+    # Test set has the same columns as the train set
+    df_test = df_test.loc[:, df_train.columns]
+
+    if do_label:
+        df_train["label"] = data["train"]["y"]
+        df_test["label"] = data["test"]["y"]
+
+    df_train.to_csv(Path(dataset_.BASE_DATASET) / f"{dataset_.__class__.__name__}_train_features.csv", index=False)
+    df_test.to_csv(Path(dataset_.BASE_DATASET) / f"{dataset_.__class__.__name__}_test_features.csv", index=False)
 
 
 if __name__ == "__main__":

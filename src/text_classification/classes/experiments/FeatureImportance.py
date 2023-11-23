@@ -50,6 +50,7 @@ class FeatureImportance:
         if "y" in self.feature_names:
             self.feature_names.remove("y")
         self.output_path = Path(out_path)
+        self.output_path.mkdir(exist_ok=True, parents=True)
 
     def run_importance_test(self, clf, metric: str, decorrelate: bool = True):
         """
@@ -57,18 +58,18 @@ class FeatureImportance:
         Returns the relative importance of each removed feature, based on the performance drop/increase obtaining after removing it.
         """
 
+        suffix = f"{self.dataset_object.__class__.__name__}_{clf.__class__.__name__}"
+
         y_train = self.data_train.pop("y").to_numpy()
         y_test = self.data_test.pop("y").to_numpy()
 
-        # scorer = make_scorer(self.dataset_object.compute_metrics, greater_is_better=True)
         scorer = scorer_wrapper(self.dataset_object.compute_metrics)
 
         if not decorrelate:
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(60, 30))
 
-            # Remove constant columns (Spear Rank Coeff is undefined and will give nan)
-            data_train = self.data_train.loc[:, (self.data_train != self.data_train.iloc[0]).any()]
-            data_test = self.data_test.loc[:, (self.data_test != self.data_test.iloc[0]).any()]
+            data_train = self.data_train
+            data_test = self.data_test
 
             plot_permutation_importance(clf, data_train, y_train, ax1, scorer=scorer, metric_name=metric)
             ax1.set_xlabel("Decrease in accuracy score (train set)")
@@ -77,9 +78,9 @@ class FeatureImportance:
             fig.suptitle(f"Permutation importance on {self.dataset_object.__class__.__name__} features ({metric})")
             _ = fig.tight_layout()
 
-            plt.savefig(self.output_path / "importance.png")
+            plt.savefig(self.output_path / f"importance_{suffix}.png")
 
-            print(f"Baseline accuracy on test data: {clf.score(self.data_test, y_test):.3}")
+            print(f"Baseline accuracy on test data: {clf.score(data_test, y_test):.3}")
 
             # plt.show()
         else:
@@ -113,7 +114,7 @@ class FeatureImportance:
             ax2.set_yticklabels(dendro["ivl"])
             _ = fig.tight_layout()
 
-            plt.savefig(self.output_path / "correlation_dendrogram.png")
+            plt.savefig(self.output_path / f"correlation_dendrogram_{suffix}.png")
             plt.clf()
 
             # Clustering
@@ -127,7 +128,7 @@ class FeatureImportance:
 
             # Write feature clusters to JSON
             feature_subsets: dict[str, list[str]] = {self.data_train.columns[fs[0]]: [self.data_train.columns[f] for f in fs[1:]] for fs in cluster_id_to_feature_ids.values()}
-            with open(self.output_path / f"features_{self.dataset_object.__class__.__name__}_{clf.__class__.__name__}.json", mode="w") as fo:
+            with open(self.output_path / f"features_{suffix}.json", mode="w") as fo:
                 json.dump(feature_subsets, fo)
 
             X_train_sel = self.data_train[selected_features_names]
@@ -143,5 +144,5 @@ class FeatureImportance:
             ax.set_xlabel(f"Decrease in {metric} score")
             ax.figure.tight_layout()
 
-            plt.savefig(self.output_path / "importance_reduced_set.png")
+            plt.savefig(self.output_path / f"importance_reduced_set_{suffix}.png")
             plt.clf()

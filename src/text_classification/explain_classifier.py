@@ -17,7 +17,6 @@ from src.text_classification.utils import load_encode_dataset
 from src.utils.yaml_manager import load_yaml
 from xgboost.sklearn import XGBClassifier
 
-
 DATASET: AbcDataset = CallMeSexistDataset()
 SK_CLASSIFIER_TYPE: type = XGBClassifier
 LOAD_MODEL_DUMP = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_1700559611.7600822.pkl"

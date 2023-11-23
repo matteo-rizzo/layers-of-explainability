@@ -29,6 +29,7 @@ class FeatureAblator:
         self.classifier_class: type = classifier_type
         self.classifier_kwargs: dict = classifier_kwargs if classifier_kwargs is not None else dict()
         self.output_path = Path(out_path)
+        self.output_path.mkdir(exist_ok=True, parents=True)
 
         self.training_utility = TrainingModelUtility(self.config, self.classifier_class, self.classifier_kwargs)
 
@@ -71,6 +72,8 @@ class FeatureAblator:
         """
         rskf = RepeatedStratifiedKFold(n_splits=k_folds, n_repeats=2, random_state=36851231)
 
+        suffix = f"{self.dataset_object.__class__.__name__}_{self.classifier_class.__name__}"
+
         all_data = self.data_train
         if use_all_data:
             all_data = pd.concat([self.data_train, self.data_test], axis=0).sample(frac=1, random_state=19)
@@ -106,6 +109,6 @@ class FeatureAblator:
         all_metrics_df = all_metrics_df.loc[all_metrics_df_ratio.index, :]
 
         self.output_path.mkdir(exist_ok=True, parents=True)
-        with pd.ExcelWriter(self.output_path / f"ablation_features_{self.dataset_object.__class__.__name__}.ods", engine="odf") as exc_writer:
+        with pd.ExcelWriter(self.output_path / f"ablation_features_{suffix}.ods", engine="odf") as exc_writer:
             all_metrics_df_ratio.to_excel(exc_writer, sheet_name="drop_ratio", index=True)
             all_metrics_df.to_excel(exc_writer, sheet_name="metrics", index=True)

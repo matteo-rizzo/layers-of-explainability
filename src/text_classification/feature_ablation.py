@@ -16,7 +16,6 @@ import json
 from pathlib import Path
 
 import joblib
-from sklearn.linear_model import LogisticRegression
 
 from src.deep_learning_strategy.classes.AMI2018Dataset import AMI2018Dataset
 from src.deep_learning_strategy.classes.CallMeSexistDataset import CallMeSexistDataset
@@ -40,11 +39,11 @@ DATASET: AbcDataset = CallMeSexistDataset()
 MODE: str = "ablation"  # "ablation", "importance"
 
 # For feature importance, path to a trained models
-MODEL_DIR = Path("dumps") / "nlp_models" / "LogisticRegression" / "model_1700476850.319165.pkl"
+MODEL_DIR = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_1700735225.8083348.pkl"
 
 # For feature ablation, the clusters of features to be removed
 # (all feature in same clusters, as well as the cluster name will be removed)
-FEATURE_CLUSTERS_REMOVE: list[str] | None = ["GenderBiasDetector_LABEL_1"]
+FEATURE_CLUSTERS_REMOVE: list[str] | None = ["GenderBiasDetector_LABEL_1", "TopicLM_sports"]
 
 
 def main():
@@ -53,7 +52,7 @@ def main():
     if MODE == "ablation":
         # SETTINGS:
         # ------------- SK learn classifiers
-        SK_CLASSIFIER_TYPE: type = LogisticRegression
+        SK_CLASSIFIER_TYPE: type = joblib.load(MODEL_DIR).__class__
         SK_CLASSIFIER_PARAMS: dict = dict()  # dict(estimator=LogisticRegression())
 
         # ------------- TORCH with SKORCH

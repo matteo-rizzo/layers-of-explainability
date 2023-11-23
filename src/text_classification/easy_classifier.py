@@ -35,6 +35,7 @@ from src.text_classification.utils import load_encode_dataset
 from src.utils.yaml_manager import load_yaml
 from xgboost import XGBClassifier
 
+
 def update_params_composite_classifiers(train_config: dict, SK_CLASSIFIER_TYPE: type, SK_CLASSIFIER_PARAMS: dict) -> dict:
     """
     Some classifiers (ensemble, boosting, etc.) may need specific configuration depending on the type.
@@ -105,7 +106,7 @@ def main():
 
     # SETTINGS:
     # ------------- SK learn classifiers
-    SK_CLASSIFIER_TYPE: type = HistGradientBoostingClassifier
+    SK_CLASSIFIER_TYPE: type = XGBClassifier
     SK_CLASSIFIER_PARAMS: dict = dict()  # dict(estimator=LogisticRegression())
 
     # ------------- TORCH with SKORCH

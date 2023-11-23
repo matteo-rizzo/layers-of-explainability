@@ -147,9 +147,6 @@ class CategoricalShapExplainer:
     #     plt.clf()
 
     def run_tree(self, train_data: pd.DataFrame, test_data: pd.DataFrame, output_names: list | None = None, show: bool = True):
-        # What number of background samples?
-        x_train_summary = shap.kmeans(train_data, 50).data
-
         target_samples = test_data
 
         self.explainer = shap.TreeExplainer(self.__model)

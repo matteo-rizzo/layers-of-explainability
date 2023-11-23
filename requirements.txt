@@ -24,3 +24,4 @@ textblob~=0.17.1
 nltk~=3.8.1
 language-tool-python
 skorch~=0.15.0
+xgboost~=2.0.2
