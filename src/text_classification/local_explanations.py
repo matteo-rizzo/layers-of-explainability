@@ -18,19 +18,26 @@ DATASET: AbcDataset = CallMeSexistDataset()
 LOAD_MODEL_DUMP = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_1700839741.5096045.pkl"
 
 
-# LOAD_MODEL_DUMP = Path("dumps") / "nlp_models" / "NeuralNetBinaryClassifier" / "model_1698674139.4118443.pkl"
-
 def read_feature_descriptions(column_names: list[str]) -> dict[str, str]:
-    modules = [e.split("_")[0] for e in column_names]
+    """
+    Retrieve feature description from column names.
+    Assume module and classes for feature extraction are named the same.
+    This will infer module names from feature names, load them and get descriptions.
+    """
+    modules = list({e.split("_")[0] for e in column_names})
     feature_dict = defaultdict(lambda: "Other features")
-    for c in modules:
-        module = import_module(f"src.text_classification.classes.features.{c}")
-        feature_class: type[Feature] = getattr(module, c)
+    for mod_path in modules:
+        module = import_module(f"src.text_classification.classes.features.{mod_path}")
+        feature_class: type[Feature] = getattr(module, mod_path)
         descriptions = feature_class.label_description()
         if descriptions is not None:
             feature_dict.update(descriptions)
     return feature_dict
 
+
+# FIXME: Implement:
+#   - normalization of input
+#   - [IF needed] save scaler to inverse scale features in showing explanations
 
 def main():
     # Load data
@@ -55,8 +62,6 @@ def main():
     feat_names = read_feature_descriptions(data_test.columns.tolist())
 
     explainer.run_tree(data_test.iloc[0:10, :], DATASET.get_train_data(), y_true_test, feat_names, label_names={0: "not sexist", 1: "sexist"}, effect_threshold=.02)
-
-    # Add local exp
 
 
 if __name__ == "__main__":

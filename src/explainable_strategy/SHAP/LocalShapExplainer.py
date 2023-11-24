@@ -8,6 +8,8 @@ import numpy as np
 import pandas as pd
 import shap
 
+from src.text_classification.utils import capitalize_first_letter
+
 
 class LocalShapExplainer:
 
@@ -21,14 +23,22 @@ class LocalShapExplainer:
     def __helper_explanation(features, y, feature_names, label_names) -> str:
         feature_importance_text = f"Top features that contributed towards '{label_names[y]}':\n"
         explanations = list()
-        for f, pf in features:
-            sc = f" - ({abs(pf):.1f}%) {feature_names[f]}"
+        for f, pf, vf in features:
+            # vf is the original value of the feature f, unless f=OTHER_0/1, where it is the average % importance on all other features
+            # here we dynamically compose template
+            key_name = "mean" if f in ["OTHER_0", "OTHER_1"] else "value"
+            suffix = "%" if key_name == "mean" else ""
+            # If the feature does not have a description, we keep its name
+            pretty_name = capitalize_first_letter(feature_names[f]) if f in feature_names or key_name == "mean" else f
+            # Fill explanation template
+            sc = f" - [importance={abs(pf):.1f}%, {key_name}={vf:.1f}{suffix}] {pretty_name}"
             explanations.append(sc)
         feature_importance_text += "\n".join(explanations)
         return feature_importance_text
 
     @staticmethod
-    def build_explanation(text: str, y_pred: int, y_true: int, prob: float, features: list[tuple[str, float]], feature_names: dict[str, str], label_names: dict[int, str]) -> str:
+    def build_explanation(text: str, y_pred: int, y_true: int, prob: float, features: list[tuple[str, float, float]], feature_names: dict[str, str],
+                          label_names: dict[int, str]) -> str:
         s = (f"Example: '{text}'\n"
              f"Predicted class: '{label_names[y_pred]}' (confidence={prob if y_pred == 1 else 100 - prob:.1f}%)\n"
              f"True class: '{label_names[y_true]}'")
@@ -66,7 +76,7 @@ class LocalShapExplainer:
 
         # DISCUSS: Is it correct to consider percentage over absolute value?
 
-        top_features: list[list[tuple[str, float]]] = list()
+        top_features: list[list[tuple[str, float, float]]] = list()
         for i, row in shap_values_relative_change_df.iterrows():
             # Multiply % importance per signs
             percentage_importance = row * shap_values_signs[i, :]
@@ -80,13 +90,17 @@ class LocalShapExplainer:
             if top_k is not None:
                 # Take top k values by magnitude
                 final_features = final_features[:top_k]
+            # Feature values for selected important features
+            feature_values: pd.Series = test_data.loc[i, final_features.index]
             # Get the cumulative sum for the contribution of all other features and summarize them in two additional rows
             # Notice that other.abs().sum() + final_features.abs().sum() == 100
             other = percentage_importance[~(percentage_importance.isin(final_features))]
-            final_features["other class 0"] = -other[other < 0].abs().sum()
-            final_features["other class 1"] = other[other > 0].abs().sum()
+            final_features = pd.concat([final_features, feature_values], axis=1)
+            final_features.loc["OTHER_0", :] = [-other[other < 0].abs().sum(), other[other < 0].abs().mean()]
+            final_features.loc["OTHER_1", :] = [other[other > 0].abs().sum(), other[other > 0].abs().mean()]
             # Add the feature tuples to the list for this example
-            top_features.append(list(final_features.items()))
+            # tuple is made of: (feature_name, feature_importance, feature_value/mean feature_importance)
+            top_features.append([(feat_name, *s.values.tolist()) for feat_name, s in list(final_features.iterrows())])
 
         # Get model probabilities of positive label
         y_probs = self.__model.predict_proba(test_data)[:, 1].tolist()

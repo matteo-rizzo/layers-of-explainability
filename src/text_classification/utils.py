@@ -50,3 +50,9 @@ def load_encode_dataset(dataset: AbcDataset, scale: bool = False, features: list
     data_train["y"] = y_train
     data_test["y"] = y_test
     return data_train, data_test
+
+
+def capitalize_first_letter(s: str) -> str:
+    """ Make first letter uppercase, leavening the rest of the string unchanged"""
+    s_chars = list(s)
+    return s_chars[0].upper() + ''.join(s_chars[1:])

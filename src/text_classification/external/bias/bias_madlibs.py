@@ -38,6 +38,8 @@ import os
 import random
 from pathlib import Path
 
+from src.text_classification.utils import capitalize_first_letter
+
 
 def _read_word_list(bias_data_dir, filename):
     """Reads a terms list and returns a list of strings, one per line."""
@@ -168,12 +170,6 @@ def _parse_args():
     parser.add_argument(
         '-longer', action='store_true', help='Output longer phrases.')
     return parser.parse_args()
-
-
-def capitalize_first_letter(s: str) -> str:
-    """ Make first letter uppercase, leavening the rest of the string unchanged"""
-    s_chars = list(s)
-    return s_chars[0].upper() + ''.join(s_chars[1:])
 
 
 def _main():
