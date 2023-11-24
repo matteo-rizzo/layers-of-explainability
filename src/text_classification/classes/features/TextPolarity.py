@@ -27,8 +27,8 @@ class TextPolarity(Feature):
                 subjectivity = .0
                 word_count = 0
                 sentence_len = .0
-            feature_df["polarity"].append(polarity)
-            feature_df["subjectivity"].append(subjectivity)
-            feature_df["word_count"].append(word_count)
-            feature_df["sentence_len"].append(sentence_len)
+            feature_df[f"{self.__class__.__name__}_polarity"].append(polarity)
+            feature_df[f"{self.__class__.__name__}_subjectivity"].append(subjectivity)
+            feature_df[f"{self.__class__.__name__}_word_count"].append(word_count)
+            feature_df[f"{self.__class__.__name__}_sentence_len"].append(sentence_len)
         return feature_df

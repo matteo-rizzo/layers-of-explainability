@@ -18,8 +18,8 @@ class TextGrammarErrors(Feature):
         for i, t in tqdm(enumerate(texts), desc="grammar analysis", total=len(texts)):
             matches = self.pipe.check(t)
             error_count_by_cat: dict[str, int] = Counter([m.category for m in matches])
-            feature_df["num_errors"][i] = len(matches)
+            feature_df[f"{self.__class__.__name__}_num_errors"][i] = len(matches)
             for cat, n in error_count_by_cat.items():
-                feature_df[f"error_{cat}"][i] = n
+                feature_df[f"{self.__class__.__name__}_error_{cat}"][i] = n
 
         return feature_df

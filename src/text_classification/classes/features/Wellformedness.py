@@ -15,3 +15,9 @@ class Wellformedness(Feature):
         feature_df: dict[str, list[float]] = defaultdict(list)
         [feature_df[f'{self.__class__.__name__}_{emotion["label"]}'].append(emotion["score"]) for labels_list_dict in labels_and_score for emotion in labels_list_dict]
         return feature_df
+
+    @classmethod
+    def label_description(cls) -> dict[str, str]:
+        return {
+            f"{cls.__name__}_LABEL_0": "sentence well-formed score"
+        }

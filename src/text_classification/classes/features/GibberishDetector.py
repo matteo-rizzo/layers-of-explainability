@@ -15,3 +15,12 @@ class GibberishDetector(Feature):
         feature_df: dict[str, list[float]] = defaultdict(list)
         [feature_df[f'{self.__class__.__name__}_{emotion["label"]}'].append(emotion["score"]) for labels_list_dict in labels_and_score for emotion in labels_list_dict]
         return feature_df
+
+    @classmethod
+    def label_description(cls) -> dict[str, str]:
+        return {
+            f"{cls.__name__}_clean": "words form a complete and meaningful sentence",
+            f"{cls.__name__}_mild gibberish": "text has grammatical errors, word sense errors, or syntactical abnormalities that reduce the overall coherence",
+            f"{cls.__name__}_word salad": "words make sense independently, but do not produce a coherent meaning",
+            f"{cls.__name__}_noise": "text appears to be made up of random characters"
+        }

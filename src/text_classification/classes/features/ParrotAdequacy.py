@@ -15,3 +15,11 @@ class ParrotAdequacy(Feature):
         feature_df: dict[str, list[float]] = defaultdict(list)
         [feature_df[f'{self.__class__.__name__}_{emotion["label"]}'].append(emotion["score"]) for labels_list_dict in labels_and_score for emotion in labels_list_dict]
         return feature_df
+
+    @classmethod
+    def label_description(cls) -> dict[str, str]:
+        return {
+            f"{cls.__name__}_neutral": "text does not contain relations",
+            f"{cls.__name__}_contradiction": "text contains a contradiction",
+            f"{cls.__name__}_entailment": "text shows entailment of two parts of text"
+        }

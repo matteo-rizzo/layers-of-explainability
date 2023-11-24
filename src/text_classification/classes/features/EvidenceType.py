@@ -15,3 +15,15 @@ class EvidenceType(Feature):
         feature_df: dict[str, list[float]] = defaultdict(list)
         [feature_df[f'{self.__class__.__name__}_{emotion["label"]}'].append(emotion["score"]) for labels_list_dict in labels_and_score for emotion in labels_list_dict]
         return feature_df
+
+    @classmethod
+    def label_description(cls) -> dict[str, str]:
+        return {
+            f"{cls.__name__}_None": "no evidence type detected in text",
+            f"{cls.__name__}_Other": "text contains other evidence types",
+            f"{cls.__name__}_Assumption": "text contains assumptions",
+            f"{cls.__name__}_Definition": "text contains definitions",
+            f"{cls.__name__}_Testimony": "text contains testimonies",
+            f"{cls.__name__}_Statistics/Study": "text reports statistics or information from a study",
+            f"{cls.__name__}_Anecdote": "text contains anecdotes"
+        }
