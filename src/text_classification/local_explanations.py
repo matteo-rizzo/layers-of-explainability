@@ -37,10 +37,10 @@ def main():
 
     explainer = LocalShapExplainer(clf)
 
-    feat_names = defaultdict(str)
+    feat_names = defaultdict(lambda: "Other features")
     feat_names.update({v: v for v in data_test.columns.tolist()})
 
-    explainer.run_tree(data_test.iloc[0:10, :], DATASET.get_train_data(), y_true_test, feat_names, label_names={0: "not sexist", 1: "sexist"})
+    explainer.run_tree(data_test.iloc[0:10, :], DATASET.get_train_data(), y_true_test, feat_names, label_names={0: "not sexist", 1: "sexist"}, effect_threshold=.02)
 
     # Add local exp
 

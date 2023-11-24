@@ -36,8 +36,12 @@ class LocalShapExplainer:
         fn_pos = float.__gt__ if y_pred == 1 else float.__lt__
         fn_neg = float.__lt__ if y_pred == 1 else float.__gt__
 
-        pred_pos_features = [f for f in features if fn_pos(f[1], 0)]  # class predicted
-        pred_neg_features = [f for f in features if fn_neg(f[1], 0)]  # class not predicted
+        # Features contributing to predicted class
+        # - if predicted == 0 we select all features < 0, since negative values are < 0.5 after sigmoid
+        # - if predicted == 1 we select all features > 0, since negative values are > 0.5 after sigmoid
+        pred_pos_features = [f for f in features if fn_pos(f[1], 0)]
+        # Features contributing to the non-predicted class
+        pred_neg_features = [f for f in features if fn_neg(f[1], 0)]
 
         text_s = [s]
         if pred_pos_features:
@@ -46,25 +50,42 @@ class LocalShapExplainer:
             text_s.append(LocalShapExplainer.__helper_explanation(pred_neg_features, 1 - y_pred, feature_names, label_names))
         return "\n".join(text_s)
 
-    def run_tree(self, test_data: pd.DataFrame, texts: list[str], targets: list[int], feature_names: dict[str, str], label_names: dict[int, str]):
+    def run_tree(self, test_data: pd.DataFrame, texts: list[str], targets: list[int], feature_names: dict[str, str], label_names: dict[int, str],
+                 top_k: int | None = None, effect_threshold: float | None = None) -> None:
+
+        assert (top_k is None) ^ (effect_threshold is None), "Exactly one of 'top_k' and 'effect_threshold' must be None"
+
         self.explainer = shap.TreeExplainer(self.__model)
-        k = 10
 
         shap_values: np.ndarray = self.explainer.shap_values(test_data)
 
-        # shap_values_df = pd.DataFrame(shap_values, columns=test_data.columns)  # - self.explainer.expected_value
         shap_values_abs = np.abs(shap_values)
         shap_values_signs = np.where(shap_values < 0, -1, 1)
         shap_values_relative_change = shap_values_abs / shap_values_abs.sum(1).reshape(-1, 1) * 100
         shap_values_relative_change_df = pd.DataFrame(shap_values_relative_change, columns=test_data.columns)
 
-        # Is it correct to consider percentage over absolute value?
+        # DISCUSS: Is it correct to consider percentage over absolute value?
 
         top_features: list[list[tuple[str, float]]] = list()
         for i, row in shap_values_relative_change_df.iterrows():
-            values = row * shap_values_signs[i, :]
-            r = values.abs().sort_values(ascending=False)
-            final_features = values[r.index][:k]
+            # Multiply % importance per signs
+            percentage_importance = row * shap_values_signs[i, :]
+            # Sort by absolute value
+            sorted_magnitudes = percentage_importance.abs().sort_values(ascending=False)
+            if effect_threshold is not None:
+                # Take values with % magnitude > threshold
+                sorted_magnitudes = sorted_magnitudes[sorted_magnitudes > effect_threshold * 100]
+            # Take original signed values
+            final_features = percentage_importance[sorted_magnitudes.index]
+            if top_k is not None:
+                # Take top k values by magnitude
+                final_features = final_features[:top_k]
+            # Get the cumulative sum for the contribution of all other features and summarize them in two additional rows
+            # Notice that other.abs().sum() + final_features.abs().sum() == 100
+            other = percentage_importance[~(percentage_importance.isin(final_features))]
+            final_features["other class 0"] = -other[other < 0].abs().sum()
+            final_features["other class 1"] = other[other > 0].abs().sum()
+            # Add the feature tuples to the list for this example
             top_features.append(list(final_features.items()))
 
         # Get model probabilities of positive label
@@ -81,14 +102,3 @@ class LocalShapExplainer:
 
         out = shap.force_plot(self.explainer.expected_value, shap_values[0, :], test_data.iloc[0, :])
         shap.save_html(str(self.__target_dir / "shap_local.htm"), out, full_html=True)
-
-        # out = shap.force_plot(base_value=self.explainer.expected_value, shap_values=shap_values, features=test_data)
-
-        # plt.title(f"Impact of features on predicted class")
-        # plt.gcf().set_size_inches(10, 15)
-        # plt.tight_layout()
-        # plt.gcf().savefig(os.path.join(self.__target_dir, "shap_violin.png"), dpi=400)
-
-        # plt.show()
-        # plt.clf()
-        # self.__plot_explanations_summary_tree(shap_values.expected, target_samples, output_names, show)
