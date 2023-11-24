@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import defaultdict
 from pathlib import Path
 
 import joblib
@@ -23,6 +24,7 @@ def main():
     data_train, data_test = load_encode_dataset(dataset=DATASET, scale=True, features=None)
     train_config: dict = load_yaml("src/text_classification/config/classifier.yml")
     data_train.pop("y")
+    y_true_test = data_test["y"].tolist()
 
     # Load model
     clf = joblib.load(LOAD_MODEL_DUMP)
@@ -34,7 +36,11 @@ def main():
     tmu.evaluate(data_test, DATASET.compute_metrics)
 
     explainer = LocalShapExplainer(clf)
-    explainer.run_tree(data_test.iloc[0:100, :], output_names=["0", "1"])
+
+    feat_names = defaultdict(str)
+    feat_names.update({v: v for v in data_test.columns.tolist()})
+
+    explainer.run_tree(data_test.iloc[0:10, :], DATASET.get_train_data(), y_true_test, feat_names, label_names={0: "not sexist", 1: "sexist"})
 
     # Add local exp
 
