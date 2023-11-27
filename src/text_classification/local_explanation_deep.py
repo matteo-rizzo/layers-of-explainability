@@ -37,12 +37,7 @@ def main():
     # explainer.run(DATASET.get_test_data()[:5], show=True)
 
     explainer = TranShapExplainer(pipeline.pipeline, pipeline.pipeline.tokenizer, target_label=TARGET_LABEL, device="cuda")
-    explainer.run(DATASET.get_test_data(), explain_ids=[0, 1, 2], show=True)
-
-    # shap_explain(dataset_processed, model=hf_pipeline, tokenizer=hf_pipeline.tokenizer, target_label=target_label)
-    # transhap_explain(dataset_processed, explain_ids=[0, 99], model=hf_pipeline, tokenizer=hf_pipeline.tokenizer,
-    #                  target_label=target_label,
-    #                  device="cuda" if config["use_gpu"] else "cpu")
+    explainer.run(DATASET.get_test_data(), explain_ids=[0, 1, 2, 9], show=True)
 
 
 if __name__ == "__main__":

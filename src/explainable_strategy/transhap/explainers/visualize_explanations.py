@@ -65,7 +65,7 @@ def determine_graph_width(max_word, max_length):
     return max_word * max_length * 0.15
 
 
-def joint_visualization(path, tokenized_text, values, class_to_explain, pred, i):
+def joint_visualization(path, tokenized_text, values, class_to_explain, pred, i, fig_name: str):
     ## first plot.
 
     # if len(tokenized_text) > 10:
@@ -124,5 +124,5 @@ def joint_visualization(path, tokenized_text, values, class_to_explain, pred, i)
     plt.ylabel("Impact on model output")
     pname = "".join(tokenized_text[0:3])
     # plt.show()
-    plt.savefig(f"{path}/our_vis_{i}", dpi=300)
-    print(f"DONE figures/our_vis_{i}")
+    plt.savefig(f"{path}/{fig_name}_{i}.png", dpi=300)
+    print(f"DONE {path}/{fig_name}_{i}.png")
