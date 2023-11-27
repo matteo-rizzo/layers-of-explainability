@@ -63,7 +63,7 @@ class TranShapExplainer:
             if show:
                 plt.show()
 
-            plt.savefig(os.path.join(self.__target_dir, "transhap_{idx}_{i}.png"), dpi=400)
+            plt.savefig(os.path.join(self.__target_dir, f"transhap_{idx}_{i}.png"), dpi=400)
             plt.clf()
 
     def run(self, corpus: List[str], explain_ids: List[int], show: bool = True):

@@ -19,17 +19,17 @@ class HuggingFaceShapExplainer:
 
     def __plot_explanations_by_sentence(self, corpus: List[str], shap_values: np.ndarray, show: bool):
         for i, text in enumerate(corpus):
-            shap.plots.bar(shap_values[i, :, self.__target_label], max_display=25, show=False)
-            plt.title("Sentence: {text}")
+            shap.plots.bar(shap_values[i, :, self.__target_label], max_display=20, show=False)
+            plt.title(f"Sentence: {text}")
             plt.gcf().set_size_inches(10, 14)
             plt.tight_layout()
             if show:
                 plt.show()
-            plt.savefig(os.path.join(self.__target_dir, "shap_sentence_barplot_{i}.png"), dpi=400)
+            plt.savefig(os.path.join(self.__target_dir, f"shap_sentence_barplot_{i}.png"), dpi=400)
             plt.clf()
 
     def __plot_explanations_summary(self, shap_values: np.ndarray, show: bool):
-        shap.plots.bar(shap_values[:, :, self.__target_label].mean(0), max_display=25, show=False)
+        shap.plots.bar(shap_values[:, :, self.__target_label].mean(0), max_display=20, show=False)
         plt.title("Mean relative importance of tokens for classification")
         plt.gcf().set_size_inches(10, 14)
         plt.tight_layout()
