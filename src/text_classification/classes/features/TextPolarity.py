@@ -32,3 +32,12 @@ class TextPolarity(Feature):
             feature_df[f"{self.__class__.__name__}_word_count"].append(word_count)
             feature_df[f"{self.__class__.__name__}_sentence_len"].append(sentence_len)
         return feature_df
+
+    @classmethod
+    def label_description(cls) -> dict[str, str]:
+        return {
+            f"{cls.__name__}_polarity": "polarity score (-1=negative, 0=neutral, 1=positive)",
+            f"{cls.__name__}_subjectivity": "subjectivity score (0=very objective, 1=very subjective)",
+            f"{cls.__name__}_word_count": "number of words in the text",
+            f"{cls.__name__}_sentence_len": "average sentence length (in words)"
+        }
