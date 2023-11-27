@@ -20,8 +20,8 @@ def main():
     train_config: dict = load_yaml("src/text_classification/config/classifier.yml")
     bias_dataset = BiasDataset()
 
-    data_train, data_test = load_encode_dataset(dataset=bias_dataset, scale=True, features=None)
-    # data_base, _ = load_encode_dataset(dataset=DATASET, scale=True, features=None)
+    data_train, data_test = load_encode_dataset(dataset=bias_dataset, max_scale=True, features=None)
+    # data_base, _ = load_encode_dataset(dataset=DATASET, max_scale=True, features=None)
 
     # Load model
     clf = joblib.load(MODEL_DIR)

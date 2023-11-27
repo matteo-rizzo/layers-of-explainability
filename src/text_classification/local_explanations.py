@@ -15,7 +15,7 @@ from src.text_classification.utils import load_encode_dataset
 from src.utils.yaml_manager import load_yaml
 
 DATASET: AbcDataset = CallMeSexistDataset()
-LOAD_MODEL_DUMP = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_1700839741.5096045.pkl"
+LOAD_MODEL_DUMP = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_1701079040.357031.pkl"
 
 
 def read_feature_descriptions(column_names: list[str]) -> dict[str, str]:
@@ -35,13 +35,9 @@ def read_feature_descriptions(column_names: list[str]) -> dict[str, str]:
     return feature_dict
 
 
-# FIXME: Implement:
-#   - normalization of input
-#   - [IF needed] save scaler to inverse scale features in showing explanations
-
 def main():
     # Load data
-    data_train, data_test = load_encode_dataset(dataset=DATASET, scale=True, features=None)
+    data_train, data_test = load_encode_dataset(dataset=DATASET, max_scale=True, features=None)
     train_config: dict = load_yaml("src/text_classification/config/classifier.yml")
     data_train.pop("y")
     y_true_test = data_test["y"].tolist()

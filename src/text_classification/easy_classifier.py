@@ -101,7 +101,7 @@ def main():
     #              'polarity', 'EmpathFeatures_fun', 'EmpathFeatures_lust',
     #              'EmpathFeatures_messaging',
     #              'EmotionLex_NRC-Hashtag-Emotion-Lexicon-v0.2_sadness_avgLexVal']
-    data_train, data_test = load_encode_dataset(dataset=DATASET, scale=True, features=keep_features)
+    data_train, data_test = load_encode_dataset(dataset=DATASET, max_scale=True, features=keep_features)
     train_config: dict = load_yaml("src/text_classification/config/classifier.yml")
 
     # SETTINGS:

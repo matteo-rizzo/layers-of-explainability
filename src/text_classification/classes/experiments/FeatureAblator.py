@@ -20,7 +20,7 @@ class FeatureAblator:
     """
 
     def __init__(self, dataset: AbcDataset, train_config: dict, classifier_type: type, out_path: str | Path, classifier_kwargs: dict | None = None):
-        self.data_train, self.data_test = load_encode_dataset(dataset=dataset, scale=True)
+        self.data_train, self.data_test = load_encode_dataset(dataset=dataset, max_scale=True)
         self.dataset_object: AbcDataset = dataset
         self.feature_names: list[str] = self.data_train.columns.tolist()
         if "y" in self.feature_names:

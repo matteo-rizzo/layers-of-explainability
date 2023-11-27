@@ -12,7 +12,7 @@ from src.text_classification.utils import load_encode_dataset
 from src.utils.yaml_manager import load_yaml
 
 DATASET: AbcDataset = CallMeSexistDataset()
-LOAD_MODEL_DUMP = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_1700735225.8083348.pkl"
+LOAD_MODEL_DUMP = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_1701079040.357031.pkl"
 
 
 # LOAD_MODEL_DUMP = Path("dumps") / "nlp_models" / "NeuralNetBinaryClassifier" / "model_1698674139.4118443.pkl"
@@ -20,7 +20,7 @@ LOAD_MODEL_DUMP = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_170073
 
 def main():
     # Load data
-    data_train, data_test = load_encode_dataset(dataset=DATASET, scale=True, features=None)
+    data_train, data_test = load_encode_dataset(dataset=DATASET, max_scale=True, features=None)
     train_config: dict = load_yaml("src/text_classification/config/classifier.yml")
     data_train.pop("y")
 

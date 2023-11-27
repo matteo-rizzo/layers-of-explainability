@@ -3,18 +3,20 @@ from __future__ import annotations
 from pathlib import Path
 
 import pandas as pd
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.preprocessing import LabelEncoder, StandardScaler, MaxAbsScaler
 
 from src.deep_learning_strategy.classes.CGReviewDataset import CGReviewDataset
 from src.deep_learning_strategy.classes.Dataset import AbcDataset
 
 
-def load_encode_dataset(dataset: AbcDataset, scale: bool = False, features: list[str] | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
+def load_encode_dataset(dataset: AbcDataset, std_scale: bool = False, max_scale: bool = False, features: list[str] | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Load dataset composed of extracted features based on the 'DATASET' global params that must be set to an AbcDataset object.
 
     @return: two dataframes with training and test data; target label is set to class 'y' and is encoded with numbers in 0...n-1
     """
+    assert not (std_scale and max_scale), "You can't use standard scaler and Max scaler together, only (at most) one operation should be done."
+
     data_path_train = Path(dataset.BASE_DATASET) / f"{dataset.__class__.__name__}_train_features.csv"
     data_path_test = Path(dataset.BASE_DATASET) / f"{dataset.__class__.__name__}_test_features.csv"
 
@@ -37,14 +39,19 @@ def load_encode_dataset(dataset: AbcDataset, scale: bool = False, features: list
     y_test = encoder.transform(test_labels)
 
     # Scaling/normalization
-    if scale:
+    if std_scale or max_scale:
         feature_names = data_train.columns.tolist()
 
-        scaler = StandardScaler()
-        data_train = pd.DataFrame(scaler.fit_transform(data_train))
+        if std_scale:
+            transformation = StandardScaler()
+        else:
+            # FIXME: values in test are not clipped (problem?)
+            transformation = MaxAbsScaler()  # range [-1, 1], 0s are kept
+
+        data_train = pd.DataFrame(transformation.fit_transform(data_train))
         data_train.columns = feature_names
 
-        data_test = pd.DataFrame(scaler.transform(data_test))
+        data_test = pd.DataFrame(transformation.transform(data_test))
         data_test.columns = feature_names
 
     data_train["y"] = y_train
