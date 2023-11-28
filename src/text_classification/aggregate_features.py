@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pandas as pd
+import torch.cuda
 from tqdm import tqdm
 
 from src.deep_learning_strategy.classes.AMI2018Dataset import AMI2018Dataset
@@ -38,6 +39,7 @@ def compute_features(dataset_: AbcDataset, do_label: bool = False):
     for f in tqdm(feature_transforms, desc="Extracting features...."):
         res = f.extract(train_texts)
         all_features.update(res)
+        torch.cuda.empty_cache()
 
     train_features = {k: f[:len_train] for k, f in all_features.items()}
     test_features = {k: f[len_train:] for k, f in all_features.items()}

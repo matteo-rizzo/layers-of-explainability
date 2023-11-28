@@ -37,7 +37,7 @@ def main():
 
     explainer = TranShapExplainer(pipeline.pipeline, pipeline.pipeline.tokenizer, target_label=TARGET_LABEL,
                                   device=0 if config["use_gpu"] else "cpu")
-    explainer.run(DATASET.get_test_data(), explain_ids=[0, 1], show=False, out_label_name="sexist")
+    explainer.run(DATASET.get_test_data(), explain_ids=[4, 5, 30, 40, 50, 100], show=False, out_label_name="sexist")
 
 
 if __name__ == "__main__":
