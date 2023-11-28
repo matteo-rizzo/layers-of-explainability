@@ -1,22 +1,21 @@
+"""
+Get explanations for HuggingFace LM, using Shap and Transhap (see plots/ folder)
+
+LM dump must be set in src/deep_learning_strategy/config.yml
+
+"""
+
 from __future__ import annotations
 
 import os
-from pathlib import Path
 from pprint import pprint
 
-import joblib
 import numpy as np
 
-from src.deep_learning_strategy.classes.CallMeSexistDataset import CallMeSexistDataset
-from src.deep_learning_strategy.classes.HuggingFaceAMI2020Dataset import HuggingFaceAMI2020Dataset
+from src.deep_learning_strategy.classes.Dataset import AbcDataset
 from src.deep_learning_strategy.classes.HuggingFaceCallMeSexistDataset import HuggingFaceCallMeSexistDataset
 from src.deep_learning_strategy.classes.HuggingFacePipeline import HuggingFacePipeline
-from src.explainable_strategy.SHAP.CategoricalShapExplainer import CategoricalShapExplainer
-from src.deep_learning_strategy.classes.Dataset import AbcDataset
-from src.explainable_strategy.SHAP.HuggingFaceShapExplainer import HuggingFaceShapExplainer
 from src.explainable_strategy.SHAP.TranShapExplainer import TranShapExplainer
-from src.text_classification.classes.training.TrainingModelUtility import TrainingModelUtility
-from src.text_classification.utils import load_encode_dataset
 from src.utils.yaml_manager import load_yaml
 
 config = load_yaml(os.path.join("src", "deep_learning_strategy", "config.yml"))

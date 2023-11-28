@@ -45,7 +45,7 @@ class TranShapExplainer:
 
     def run(self, texts: list[str], explain_ids: list[int], show: bool = True, out_label_name: str = "target"):
         word_tokenizer = TweetTokenizer()
-        bag_of_words = set([xx for x in texts for xx in word_tokenizer.tokenize(x)])
+        bag_of_words = list(sorted(set([xx for x in texts for xx in word_tokenizer.tokenize(x)])))
 
         words_dict = {0: None}
         words_dict_reverse = {None: 0}
@@ -57,14 +57,14 @@ class TranShapExplainer:
         train_dt = np.array([predictor.split_string(x) for x in np.array(texts)])
         idx_train_data, max_seq_len = predictor.dt_to_idx(train_dt)
 
-        explainer = shap.KernelExplainer(model=predictor.predict, data=shap.kmeans(idx_train_data, k=100))
+        explainer = shap.KernelExplainer(model=predictor.predict, data=shap.kmeans(idx_train_data, k=50))
 
         texts_ = [predictor.split_string(x) for x in texts]
         idx_texts, _ = predictor.dt_to_idx(texts_, max_seq_len=max_seq_len)
 
         idx_texts_to_use = np.asarray([idx_texts[a] for a in explain_ids])
         tokenized_texts_ = [texts_[a] for a in explain_ids]
-        shap_values = explainer.shap_values(X=idx_texts_to_use, nsamples=64, l1_reg="aic")
+        shap_values = explainer.shap_values(X=idx_texts_to_use, nsamples=96, l1_reg="aic")  # nsamples="auto" should be better
 
         # Explain each ID
         for idx, j in enumerate(range(len(explain_ids))):
