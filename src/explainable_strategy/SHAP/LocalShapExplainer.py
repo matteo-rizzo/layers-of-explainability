@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import shap
 
-from src.text_classification.utils import capitalize_first_letter
+from src.explainable_strategy.SHAP.utils import build_explanation
 
 
 class LocalShapExplainer:
@@ -18,47 +18,6 @@ class LocalShapExplainer:
         self.__target_dir = Path("plots") / "CategoricalShap" / f"shap_{model.__class__.__name__}_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
         self.explainer = None
         os.makedirs(self.__target_dir, exist_ok=True)
-
-    @staticmethod
-    def __helper_explanation(features, y, feature_names, label_names) -> str:
-        feature_importance_text = f"Top features that contributed towards '{label_names[y]}':\n"
-        explanations = list()
-        for f, pf, vf in features:
-            # vf is the original value of the feature f, unless f=OTHER_0/1, where it is the average % importance on all other features
-            # here we dynamically compose template
-            key_name = "mean" if f in ["OTHER_0", "OTHER_1"] else "value"
-            suffix = "%" if key_name == "mean" else ""
-            # If the feature does not have a description, we keep its name
-            pretty_name = capitalize_first_letter(feature_names[f]) if f in feature_names or key_name == "mean" else f
-            # Fill explanation template
-            sc = f" - [importance={abs(pf):.1f}%, {key_name}={vf:.1f}{suffix}] {pretty_name}"
-            explanations.append(sc)
-        feature_importance_text += "\n".join(explanations)
-        return feature_importance_text
-
-    @staticmethod
-    def build_explanation(text: str, y_pred: int, y_true: int, prob: float, features: list[tuple[str, float, float]], feature_names: dict[str, str],
-                          label_names: dict[int, str]) -> str:
-        s = (f"Example: '{text}'\n"
-             f"Predicted class: '{label_names[y_pred]}' (confidence={prob if y_pred == 1 else 100 - prob:.1f}%)\n"
-             f"True class: '{label_names[y_true]}'")
-
-        fn_pos = float.__gt__ if y_pred == 1 else float.__lt__
-        fn_neg = float.__lt__ if y_pred == 1 else float.__gt__
-
-        # Features contributing to predicted class
-        # - if predicted == 0 we select all features < 0, since negative values are < 0.5 after sigmoid
-        # - if predicted == 1 we select all features > 0, since negative values are > 0.5 after sigmoid
-        pred_pos_features = [f for f in features if fn_pos(f[1], 0)]
-        # Features contributing to the non-predicted class
-        pred_neg_features = [f for f in features if fn_neg(f[1], 0)]
-
-        text_s = [s]
-        if pred_pos_features:
-            text_s.append(LocalShapExplainer.__helper_explanation(pred_pos_features, y_pred, feature_names, label_names))
-        if pred_neg_features:
-            text_s.append(LocalShapExplainer.__helper_explanation(pred_neg_features, 1 - y_pred, feature_names, label_names))
-        return "\n".join(text_s)
 
     def run_tree(self, test_data: pd.DataFrame, texts: list[str], targets: list[int], feature_names: dict[str, str], label_names: dict[int, str],
                  top_k: int | None = None, effect_threshold: float | None = None) -> None:
@@ -108,7 +67,7 @@ class LocalShapExplainer:
 
         explanations: list[str] = list()
         for prob, y_pred, y_true, features, text in zip(y_probs, y_preds, targets, top_features, texts):
-            explanations.append(self.build_explanation(text, y_pred, y_true, prob * 100, features, feature_names, label_names))
+            explanations.append(build_explanation(text, y_pred, y_true, prob * 100, features, feature_names, label_names))
 
         for ex in explanations:
             print("************************************************************")
