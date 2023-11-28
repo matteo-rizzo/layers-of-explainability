@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pandas as pd
-from sklearn.preprocessing import LabelEncoder, StandardScaler, MaxAbsScaler
+from sklearn.preprocessing import LabelEncoder, StandardScaler, MinMaxScaler
 
 from src.deep_learning_strategy.classes.CGReviewDataset import CGReviewDataset
 from src.deep_learning_strategy.classes.Dataset import AbcDataset
@@ -45,8 +45,7 @@ def load_encode_dataset(dataset: AbcDataset, std_scale: bool = False, max_scale:
         if std_scale:
             transformation = StandardScaler()
         else:
-            # FIXME: values in test are not clipped (problem?)
-            transformation = MaxAbsScaler()  # range [-1, 1], 0s are kept
+            transformation = MinMaxScaler(clip=True)  # MaxAbsScaler: range [-1, 1], 0s are kept
 
         data_train = pd.DataFrame(transformation.fit_transform(data_train))
         data_train.columns = feature_names

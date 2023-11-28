@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import re
 from typing import Dict, Tuple, List, Union
@@ -14,6 +15,7 @@ from src.feature_extraction.text_features import separate_html_entities
 
 class CallMeSexistDataset(AbcDataset):
     BASE_DATASET = os.path.join("dataset", "call_me_sexist_sexism_detection")
+    EMOJI2CODE: dict = json.load(open("dataset/asset/emoji_to_code.json", mode="r", encoding="utf-8"))
 
     def __init__(self, target: str = "sexist", validation: float = .0, test_size: float = 0.25):
         super().__init__(target, validation)
@@ -30,14 +32,23 @@ class CallMeSexistDataset(AbcDataset):
 
     @staticmethod
     def preprocessing(text_string: str) -> str:
+        text_string_p = re.sub("MENTION\d+", "MENTION", text_string).strip()
+
+        text_string_p = re.sub(r"(http|ftp|https)://([\w_-]+(?:\.[\w_-]+)+)([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])", "LINK", text_string_p).strip()
+
         # Separate EMOJIS from adjacent words if necessary
-        text_string = separate_html_entities(text_string)
+        text_string_p = separate_html_entities(text_string_p)
 
         # Remove all substrings with < "anything but spaces" >
-        text_string = re.sub("<\S+>", "", text_string, flags=re.RegexFlag.IGNORECASE).strip()
+        # text_string_p = re.sub("<\S+>", "", text_string_p, flags=re.RegexFlag.IGNORECASE).strip()
 
         # Remove double spaces
-        return re.sub(" +", " ", text_string).strip()
+        text_string_p = re.sub(" +", " ", text_string_p).strip()
+
+        # text_string__ = replace_with_unicode(text_string_p, mapping=CallMeSexistDataset.EMOJI2CODE)
+        # text_string_p = capitalize_first_letter(text_string_p)
+
+        return text_string_p
 
     def _preprocess(self, corpora: List) -> Union[Tuple, None]:
         if not corpora:
