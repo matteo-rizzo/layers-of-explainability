@@ -1,9 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import rc, font_manager
+import scipy.special
 import seaborn as sns
-import itertools
-import glob
+from matplotlib import rc, font_manager
 
 
 def bar_chart_explanation(tokenized_text, values, class_to_explain, pred):
@@ -65,7 +64,7 @@ def determine_graph_width(max_word, max_length):
     return max_word * max_length * 0.15
 
 
-def joint_visualization(path, tokenized_text, values, class_to_explain, pred, i, fig_name: str):
+def joint_visualization(path, tokenized_text, values, class_to_explain, pred, i, fig_name: str, pred_is_logit: bool = True):
     ## first plot.
 
     # if len(tokenized_text) > 10:
@@ -118,8 +117,10 @@ def joint_visualization(path, tokenized_text, values, class_to_explain, pred, i,
         plt.setp(ticklabel, bbox=bbox)
     # ax.set_xticklabels(ax.get_xticklabels(), rotation = 45, ha="right")
     plt.axhline(y=0, color='black', linestyle='dashed')
+    if pred_is_logit:
+        pred = scipy.special.expit(pred)
     pred *= 100
-    title = f"Predicted class: {class_to_explain} ({pred:.2f} %)"
+    title = f"Predicted class: {class_to_explain} ({pred:.1f}%)"
     fig.suptitle(title)
     plt.ylabel("Impact on model output")
     pname = "".join(tokenized_text[0:3])

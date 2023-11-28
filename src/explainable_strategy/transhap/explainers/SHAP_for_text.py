@@ -14,13 +14,14 @@ def softmax(it):
 
 class SHAPexplainer:
 
-    def __init__(self, model, tokenizer, words_dict, words_dict_reverse, device="cuda"):
+    def __init__(self, model, tokenizer, words_dict, words_dict_reverse, device="cuda", use_logits: bool = True):
         self.model = model.model
         self.tokenizer = tokenizer
         self.device = device
         self.tweet_tokenizer = TweetTokenizer()
         self.words_dict = words_dict
         self.words_dict_reverse = words_dict_reverse
+        self.use_logits = use_logits
 
     def predict(self, indexed_words):
         # self.model.to(self.device)
@@ -55,8 +56,13 @@ class SHAPexplainer:
             outputs = self.model(input_ids=tokens_tensor)
             logits = outputs[0]
             predictions = logits.detach().cpu().numpy()
-        final = [softmax(x) for x in predictions]
-        return np.array(final)
+        if self.use_logits:
+            # return raw logits for additive shapley
+            return predictions
+        else:
+            # return probabilities
+            final = [softmax(x) for x in predictions]
+            return np.array(final)
 
     def split_string(self, string):
         data_raw = self.tweet_tokenizer.tokenize(string)
