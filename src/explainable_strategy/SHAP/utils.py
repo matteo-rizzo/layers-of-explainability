@@ -35,7 +35,7 @@ def __helper_explanation(features, y, feature_names, label_names, words_mode: bo
     for f, pf, vf in features:
         # vf is the original value of the feature f, unless f=OTHER_0/1, where it is the average % importance on all other features
         # here we dynamically compose template
-        key_name = "mean" if f in ["OTHER_0", "OTHER_1"] else "value"
+        key_name = "mean" if f in ["OTHER_0", "OTHER_1"] else "score"
         suffix = "%" if key_name == "mean" else ""
         # If the feature does not have a description, we keep its name
         pretty_name = capitalize_first_letter(feature_names[f]) if feature_names is not None and (f in feature_names or key_name == "mean") else f
@@ -44,7 +44,7 @@ def __helper_explanation(features, y, feature_names, label_names, words_mode: bo
         if words_mode and key_name != "mean":
             sc = f" - [importance={abs(pf):.1f}%] {value}"
         else:
-            sc = f" - [importance={abs(pf):.1f}%, {key_name}={value}{suffix}] {pretty_name if not words_mode else 'Other words'}"
+            sc = f" - [importance={abs(pf):.1f}%] {pretty_name if not words_mode else 'Other words'} ({key_name}={value}{suffix})"
         explanations.append(sc)
     feature_importance_text += "\n".join(explanations)
     return feature_importance_text

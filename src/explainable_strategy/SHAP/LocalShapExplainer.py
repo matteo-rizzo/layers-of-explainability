@@ -19,8 +19,8 @@ class LocalShapExplainer:
         self.explainer = None
         os.makedirs(self.__target_dir, exist_ok=True)
 
-    def run_tree(self, test_data: pd.DataFrame, texts: list[str], targets: list[int], feature_names: dict[str, str], label_names: dict[int, str],
-                 top_k: int | None = None, effect_threshold: float | None = None) -> None:
+    def run_explain(self, test_data: pd.DataFrame, texts: list[str], targets: list[int], feature_names: dict[str, str], label_names: dict[int, str],
+                    top_k: int | None = None, effect_threshold: float | None = None) -> None:
 
         assert (top_k is None) ^ (effect_threshold is None), "Exactly one of 'top_k' and 'effect_threshold' must be None"
 
@@ -53,7 +53,7 @@ class LocalShapExplainer:
             feature_values: pd.Series = test_data.loc[i, final_features.index]
             # Get the cumulative sum for the contribution of all other features and summarize them in two additional rows
             # Notice that other.abs().sum() + final_features.abs().sum() == 100
-            other = percentage_importance[~(percentage_importance.isin(final_features))]
+            other = percentage_importance[~(percentage_importance.index.isin(final_features.index))]
             final_features = pd.concat([final_features, feature_values], axis=1)
             final_features.loc["OTHER_0", :] = [-other[other < 0].abs().sum(), other[other < 0].abs().mean()]
             final_features.loc["OTHER_1", :] = [other[other > 0].abs().sum(), other[other > 0].abs().mean()]
