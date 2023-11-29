@@ -57,7 +57,7 @@ def main():
     # feat_names.update({v: v for v in data_test.columns.tolist()})
     feat_names = read_feature_descriptions(data_test.columns.tolist())
 
-    explainer.run_explain(data_test.iloc[0:10, :], DATASET.get_train_data(), y_true_test, feat_names, label_names={0: "not sexist", 1: "sexist"}, effect_threshold=.02)
+    explainer.run_explain(data_test.iloc[0:10, :], DATASET.get_test_data(), y_true_test, feat_names, label_names={0: "not sexist", 1: "sexist"}, effect_threshold=.02)
 
 
 if __name__ == "__main__":
