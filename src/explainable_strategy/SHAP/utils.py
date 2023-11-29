@@ -30,7 +30,7 @@ def build_explanation(text: str, y_pred: int, y_true: int, prob: float, features
 
 
 def __helper_explanation(features, y, feature_names, label_names, words_mode: bool) -> str:
-    feature_importance_text = f"Top features that contributed towards '{label_names[y]}':\n"
+    feature_importance_text = f"Top {'words' if words_mode else 'features'} that contributed towards '{label_names[y]}':\n"
     explanations = list()
     for f, pf, vf in features:
         # vf is the original value of the feature f, unless f=OTHER_0/1, where it is the average % importance on all other features
@@ -41,10 +41,10 @@ def __helper_explanation(features, y, feature_names, label_names, words_mode: bo
         pretty_name = capitalize_first_letter(feature_names[f]) if feature_names is not None and (f in feature_names or key_name == "mean") else f
         # Fill explanation template
         value = vf if not isinstance(vf, Number) else f"{vf:.1f}"
-        if words_mode:
+        if words_mode and key_name != "mean":
             sc = f" - [importance={abs(pf):.1f}%] {value}"
         else:
-            sc = f" - [importance={abs(pf):.1f}%, {key_name}={value}{suffix}] {pretty_name}"
+            sc = f" - [importance={abs(pf):.1f}%, {key_name}={value}{suffix}] {pretty_name if not words_mode else 'Other words'}"
         explanations.append(sc)
     feature_importance_text += "\n".join(explanations)
     return feature_importance_text

@@ -48,7 +48,12 @@ class TranShapExplainer:
 
     def run_explain(self, texts: list[str], explain_ids: list[int], targets: list[int], label_names: dict,
                     effect_threshold: float = None, top_k: int = None, out_label_name: str = "target"):
-        out_ = self.__model([texts[i] for i in explain_ids], top_k=1)
+        # Extract examples for explanation
+        texts_to_explain = [texts[i] for i in explain_ids]
+        targets_to_explain = [targets[i] for i in explain_ids]
+        out_ = self.__model(texts_to_explain, top_k=1)
+        predicted_classes: list[int] = [int(idx[0]["score"] >= .5) for idx in out_]
+        predicted_scores: list[float] = [idx[0]["score"] for idx in out_]
         labels = [f"not {out_label_name}", out_label_name]
 
         word_tokenizer = TweetTokenizer()
@@ -73,11 +78,8 @@ class TranShapExplainer:
         tokenized_texts_: list[list[str]] = [texts_[a] for a in explain_ids]
         shap_values = explainer.shap_values(X=idx_texts_to_use, nsamples=96, l1_reg="aic")  # nsamples="auto" should be better
 
-        predicted_classes: list[int] = [int(idx[0]["label"] == self.__target_label) for idx in out_]
-        predicted_scores: list[float] = [idx[0]["score"] for idx in out_]
         # shap_values_to_explain = np.array([shap_values[class_idx][i] for i, class_idx in enumerate(predicted_classes)])
-        # TODO: boh?
-        shap_values_to_explain = shap_values[1] - shap_values[0]
+        shap_values_to_explain: np.ndarray = shap_values[0]  # shap_values[1] + shap_values[0]
 
         shap_values_abs = np.abs(shap_values_to_explain)
         shap_values_signs = np.where(shap_values_to_explain < 0, -1, 1)
@@ -99,31 +101,35 @@ class TranShapExplainer:
                 sorted_magnitudes = sorted_magnitudes[sorted_magnitudes > effect_threshold * 100]
             # Take original signed values
             final_features = percentage_importance[sorted_magnitudes.index]
-            if top_k is not None:
-                # Take top k values by magnitude
-                final_features = final_features[:top_k]
 
-            # Feature values for selected important features
+            # Find words with highest importance, dropping None values (padding tokens)
             feature_values: pd.Series = pd.Series([words_dict[wi] for wi in shap_values_columns_indexes.loc[j, final_features.index].tolist()],
-                                                  index=final_features.index)  # [w for w in tokenized_texts_[j]]  test_data.loc[i, final_features.index]
+                                                  index=final_features.index).dropna()
+
+            if top_k is not None:
+                # Take top k values by magnitude (not None)
+                final_features = final_features.loc[feature_values.index][:top_k]
+
             # Get the cumulative sum for the contribution of all other features and summarize them in two additional rows
             # Notice that other.abs().sum() + final_features.abs().sum() == 100
-            other = percentage_importance[~(percentage_importance.isin(final_features))]
-            final_features = pd.concat([final_features, feature_values], axis=1)
+            other = percentage_importance[~(percentage_importance.index.isin(final_features.index))]
+            final_features = pd.concat([final_features, feature_values], axis=1, join="inner")
             final_features.loc["OTHER_0", :] = [-other[other < 0].abs().sum(), other[other < 0].abs().mean()]
             final_features.loc["OTHER_1", :] = [other[other > 0].abs().sum(), other[other > 0].abs().mean()]
             # Add the feature tuples to the list for this example
             # tuple is made of: (feature_name, feature_importance, feature_value/mean feature_importance)
             top_features.append([(feat_name, *s.values.tolist()) for feat_name, s in list(final_features.iterrows())])
 
-            # TODO:
-            #   - word is None sometime
-            #   - other features does not appear correctly (no name)
-            #   - is it correct to subtract SHAPleys
-            #   - duplication
+            pred = predicted_classes[j]
+            len_ = len(tokenized_texts_[j])
+            # out = shap.force_plot(explainer.expected_value[pred], shap_values[pred][j, :len_], tokenized_texts_[j], matplotlib=False, show=False, out_names=labels[pred])
+            out = shap.force_plot(explainer.expected_value, shap_values_to_explain[j, :len_], tokenized_texts_[j], matplotlib=False, show=False, out_names=labels[pred])
+            shap.save_html(str(self.__target_dir / f"shap_force_{explain_ids[j]}.htm"), out, full_html=True)
+
+            print(" ".join(tokenized_texts_[j]), texts[explain_ids[j]])
 
         explanations: list[str] = list()
-        for prob, y_pred, y_true, features, text in zip(predicted_scores, predicted_classes, targets, top_features, texts):
+        for prob, y_pred, y_true, features, text in zip(predicted_scores, predicted_classes, targets_to_explain, top_features, texts_to_explain):
             explanations.append(build_explanation(text, y_pred, y_true, prob * 100, features, None, label_names, words_mode=True))
 
         for ex in explanations:
