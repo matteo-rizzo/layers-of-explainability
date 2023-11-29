@@ -19,5 +19,5 @@ class Wellformedness(Feature):
     @classmethod
     def label_description(cls) -> dict[str, str]:
         return {
-            f"{cls.__name__}_LABEL_0": "sentence well-formed score"
+            f"{cls.__name__}_LABEL_0": "Grammatical score"
         }

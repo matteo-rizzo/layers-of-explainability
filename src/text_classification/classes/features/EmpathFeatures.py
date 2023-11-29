@@ -38,7 +38,7 @@ class EmpathFeatures(Feature):
                 'philosophy', 'negotiate', 'negative_emotion', 'cleaning', 'messaging', 'competing', 'law', 'friends', 'payment', 'achievement', 'alcohol', 'disappointment',
                 'liquid', 'feminine', 'weapon', 'children', 'ocean', 'giving', 'contentment', 'writing', 'rural', 'positive_emotion', 'musical']
 
-        emotions = [f"text score for lexical category '{e}'" for e in cats]
+        emotions = [f"Lexical category '{e}' score" for e in cats]
         labels = [f"{cls.__name__}_{aspect}" for aspect in cats]
         d = dict(zip(labels, emotions))
 

@@ -19,6 +19,6 @@ class ChatGPTDetector(Feature):
     @classmethod
     def label_description(cls) -> dict[str, str]:
         return {
-            f"{cls.__name__}_Human": "text is not written using ChatGPT",
-            f"{cls.__name__}_ChatGPT": "text is written using ChatGPT"
+            f"{cls.__name__}_Human": "Likely not written using a generative model",
+            f"{cls.__name__}_ChatGPT": "Likely written using a generative model"
         }

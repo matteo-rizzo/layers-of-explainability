@@ -24,3 +24,75 @@ class LIWCFeatures(Feature):
         feature_df: dict[str, list[float]] = defaultdict(list)
         [feature_df[f'{self.__class__.__name__}_{aspect}'].append(score) for label_dict in ext_data for aspect, score in label_dict.items()]
         return feature_df
+
+    @classmethod
+    def label_description(cls) -> dict[str, str]:
+        # See manual at: https://www.liwc.app/static/documents/LIWC-22%20Manual%20-%20Development%20and%20Psychometrics.pdf
+        liwc_spheres = {
+            "funct": "all functional words",
+            "pronoun": "pronouns",
+            "ppron": "personal pronouns",
+            "i": "1st person singular",
+            "we": "1st person plural",
+            "you": "2nd person",
+            "shehe": "3rd person singular",
+            "they": "3rd person plural ",
+            "ipron": "impersonal pronouns",
+            "article": "articles",
+            "verb": "verbs",
+            "auxverb": "auxiliary verbs",
+            "past": "past focus",
+            "present": "present focus",
+            "future": "future focus",
+            "adverb": "Adverbs",
+            "preps": "prepositions",
+            "conj": "conjunctions",
+            "negate": "Negations",
+            "quant": "quantities",
+            "number": "numbers",
+            "swear": "swear words",
+            "social": "social processes",
+            "family": "family",
+            "friend": "friends",
+            "humans": "humanity",  #
+            "affect": "affections",
+            "posemo": "positive emotions",
+            "negemo": "negative emotions",
+            "anx": "anxiety",
+            "anger": "anger",
+            "sad": "sadness",
+            "cogmech": "cognitive processes",
+            "insight": "insight",
+            "cause": "causation",
+            "discrep": "discrepancy",
+            "tentat": "tentative",
+            "certain": "certitude",
+            "inhib": "inhibition",  #
+            "incl": "inclusion",  #
+            "excl": "exclusion",  #
+            "percept": "perception",
+            "see": "visual perception",
+            "hear": "auditory perception",
+            "feel": "feeling",
+            "bio": "physical",
+            "body": "human body",  #
+            "health": "health",
+            "sexual": "sexuality",
+            "ingest": "food",
+            "relativ": "time, space, motion words",
+            "motion": "motion words",
+            "space": "space perception (in, out, up, there)",
+            "time": "time",
+            "work": "work",  #
+            "achieve": "achievement",
+            "leisure": "leisure",
+            "home": "home-place",
+            "money": "money",
+            "relig": "religion",
+            "death": "death",
+            "assent": "assent",
+            "nonfl": "nonfluencies",
+            "filler": "filler words/exclamations"
+        }
+
+        return {f"{cls.__name__}_{s}": f"LIWC score for psychosocial construct '{d}'" for s, d in liwc_spheres.items()}

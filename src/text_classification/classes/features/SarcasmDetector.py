@@ -19,6 +19,6 @@ class SarcasmDetector(Feature):
     @classmethod
     def label_description(cls) -> dict[str, str]:
         return {
-            f"{cls.__name__}_LABEL_0": "text does not contain sarcasm",
-            f"{cls.__name__}_LABEL_1": "text contains sarcasm"
+            f"{cls.__name__}_LABEL_0": "text is not sarcastic",
+            f"{cls.__name__}_LABEL_1": "text is sarcastic"
         }

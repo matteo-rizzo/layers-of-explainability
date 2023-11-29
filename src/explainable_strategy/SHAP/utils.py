@@ -40,7 +40,7 @@ def __helper_explanation(features, y, feature_names, label_names, words_mode: bo
         # If the feature does not have a description, we keep its name
         pretty_name = capitalize_first_letter(feature_names[f]) if feature_names is not None and (f in feature_names or key_name == "mean") else f
         # Fill explanation template
-        value = vf if not isinstance(vf, Number) else f"{vf:.1f}"
+        value = vf if not isinstance(vf, Number) else f"{vf:.2f}"
         if words_mode and key_name != "mean":
             sc = f" - [importance={abs(pf):.1f}%] {value}"
         else:

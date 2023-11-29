@@ -20,7 +20,7 @@ class EvidenceType(Feature):
     def label_description(cls) -> dict[str, str]:
         return {
             f"{cls.__name__}_None": "no evidence type detected in text",
-            f"{cls.__name__}_Other": "text contains other evidence types",
+            f"{cls.__name__}_Other": "text contains unrecognized evidence types",
             f"{cls.__name__}_Assumption": "text contains assumptions",
             f"{cls.__name__}_Definition": "text contains definitions",
             f"{cls.__name__}_Testimony": "text contains testimonies",
