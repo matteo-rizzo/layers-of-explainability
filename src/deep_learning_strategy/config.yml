@@ -23,7 +23,7 @@ training:
 
 testing:
   model_name: dumps/nlp_models/cardiffnlp_twitter-roberta-base-2022-154m_1/checkpoint-768
-  target_label: LABEL_1 # LABEL_1 # hateful # target for inference, depends on pre-trained model
+  target_label: LABEL_0 # LABEL_1 # hateful # target for inference, depends on pre-trained model
 
 
 grid_search_params:

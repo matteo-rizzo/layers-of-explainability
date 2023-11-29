@@ -4,17 +4,17 @@ from pathlib import Path
 from typing import Dict, Tuple, Optional
 
 import evaluate
-import numpy as np
+import scipy as sp
 from datasets import Dataset
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, TrainingArguments, Trainer, \
     EarlyStoppingCallback, PreTrainedModel, PreTrainedTokenizer
 
-from src.deep_learning_strategy.classes.CallMeSexistDataset import CallMeSexistDataset
 from src.deep_learning_strategy.classes.HuggingFaceAMI2018Dataset import HuggingFaceAMI2018Dataset
 from src.deep_learning_strategy.classes.HuggingFaceAMI2020Dataset import HuggingFaceAMI2020Dataset
 from src.deep_learning_strategy.classes.HuggingFaceCGReviewDataset import HuggingFaceCGReviewDataset
 from src.deep_learning_strategy.classes.HuggingFaceCallMeSexistDataset import HuggingFaceCallMeSexistDataset
 from src.deep_learning_strategy.classes.HuggingFaceIMDBDataset import HuggingFaceIMDBDataset
+from src.text_classification.classes.training.BinaryTrainer import BinaryTrainer
 
 
 class FineTuner:
@@ -71,7 +71,7 @@ class FineTuner:
             metric_for_best_model="eval_loss", save_total_limit=self.__keep_n_best_models,
             load_best_model_at_end=True)
 
-        self.__trainer = Trainer(
+        self.__trainer = BinaryTrainer(
             model=self.__model,
             args=training_args,
             train_dataset=self.__data["train"],
@@ -89,7 +89,11 @@ class FineTuner:
 
     def __get_model(self) -> PreTrainedModel:
         num_labels = self.__data["train"].features["label"].num_classes
-        model = AutoModelForSequenceClassification.from_pretrained(self.__model_name, num_labels=num_labels)
+        if num_labels == 2:
+            num_labels = 1
+        model = AutoModelForSequenceClassification.from_pretrained(self.__model_name,
+                                                                   num_labels=num_labels,
+                                                                   problem_type="multi_label_classification")
         return self.__freeze_parameters(model) if self.__freeze_base else model
 
     def __get_eval_data(self) -> Dict:
@@ -132,7 +136,10 @@ class FineTuner:
     @staticmethod
     def __get_metrics(model_output: Tuple) -> Dict:
         logits, labels = model_output
-        predictions = np.argmax(logits, axis=-1)
+        # predictions = np.argmax(logits, axis=-1)
+        logits = logits.reshape(-1)
+        predictions = sp.special.expit(logits)
+        predictions = (predictions >= .5).astype(int)
         return {
             "precision": evaluate.load("precision").compute(predictions=predictions, references=labels)["precision"],
             "recall": evaluate.load("recall").compute(predictions=predictions, references=labels)["recall"],
