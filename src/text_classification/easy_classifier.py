@@ -13,6 +13,7 @@ Classifier/grid search configuration is to be set in "src/text_classification/co
 
 from __future__ import annotations
 
+import random
 import time
 from pathlib import Path
 
@@ -90,44 +91,54 @@ def create_skorch_model_arguments(train_data: pd.DataFrame) -> dict:
     return classifier
 
 
-DATASET: AbcDataset = CallMeSexistDataset()
+# DATASET: AbcDataset = CallMeSexistDataset()
 DO_GRID_SEARCH = False
 
 
 def main():
-    # Define which feature to use, or None to use everything
-    keep_features = None
-    # ['TextEmotion_admiration', 'TextEmotion_annoyance', 'TextEmotion_pride',
-    #              'polarity', 'EmpathFeatures_fun', 'EmpathFeatures_lust',
-    #              'EmpathFeatures_messaging',
-    #              'EmotionLex_NRC-Hashtag-Emotion-Lexicon-v0.2_sadness_avgLexVal']
-    data_train, data_test = load_encode_dataset(dataset=DATASET, max_scale=True, features=keep_features)
-    train_config: dict = load_yaml("src/text_classification/config/classifier.yml")
+    all_metrics = []
 
-    # SETTINGS:
-    # ------------- SK learn classifiers
-    SK_CLASSIFIER_TYPE: type = XGBClassifier
-    SK_CLASSIFIER_PARAMS: dict = dict()  # dict(estimator=LogisticRegression())
+    for seed in [1]:
+        DATASET: AbcDataset = CallMeSexistDataset(random_seed=seed)
+        # Define which feature to use, or None to use everything
+        keep_features = None
+        # ['TextEmotion_admiration', 'TextEmotion_annoyance', 'TextEmotion_pride',
+        #              'polarity', 'EmpathFeatures_fun', 'EmpathFeatures_lust',
+        #              'EmpathFeatures_messaging',
+        #              'EmotionLex_NRC-Hashtag-Emotion-Lexicon-v0.2_sadness_avgLexVal']
+        data_train, data_test = load_encode_dataset(dataset=DATASET, max_scale=True, features=keep_features)
+        train_config: dict = load_yaml("src/text_classification/config/classifier.yml")
 
-    # ------------- TORCH with SKORCH
-    # SK_CLASSIFIER_TYPE: type = NeuralNetBinaryClassifier
-    # SK_CLASSIFIER_PARAMS: dict = create_skorch_model_arguments(data_train)
+        # SETTINGS:
+        # ------------- SK learn classifiers
+        SK_CLASSIFIER_TYPE: type = XGBClassifier
+        SK_CLASSIFIER_PARAMS: dict = dict()  # dict(estimator=LogisticRegression())
 
-    update_params_composite_classifiers(train_config, SK_CLASSIFIER_TYPE, SK_CLASSIFIER_PARAMS)
+        # ------------- TORCH with SKORCH
+        # SK_CLASSIFIER_TYPE: type = NeuralNetBinaryClassifier
+        # SK_CLASSIFIER_PARAMS: dict = create_skorch_model_arguments(data_train)
 
-    if DO_GRID_SEARCH:
-        gsu = GridSearchUtility(train_config, SK_CLASSIFIER_TYPE, SK_CLASSIFIER_PARAMS)
-        clf = gsu.grid_search_best_params(data_train, DATASET.compute_metrics)
-    else:
-        tmu = TrainingModelUtility(train_config, SK_CLASSIFIER_TYPE, SK_CLASSIFIER_PARAMS)
-        clf = tmu.train_classifier(data_train)
-        tmu.evaluate(data_test, DATASET.compute_metrics)
+        update_params_composite_classifiers(train_config, SK_CLASSIFIER_TYPE, SK_CLASSIFIER_PARAMS)
 
-    # TO BE DONE: Implement saving if needed
-    save_dir = Path("dumps") / "nlp_models" / clf.__class__.__name__ / f"model_{time.time()}.pkl"
-    save_dir.parent.mkdir(exist_ok=True, parents=True)
-    joblib.dump(clf, save_dir)
+        if DO_GRID_SEARCH:
+            gsu = GridSearchUtility(train_config, SK_CLASSIFIER_TYPE, SK_CLASSIFIER_PARAMS)
+            clf = gsu.grid_search_best_params(data_train, DATASET.compute_metrics)
+        else:
+            tmu = TrainingModelUtility(train_config, SK_CLASSIFIER_TYPE, SK_CLASSIFIER_PARAMS)
+            clf = tmu.train_classifier(data_train)
+            metrics = tmu.evaluate(data_test, DATASET.compute_metrics, print_metrics=False)
+            all_metrics.append(metrics)
 
+        # TO BE DONE: Implement saving if needed
+        save_dir = Path("dumps") / "nlp_models" / clf.__class__.__name__ / f"model_{time.time()}.pkl"
+        save_dir.parent.mkdir(exist_ok=True, parents=True)
+        joblib.dump(clf, save_dir)
+
+    results = pd.DataFrame(all_metrics)
+    for column in results.columns:
+        average = results[column].mean()
+        std = results[column].std()
+        print(f"{XGBClassifier.__name__} {column}: {average:.3f} [+-{std:.3f}]")
 
 if __name__ == "__main__":
     main()

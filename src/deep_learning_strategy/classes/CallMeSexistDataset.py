@@ -17,10 +17,11 @@ class CallMeSexistDataset(AbcDataset):
     BASE_DATASET = os.path.join("dataset", "call_me_sexist_sexism_detection")
     EMOJI2CODE: dict = json.load(open("dataset/asset/emoji_to_code.json", mode="r", encoding="utf-8"))
 
-    def __init__(self, target: str = "sexist", validation: float = .0, test_size: float = 0.25):
+    def __init__(self, target: str = "sexist", validation: float = .0, test_size: float = 0.25,
+                 random_seed: int = RANDOM_SEED):
         super().__init__(target, validation)
         self._test_size = test_size
-        self._split_data = self._train_val_test()
+        self._split_data = self._train_val_test(random_seed=random_seed)
 
     @staticmethod
     def get_path_to_testset() -> str:
@@ -34,7 +35,8 @@ class CallMeSexistDataset(AbcDataset):
     def preprocessing(text_string: str) -> str:
         text_string_p = re.sub("MENTION\d+", "MENTION", text_string).strip()
 
-        text_string_p = re.sub(r"(http|ftp|https)://([\w_-]+(?:\.[\w_-]+)+)([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])", "LINK", text_string_p).strip()
+        text_string_p = re.sub(r"(http|ftp|https)://([\w_-]+(?:\.[\w_-]+)+)([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])",
+                               "LINK", text_string_p).strip()
 
         # Separate EMOJIS from adjacent words if necessary
         text_string_p = separate_html_entities(text_string_p)
@@ -61,13 +63,13 @@ class CallMeSexistDataset(AbcDataset):
         # prepr_ds = tuple([[text for text in texts if text] if texts is not None else None for texts in prepr_ds])
         return prepr_ds
 
-    def _train_val_test(self) -> Dict:
+    def _train_val_test(self, random_seed: int = RANDOM_SEED) -> Dict:
         # Fetch data
         all_data_path = self.get_path_to_testset()
         train_df = pd.read_csv(all_data_path)
 
         # Split train and test
-        train_df, test_df = train_test_split(train_df, test_size=self._test_size, random_state=RANDOM_SEED,
+        train_df, test_df = train_test_split(train_df, test_size=self._test_size, random_state=random_seed,
                                              shuffle=True, stratify=train_df[self._target])
         train_x, train_y = train_df["text"].tolist(), train_df[self._target].astype(int).tolist()
         test_x, test_y = test_df["text"].tolist(), test_df[self._target].astype(int).tolist()
@@ -79,7 +81,7 @@ class CallMeSexistDataset(AbcDataset):
         validation = dict()
         if self._validation > 0:
             train_x, val_x, train_y, val_y, train_ids, val_ids = (
-                train_test_split(train_x, train_y, test_size=self._validation, random_state=RANDOM_SEED, shuffle=True,
+                train_test_split(train_x, train_y, test_size=self._validation, random_state=random_seed, shuffle=True,
                                  stratify=train_y))
             validation = {"val": {"x": val_x, "y": val_y, "ids": val_ids}}
 
