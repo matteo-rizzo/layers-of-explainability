@@ -20,7 +20,14 @@ class LocalShapExplainer:
         os.makedirs(self.__target_dir, exist_ok=True)
 
     def run_explain(self, test_data: pd.DataFrame, texts: list[str], targets: list[int], feature_names: dict[str, str], label_names: dict[int, str],
-                    top_k: int | None = None, effect_threshold: float | None = None) -> None:
+                    top_k: int | None = None, effect_threshold: float | None = None, quantized_features: pd.DataFrame | None = None) -> None:
+
+        assert (quantized_features is None or (test_data.shape == quantized_features.shape)
+                and (test_data.index == quantized_features.index).all()
+                and (test_data.columns == quantized_features.columns).all()), "'quantized_features' must have same shape as 'test_data'"
+        values_df = test_data
+        if quantized_features is not None:
+            values_df = quantized_features.astype(str)  # Categorical causes problems, so use str
 
         assert (top_k is None) ^ (effect_threshold is None), "Exactly one of 'top_k' and 'effect_threshold' must be None"
 
@@ -49,8 +56,8 @@ class LocalShapExplainer:
             if top_k is not None:
                 # Take top k values by magnitude
                 final_features = final_features[:top_k]
-            # Feature values for selected important features
-            feature_values: pd.Series = test_data.loc[i, final_features.index]
+            # Feature values (quantized or vanilla) for selected important features
+            feature_values: pd.Series = values_df.loc[i, final_features.index]
             # Get the cumulative sum for the contribution of all other features and summarize them in two additional rows
             # Notice that other.abs().sum() + final_features.abs().sum() == 100
             other = percentage_importance[~(percentage_importance.index.isin(final_features.index))]

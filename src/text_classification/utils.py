@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder, StandardScaler, MinMaxScaler
 
@@ -62,3 +63,48 @@ def capitalize_first_letter(s: str) -> str:
     """ Make first letter uppercase, leavening the rest of the string unchanged"""
     s_chars = list(s)
     return s_chars[0].upper() + ''.join(s_chars[1:])
+
+
+def bin_column(values: pd.Series, labels: list[str]) -> tuple[pd.Series, dict[str, float]]:
+    """
+    Utility to bin a single pandas series using, if possible, pd.qcut or alternatively pd.cut
+
+    @param values: series to transform, will not be changed
+    @param labels: list of interval labels in sorted order (low to high)
+    @return: series with transformed values,
+        and dictionary of bin edges used in the binning process ({bin label -> bin upper edge})
+    """
+    test_quantiles: list[float] = [values.quantile(x) for x in np.linspace(0, 1, len(labels) + 1).tolist()]
+    has_duplicates: bool = len(np.unique(test_quantiles)) != len(test_quantiles)
+    if has_duplicates:
+        # Can't do partition by quantiles so just use linear partition
+        t_values, bins = pd.cut(values, bins=len(labels), labels=labels, include_lowest=True, duplicates="raise", ordered=True, right=True, retbins=True)
+    else:
+        t_values, bins = pd.qcut(values, q=len(labels), labels=labels, duplicates="raise", retbins=True)
+    bin_labels = dict(zip(labels, bins[1:].tolist()))  # exclude the lowest bound which is always 0
+    return t_values, bin_labels
+
+
+def quantize_features(data: pd.DataFrame, quantiles: dict[str, dict[str, float]] | None = None, interval_labels: list[str] = None) -> tuple[pd.DataFrame, dict]:
+    """
+    Quantization of feature based on frequency intervals
+
+    @param interval_labels: labels of each quantile. Used to determine the number of bins. Ignored if quantiles != None
+    @param quantiles: dictionary of {"column" -> {"label" -> bin upper bound}}, or None to compute quantiles automatically
+    @param data: dataframe to transform, a copy will be returned
+    @return: transformed dataframe, bins/quantiles for each column as dict (same as input)
+    """
+    data = data.copy()
+    if interval_labels is None:
+        interval_labels = ["low", "mid", "high"]
+
+    if quantiles is None:
+        quantiles = dict()
+        for col in data.columns:
+            data[col], quantiles[col] = bin_column(data[col], interval_labels)
+    else:
+        for col in data.columns:
+            data[col] = pd.cut(data[col], bins=[0, *quantiles[col].values()], labels=list(quantiles[col].keys()), include_lowest=True, duplicates="raise", right=True,
+                               retbins=False)
+
+    return data, quantiles
