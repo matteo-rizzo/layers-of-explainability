@@ -34,7 +34,7 @@ from src.utils.yaml_manager import load_yaml
 DATASET: AbcDataset = CallMeSexistDataset()
 
 # 'ablation' will try to retrain a model removing 1 feature at a time,
-# or if 'FEATURE_CLUSTERS_REMOVE' is a list of feaures it will try to remove only this set of features
+# or if 'FEATURE_CLUSTERS_REMOVE' is a list of features it will try to remove only this set of features
 # 'importance' will require a fitted model in 'MODEL_DIR' and will try feature permutation to understand the feature importance in model
 MODE: str = "ablation"  # "ablation", "importance"
 
@@ -72,7 +72,7 @@ def main():
     else:
         clf = joblib.load(MODEL_DIR)
         abl = FeatureImportance(dataset=DATASET, out_path="dumps/ablation")
-        abl.run_importance_test(clf, metric="accuracy", decorrelate=True)
+        abl.run_importance_test(clf, metric="accuracy", decorrelate=True, use_validation=False)
 
 
 if __name__ == "__main__":
