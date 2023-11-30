@@ -5,6 +5,7 @@ from importlib import import_module
 from pathlib import Path
 
 import joblib
+import numpy as np
 
 from src.deep_learning_strategy.classes.CallMeSexistDataset import CallMeSexistDataset
 from src.deep_learning_strategy.classes.Dataset import AbcDataset
@@ -67,10 +68,12 @@ def main():
     # * Quantize the test set
     data_test_q, _ = quantize_features(data_test, quantiles=q_bins)
 
-    ids_to_explain = slice(0, 10)  # or [1, 4, 5, 2, 67]
+    # ids_to_explain = slice(0, 10)  # or [1, 4, 5, 2, 67]
+    ids_to_explain = np.random.randint(0, data_test.shape[0], size=20).tolist()
+    print(f"Chosen ids: {ids_to_explain}")
 
-    explainer.run_explain(data_test.iloc[ids_to_explain, :], DATASET.get_test_data(), y_true_test, feat_names, label_names={0: "not sexist", 1: "sexist"}, effect_threshold=.02,
-                          quantized_features=data_test_q.iloc[ids_to_explain, :])
+    explainer.run_explain(data_test, ids_to_explain, DATASET.get_test_data(), y_true_test, feat_names, label_names={0: "not sexist", 1: "sexist"}, effect_threshold=.001,
+                          quantized_features=data_test_q)
 
 
 if __name__ == "__main__":

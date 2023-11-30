@@ -49,7 +49,7 @@ class TranShapExplainer:
     def run_explain(self, texts: list[str], explain_ids: list[int], targets: list[int], label_names: dict,
                     effect_threshold: float = None, top_k: int = None, out_label_name: str = "target"):
         # Extract examples for explanation
-        texts_to_explain = [texts[i] for i in explain_ids]
+        texts_to_explain = [f"ID:{i} - {texts[i]}" for i in explain_ids]
         targets_to_explain = [targets[i] for i in explain_ids]
         out_ = self.__model(texts_to_explain, top_k=1)
         predicted_classes: list[int] = [int(idx[0]["score"] >= .5) for idx in out_]
@@ -102,8 +102,8 @@ class TranShapExplainer:
             # Take original signed values
             final_features = percentage_importance[sorted_magnitudes.index]
 
-            # Find words with highest importance, dropping None values (padding tokens)
-            feature_values: pd.Series = pd.Series([words_dict[wi] for wi in shap_values_columns_indexes.loc[j, final_features.index].tolist()],
+            # Find words with the highest importance, dropping None values (padding tokens)
+            feature_values: pd.Series = pd.Series([words_dict[wi] for wi in shap_values_columns_indexes.iloc[j, :].loc[final_features.index].tolist()],
                                                   index=final_features.index).dropna()
 
             if top_k is not None:
