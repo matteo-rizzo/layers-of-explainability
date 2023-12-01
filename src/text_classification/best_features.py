@@ -24,7 +24,7 @@ def test_rfe():
     # data_train = data_train.iloc[:, :10]
 
     # create pipeline
-    rfe = RFECV(estimator=SK_CLASSIFIER_TYPE(**train_config[SK_CLASSIFIER_TYPE.__name__]))
+    rfe = RFECV(estimator=SK_CLASSIFIER_TYPE(**train_config[SK_CLASSIFIER_TYPE.__name__]), min_features_to_select=270, step=2)
     model = SK_CLASSIFIER_TYPE(**train_config[SK_CLASSIFIER_TYPE.__name__])
     # pipeline = Pipeline(steps=[('s', rfe), ('m', model)])
     # evaluate model
@@ -47,6 +47,9 @@ def test_rfe():
 
     n_scores = cross_val_score(model, data_train.loc[:, selected], y_train, scoring="accuracy", cv=cv, n_jobs=-1, error_score="raise", verbose=0)
     print(f"Scores on CV with only {len(selected)} features: {float(np.mean(n_scores)):.3}")
+
+    print("*** Removed")
+    print(list(set(data_train.columns) - set(selected)))
 
 
 def get_feature_by_importance():
@@ -72,5 +75,5 @@ def get_feature_by_importance():
 
 
 if __name__ == "__main__":
-    get_feature_by_importance()
-    # test_rfe()
+    # get_feature_by_importance()
+    test_rfe()
