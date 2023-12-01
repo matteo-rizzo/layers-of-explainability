@@ -12,11 +12,12 @@ from src.deep_learning_strategy.classes.Dataset import AbcDataset
 from src.explainable_strategy.SHAP.LocalShapExplainer import LocalShapExplainer
 from src.text_classification.classes.features.Feature import Feature
 from src.text_classification.classes.training.TrainingModelUtility import TrainingModelUtility
+from src.text_classification.easy_classifier import EXCLUDE_LIST
 from src.text_classification.utils import load_encode_dataset, quantize_features
 from src.utils.yaml_manager import load_yaml
 
 DATASET: AbcDataset = CallMeSexistDataset()
-LOAD_MODEL_DUMP = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_1701189623.104557.pkl"
+LOAD_MODEL_DUMP = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_1701429210.1156893.pkl"
 
 
 def read_feature_descriptions(column_names: list[str]) -> dict[str, str]:
@@ -38,7 +39,7 @@ def read_feature_descriptions(column_names: list[str]) -> dict[str, str]:
 
 def main():
     # Load data
-    data_train, data_test = load_encode_dataset(dataset=DATASET, max_scale=True, features=None)
+    data_train, data_test = load_encode_dataset(dataset=DATASET, max_scale=True, exclude_features=EXCLUDE_LIST)
     train_config: dict = load_yaml("src/text_classification/config/classifier.yml")
     data_train.pop("y")
     y_true_test = data_test["y"].tolist()

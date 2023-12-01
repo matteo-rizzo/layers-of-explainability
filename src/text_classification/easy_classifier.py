@@ -93,6 +93,16 @@ def create_skorch_model_arguments(train_data: pd.DataFrame) -> dict:
 DATASET: AbcDataset = CallMeSexistDataset()
 DO_GRID_SEARCH = False
 
+EXCLUDE_LIST = ['TextEmotion_sadness', 'TextEmotion_remorse', 'TextEmotion_nervousness', 'TextEmotion_grief', 'LIWCFeatures_auxverb', 'LIWCFeatures_present', 'LIWCFeatures_quant',
+                'LIWCFeatures_sad', 'LIWCFeatures_certain', 'LIWCFeatures_time', 'EmpathFeatures_ancient', 'EmotionLex_NRC-Hashtag-Emotion-Lexicon-v0.2_anticipation_avgLexVal',
+                'EmotionLex_NRC-Hashtag-Emotion-Lexicon-v0.2_fear_avgLexVal', 'EmotionLex_NRC-Hashtag-Emotion-Lexicon-v0.2_joy_avgLexVal',
+                'EmotionLex_NRC-Hashtag-Emotion-Lexicon-v0.2_sadness_avgLexVal', 'LIWCFeatures_tentat', 'LIWCFeatures_excl', 'LIWCFeatures_ipron', 'LIWCFeatures_negate',
+                'LIWCFeatures_insight', 'SarcasmDetector_LABEL_1', 'Wellformedness_LABEL_0', 'ChatGPTDetector_Human', 'ChatGPTDetector_ChatGPT', 'ParrotAdequacy_contradiction',
+                'GibberishDetector_clean', 'GibberishDetector_mild gibberish', 'TextGrammarErrors_error_MISC', 'LIWCFeatures_affect', 'LIWCFeatures_posemo', 'EvidenceType_Other',
+                'EvidenceType_Anecdote', 'EmpathFeatures_love', 'EmpathFeatures_affection', 'EmpathFeatures_positive_emotion', 'EmpathFeatures_medical_emergency',
+                'EmpathFeatures_health', 'TextEmotion_fear', 'LIWCFeatures_verb', 'LIWCFeatures_adverb', 'LIWCFeatures_cogmech', 'SarcasmDetector_LABEL_0',
+                'TextPolarity_subjectivity', 'EvidenceType_None', 'EmpathFeatures_optimism', 'LIWCFeatures_health']
+
 
 def main():
     # Define which feature to use, or None to use everything
@@ -101,7 +111,7 @@ def main():
     #              'polarity', 'EmpathFeatures_fun', 'EmpathFeatures_lust',
     #              'EmpathFeatures_messaging',
     #              'EmotionLex_NRC-Hashtag-Emotion-Lexicon-v0.2_sadness_avgLexVal']
-    data_train, data_test = load_encode_dataset(dataset=DATASET, max_scale=True, features=keep_features)
+    data_train, data_test = load_encode_dataset(dataset=DATASET, max_scale=True, features=keep_features, exclude_features=EXCLUDE_LIST)
     train_config: dict = load_yaml("src/text_classification/config/classifier.yml")
 
     # SETTINGS:

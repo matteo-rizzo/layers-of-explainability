@@ -20,7 +20,7 @@ from src.deep_learning_strategy.classes.Dataset import AbcDataset
 from src.text_classification.utils import load_encode_dataset
 
 
-def plot_permutation_importance(clf, X, y, ax, scorer: Callable, metric_name: str, rskf: RepeatedStratifiedKFold | None = None):
+def plot_permutation_importance(clf, X, y, ax, scorer: Callable, metric_name: str, rskf: RepeatedStratifiedKFold | None = None) -> tuple[plt.Axes, pd.DataFrame]:
     def process_fold(train_index, test_index) -> dict[str, float]:
         x_train_data = X.iloc[train_index, :]
         x_test_data = X.iloc[test_index, :]
@@ -51,8 +51,12 @@ def plot_permutation_importance(clf, X, y, ax, scorer: Callable, metric_name: st
         labels=X.columns[perm_sorted_idx],
     )
     ax.axvline(x=0, color="k", linestyle="--")
+
+    stats: pd.DataFrame = pd.DataFrame(result.importances[perm_sorted_idx].T, columns=X.columns[perm_sorted_idx]).describe()
     result.pop("importances")
-    return ax, result
+    importance_mean_df = pd.DataFrame.from_dict(result, orient="columns").set_index(X.columns[perm_sorted_idx])
+    stats = pd.concat([stats, importance_mean_df.T], join="inner").sort_values(by=["50%", "importances_mean"], ascending=False, axis="columns").T
+    return ax, stats
 
 
 def scorer_wrapper(score_fn: Callable) -> Callable:
@@ -77,7 +81,7 @@ class FeatureImportance:
         self.output_path = Path(out_path)
         self.output_path.mkdir(exist_ok=True, parents=True)
 
-    def run_importance_test(self, clf, metric: str, decorrelate: bool = True, use_validation: bool = False):
+    def run_importance_test(self, clf, metric: str, decorrelate: bool = True, use_validation: bool = False, use_all_data: bool = True):
         """
         Train the classifier removing one feature at a time, recording the performance metrics for each run.
         Returns the relative importance of each removed feature, based on the performance drop/increase obtaining after removing it.
@@ -111,7 +115,9 @@ class FeatureImportance:
         else:
             # Create hierarchy
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(100, 50))
-            all_data = pd.concat([self.data_train, self.data_test])
+            all_data = self.data_train
+            if use_all_data:
+                all_data = pd.concat([self.data_train, self.data_test])
             # remove constant columns
             all_data = all_data.loc[:, (all_data != all_data.iloc[0]).any()]
 
@@ -142,7 +148,7 @@ class FeatureImportance:
 
             # Clustering
 
-            cluster_ids = hierarchy.fcluster(dist_linkage, 1.2, criterion="distance")
+            cluster_ids = hierarchy.fcluster(dist_linkage, 1.1, criterion="distance")
             cluster_id_to_feature_ids = defaultdict(list)
             for idx, cluster_id in enumerate(cluster_ids):
                 cluster_id_to_feature_ids[cluster_id].append(idx)
@@ -164,14 +170,14 @@ class FeatureImportance:
                 rskf = None
             else:
                 # Pass training set, to do k-fold permutation
-                rskf = RepeatedStratifiedKFold(n_splits=5, n_repeats=2, random_state=36851231)
+                rskf = RepeatedStratifiedKFold(n_splits=10, n_repeats=5, random_state=36851231)
                 X_test_sel = X_train_sel
                 y_test = y_train
                 suffix += "_validation"
 
             fig, ax = plt.subplots(figsize=(12, 20))
-            ax, bunch = plot_permutation_importance(clf, X_test_sel, y_test, ax, scorer=scorer, metric_name=metric, rskf=rskf)
-            pd.DataFrame.from_dict(bunch, orient="columns").sort_values(by="importances_mean", ascending=False).to_csv(self.output_path / f"importance_reduced_set_{suffix}.csv")
+            ax, stats = plot_permutation_importance(clf, X_test_sel, y_test, ax, scorer=scorer, metric_name=metric, rskf=rskf)
+            stats.to_csv(self.output_path / f"importance_reduced_set_{suffix}.csv", index_label="index")
             ax.set_title(f"Permutation importance on selected subset of features ({'test set' if not use_validation else 'validation'})")
             ax.set_xlabel(f"Decrease in {metric} score")
             ax.figure.tight_layout()
