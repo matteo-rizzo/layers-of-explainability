@@ -19,6 +19,7 @@ SK_CLASSIFIER_TYPE: type = XGBClassifier
 # try to remove 170 features
 # 214 features 0.904 NO BEST
 # 220 features, same as 330, worse recall
+# Try 250, or keep 270 -> keep 220 as it is justifiable
 
 def test_rfe():
     train_config: dict = load_yaml("src/text_classification/config/classifier.yml")
@@ -30,7 +31,7 @@ def test_rfe():
     # data_train = data_train.iloc[:, :10]
 
     # create pipeline
-    rfe = RFECV(estimator=SK_CLASSIFIER_TYPE(**train_config[SK_CLASSIFIER_TYPE.__name__]), min_features_to_select=250, step=2)
+    rfe = RFECV(estimator=SK_CLASSIFIER_TYPE(**train_config[SK_CLASSIFIER_TYPE.__name__]), min_features_to_select=220, step=2)
     model = SK_CLASSIFIER_TYPE(**train_config[SK_CLASSIFIER_TYPE.__name__])
     # pipeline = Pipeline(steps=[('s', rfe), ('m', model)])
     # evaluate model
@@ -83,5 +84,5 @@ def get_feature_by_importance():
 
 
 if __name__ == "__main__":
-    # get_feature_by_importance()
-    test_rfe()
+    get_feature_by_importance()
+    # test_rfe()
