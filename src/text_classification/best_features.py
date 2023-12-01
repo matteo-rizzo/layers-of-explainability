@@ -14,6 +14,12 @@ from src.utils.yaml_manager import load_yaml
 SK_CLASSIFIER_TYPE: type = XGBClassifier
 
 
+# 330 features: 0.902 baseline and after
+# 270 features: 0.902 baseline, 0.903 after
+# try to remove 170 features
+# 214 features 0.904 NO BEST
+# 220 features, same as 330, worse recall
+
 def test_rfe():
     train_config: dict = load_yaml("src/text_classification/config/classifier.yml")
 
@@ -24,7 +30,7 @@ def test_rfe():
     # data_train = data_train.iloc[:, :10]
 
     # create pipeline
-    rfe = RFECV(estimator=SK_CLASSIFIER_TYPE(**train_config[SK_CLASSIFIER_TYPE.__name__]), min_features_to_select=270, step=2)
+    rfe = RFECV(estimator=SK_CLASSIFIER_TYPE(**train_config[SK_CLASSIFIER_TYPE.__name__]), min_features_to_select=250, step=2)
     model = SK_CLASSIFIER_TYPE(**train_config[SK_CLASSIFIER_TYPE.__name__])
     # pipeline = Pipeline(steps=[('s', rfe), ('m', model)])
     # evaluate model
@@ -57,10 +63,12 @@ def get_feature_by_importance():
     feat_dict = json.load(open("dumps/ablation/features_CallMeSexistDataset_XGBClassifier.json"))
     importance_df = pd.read_csv("dumps/ablation/importance_reduced_set_CallMeSexistDataset_XGBClassifier_validation.csv", index_col="index")
 
-    # feat_to_remove: list[str] = importance_df[~(importance_df["25%"] >= 0)].index.to_list()
-    feat_to_remove: list[str] = importance_df[importance_df["50%"] < 0].index.to_list()
-    feat_to_remove_2: list[str] = importance_df[(importance_df["50%"] == 0) & (importance_df["25%"] < 0) & (importance_df["75%"] <= 0)].index.to_list()
-    feat_to_remove += feat_to_remove_2
+    feat_to_remove: list[str] = importance_df[~(importance_df["25%"] >= 0)].index.to_list()
+    # TOO MUCH feat_to_remove: list[str] = importance_df[importance_df["50%"] <= 0].index.to_list()
+    # feat_to_remove: list[str] = importance_df[importance_df["50%"] < 0].index.to_list()
+    # feat_to_remove: list[str] = importance_df[importance_df["50%"] < 0].index.to_list()
+    # feat_to_remove_2: list[str] = importance_df[(importance_df["50%"] == 0) & (importance_df["25%"] < 0) & (importance_df["75%"] <= 0)].index.to_list()
+    # feat_to_remove += feat_to_remove_2
     all_feat_to_remove = [sf for f in feat_to_remove for sf in feat_dict[f]] + feat_to_remove
     print(feat_to_remove)
     print(all_feat_to_remove)
