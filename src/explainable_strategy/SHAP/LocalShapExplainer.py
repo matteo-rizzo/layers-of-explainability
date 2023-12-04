@@ -19,10 +19,23 @@ class LocalShapExplainer:
         self.explainer = None
         os.makedirs(self.__target_dir, exist_ok=True)
 
-    def run_explain(self, test_data: pd.DataFrame, texts: list[str], targets: list[int], feature_names: dict[str, str], label_names: dict[int, str],
-                    top_k: int | None = None, effect_threshold: float | None = None) -> None:
+    def run_explain(self, test_data: pd.DataFrame, explain_ids: list[int], texts: list[str], targets: list[int], feature_names: dict[str, str], label_names: dict[int, str],
+                    top_k: int | None = None, effect_threshold: float | None = None, quantized_features: pd.DataFrame | None = None) -> None:
+
+        assert (quantized_features is None or (test_data.shape == quantized_features.shape)
+                and (test_data.index == quantized_features.index).all()
+                and (test_data.columns == quantized_features.columns).all()), "'quantized_features' must have same shape as 'test_data'"
+        values_df = test_data
+        if quantized_features is not None:
+            values_df = quantized_features.astype(str)  # Categorical causes problems, so use str
 
         assert (top_k is None) ^ (effect_threshold is None), "Exactly one of 'top_k' and 'effect_threshold' must be None"
+
+        # Extract examples for explanation
+        texts_to_explain = [f"ID:{i} - {texts[i]}" for i in explain_ids]
+        targets_to_explain = [targets[i] for i in explain_ids]
+        values_df = values_df.iloc[explain_ids, :]
+        test_data = test_data.iloc[explain_ids, :]
 
         self.explainer = shap.TreeExplainer(self.__model)
 
@@ -31,12 +44,12 @@ class LocalShapExplainer:
         shap_values_abs = np.abs(shap_values)
         shap_values_signs = np.where(shap_values < 0, -1, 1)
         shap_values_relative_change = shap_values_abs / shap_values_abs.sum(1).reshape(-1, 1) * 100
-        shap_values_relative_change_df = pd.DataFrame(shap_values_relative_change, columns=test_data.columns)
+        shap_values_relative_change_df = pd.DataFrame(shap_values_relative_change, columns=test_data.columns, index=test_data.index)
 
         # DISCUSS: Is it correct to consider percentage over absolute value?
 
         top_features: list[list[tuple[str, float, float]]] = list()
-        for i, row in shap_values_relative_change_df.iterrows():
+        for i, (idx, row) in enumerate(shap_values_relative_change_df.iterrows()):
             # Multiply % importance per signs
             percentage_importance = row * shap_values_signs[i, :]
             # Sort by absolute value
@@ -49,8 +62,8 @@ class LocalShapExplainer:
             if top_k is not None:
                 # Take top k values by magnitude
                 final_features = final_features[:top_k]
-            # Feature values for selected important features
-            feature_values: pd.Series = test_data.loc[i, final_features.index]
+            # Feature values (quantized or vanilla) for selected important features
+            feature_values: pd.Series = values_df.loc[idx, final_features.index]
             # Get the cumulative sum for the contribution of all other features and summarize them in two additional rows
             # Notice that other.abs().sum() + final_features.abs().sum() == 100
             other = percentage_importance[~(percentage_importance.index.isin(final_features.index))]
@@ -66,7 +79,7 @@ class LocalShapExplainer:
         y_preds = self.__model.predict(test_data).tolist()
 
         explanations: list[str] = list()
-        for prob, y_pred, y_true, features, text in zip(y_probs, y_preds, targets, top_features, texts):
+        for prob, y_pred, y_true, features, text in zip(y_probs, y_preds, targets_to_explain, top_features, texts_to_explain):
             explanations.append(build_explanation(text, y_pred, y_true, prob * 100, features, feature_names, label_names))
 
         for ex in explanations:

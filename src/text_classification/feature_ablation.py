@@ -34,16 +34,16 @@ from src.utils.yaml_manager import load_yaml
 DATASET: AbcDataset = CallMeSexistDataset()
 
 # 'ablation' will try to retrain a model removing 1 feature at a time,
-# or if 'FEATURE_CLUSTERS_REMOVE' is a list of feaures it will try to remove only this set of features
+# or if 'FEATURE_CLUSTERS_REMOVE' is a list of features it will try to remove only this set of features
 # 'importance' will require a fitted model in 'MODEL_DIR' and will try feature permutation to understand the feature importance in model
-MODE: str = "ablation"  # "ablation", "importance"
+MODE: str = "importance"  # "ablation", "importance"
 
 # For feature importance, path to a trained models
-MODEL_DIR = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_1700735225.8083348.pkl"
+MODEL_DIR = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_1701361017.0959067.pkl"
 
 # For feature ablation, the clusters of features to be removed
 # (all feature in same clusters, as well as the cluster name will be removed)
-FEATURE_CLUSTERS_REMOVE: list[str] | None = ["GenderBiasDetector_LABEL_1", "TopicLM_sports"]
+FEATURE_CLUSTERS_REMOVE: list[str] | None = None  # ["GenderBiasDetector_LABEL_1", "TopicLM_sports"]
 
 
 def main():
@@ -68,11 +68,11 @@ def main():
         else:
             feature_excluded = None
 
-        abl.run_ablation(k_folds=5, use_all_data=True, exclude_feature_set=feature_excluded)
+        abl.run_ablation(k_folds=5, use_all_data=False, exclude_feature_set=feature_excluded)
     else:
         clf = joblib.load(MODEL_DIR)
         abl = FeatureImportance(dataset=DATASET, out_path="dumps/ablation")
-        abl.run_importance_test(clf, metric="accuracy", decorrelate=True)
+        abl.run_importance_test(clf, metric="accuracy", decorrelate=True, use_validation=True, use_all_data=False)
 
 
 if __name__ == "__main__":

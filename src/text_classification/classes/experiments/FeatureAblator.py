@@ -78,7 +78,7 @@ class FeatureAblator:
         if use_all_data:
             all_data = pd.concat([self.data_train, self.data_test], axis=0).sample(frac=1, random_state=19)
 
-        baseline_metrics = self._k_fold_training_testing(rskf, all_data.copy(), n_jobs=12)
+        baseline_metrics = self._k_fold_training_testing(rskf, all_data.copy(), n_jobs=-1)
         avg_metrics = {k: float(np.mean(vs)) for k, vs in baseline_metrics.items()}
         metric_names: list[str] = list(sorted(avg_metrics.keys()))
 
@@ -88,7 +88,7 @@ class FeatureAblator:
         if exclude_feature_set is not None:
             # remove feature set
             data_train = all_data.copy().drop(columns=exclude_feature_set)
-            metrics = self._k_fold_training_testing(rskf, data_train, n_jobs=12)
+            metrics = self._k_fold_training_testing(rskf, data_train, n_jobs=-1)
             avg_metrics = {k: float(np.mean(vs)) for k, vs in metrics.items()}
             metric_list: list[float] = [avg_metrics[k] for k in metric_names]
             all_metrics["excluded_set"] = metric_list
@@ -96,7 +96,7 @@ class FeatureAblator:
             # remove all features one by one
             for f in tqdm(self.feature_names, desc="Feature removal"):
                 data_train = all_data.copy().drop(columns=f)
-                metrics = self._k_fold_training_testing(rskf, data_train, n_jobs=12)
+                metrics = self._k_fold_training_testing(rskf, data_train, n_jobs=-1)
                 avg_metrics = {k: float(np.mean(vs)) for k, vs in metrics.items()}
                 # Select metrics in correct order and add it to the dictionary {feature_removed -> results}
                 metric_list: list[float] = [avg_metrics[k] for k in metric_names]
