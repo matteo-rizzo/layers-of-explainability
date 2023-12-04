@@ -59,7 +59,10 @@ def compute_features(dataset_: AbcDataset, do_label: bool = False):
     df_train.to_csv(Path(dataset_.BASE_DATASET) / f"{dataset_.__class__.__name__}_train_features.csv", index=False)
     df_test.to_csv(Path(dataset_.BASE_DATASET) / f"{dataset_.__class__.__name__}_test_features.csv", index=False)
 
+    # df_train.to_csv(Path(dataset_.BASE_DATASET) / f"{dataset_.__class__.__name__}_train_features_labeled.csv", index=False)
+    # df_test.to_csv(Path(dataset_.BASE_DATASET) / f"{dataset_.__class__.__name__}_test_features_labeled.csv", index=False)
+
 
 if __name__ == "__main__":
     dataset = CallMeSexistDataset()
-    compute_features(dataset, do_label=False)
+    compute_features(dataset, do_label=True)

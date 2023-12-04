@@ -108,9 +108,17 @@ NeuralNetBinaryClassifier:
   batch_size: 256
   max_epochs: 1000
 
+KNeighborsClassifier:
+  n_neighbors: 10
+
 grid_search_params:
   num_seeds: 2
-  test_size: 0.2
+  test_size: 0.2#
+
+  KNeighborsClassifier:
+    n_neighbors: [5,10,20,50]
+    weights: ['uniform', 'distance']
+    algorithm: ['auto', 'ball_tree', 'kd_tree', 'brute']
 
   GradientBoostingClassifier:
     loss: [ "log_loss", "exponential" ]
