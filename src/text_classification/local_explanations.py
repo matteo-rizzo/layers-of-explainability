@@ -17,7 +17,7 @@ from src.text_classification.utils import load_encode_dataset, quantize_features
 from src.utils.yaml_manager import load_yaml
 
 DATASET: AbcDataset = CallMeSexistDataset()
-LOAD_MODEL_DUMP = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_1701429210.1156893.pkl"
+LOAD_MODEL_DUMP = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_CMS_FINAL.pkl"
 
 
 def read_feature_descriptions(column_names: list[str]) -> dict[str, str]:

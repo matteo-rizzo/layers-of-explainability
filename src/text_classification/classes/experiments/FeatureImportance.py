@@ -101,15 +101,15 @@ class FeatureImportance:
             data_test = self.data_test
 
             plot_permutation_importance(clf, data_train, y_train, ax1, scorer=scorer, metric_name=metric)
-            ax1.set_xlabel("Decrease in accuracy score (train set)")
+            ax1.set_xlabel(f"Decrease in {metric} score (train set)")
             plot_permutation_importance(clf, data_test, y_test, ax2, scorer=scorer, metric_name=metric)
-            ax2.set_xlabel("Decrease in accuracy score (test set)")
+            ax2.set_xlabel(f"Decrease in {metric} score (test set)")
             fig.suptitle(f"Permutation importance on {self.dataset_object.__class__.__name__} features ({metric})")
             _ = fig.tight_layout()
 
             plt.savefig(self.output_path / f"importance_{suffix}.png")
 
-            print(f"Baseline accuracy on test data: {clf.score(data_test, y_test):.3}")
+            print(f"Baseline {metric} on test data: {clf.score(data_test, y_test):.3}")
 
             # plt.show()
         else:
@@ -166,7 +166,7 @@ class FeatureImportance:
             if use_validation is False:
                 # Train on the training set and compute importance on testing
                 clf.fit(X_train_sel, y_train)
-                print(f"Baseline accuracy on test data with feature subset: {clf.score(X_test_sel, y_test):.3}")
+                print(f"Baseline {metric} on test data with feature subset: {clf.score(X_test_sel, y_test):.3}")
                 rskf = None
             else:
                 # Pass training set, to do k-fold permutation

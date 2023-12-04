@@ -11,7 +11,7 @@ from src.text_classification.utils import load_encode_dataset
 from src.utils.yaml_manager import load_yaml
 
 # Path to a trained models on sexism dataset
-MODEL_DIR = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_1700735225.8083348.pkl"
+MODEL_DIR = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_CMS_FINAL.pkl"
 
 SK_CLASSIFIER_TYPE: type = XGBClassifier
 

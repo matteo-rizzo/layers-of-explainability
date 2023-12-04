@@ -39,7 +39,7 @@ DATASET: AbcDataset = CallMeSexistDataset()
 MODE: str = "importance"  # "ablation", "importance"
 
 # For feature importance, path to a trained models
-MODEL_DIR = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_1701361017.0959067.pkl"
+MODEL_DIR = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_CMS_FINAL.pkl"
 
 # For feature ablation, the clusters of features to be removed
 # (all feature in same clusters, as well as the cluster name will be removed)

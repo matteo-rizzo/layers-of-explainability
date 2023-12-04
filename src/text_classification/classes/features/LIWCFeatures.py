@@ -27,7 +27,7 @@ class LIWCFeatures(Feature):
 
     @classmethod
     def label_description(cls) -> dict[str, str]:
-        # See manual at: https://www.liwc.app/static/documents/LIWC-22%20Manual%20-%20Development%20and%20Psychometrics.pdf
+        # See manual at: https://www.liwc.app/help/psychometrics-manuals
         liwc_spheres = {
             "funct": "all functional words",
             "pronoun": "pronouns",
@@ -36,7 +36,7 @@ class LIWCFeatures(Feature):
             "we": "1st person plural",
             "you": "2nd person",
             "shehe": "3rd person singular",
-            "they": "3rd person plural ",
+            "they": "3rd person plural",
             "ipron": "impersonal pronouns",
             "article": "articles",
             "verb": "verbs",
@@ -54,7 +54,7 @@ class LIWCFeatures(Feature):
             "social": "social processes",
             "family": "family",
             "friend": "friends",
-            "humans": "humanity",  #
+            "humans": "human beings",  #
             "affect": "affections",
             "posemo": "positive emotions",
             "negemo": "negative emotions",
@@ -79,9 +79,9 @@ class LIWCFeatures(Feature):
             "health": "health",
             "sexual": "sexuality",
             "ingest": "food",
-            "relativ": "time, space, motion words",
-            "motion": "motion words",
-            "space": "space perception (in, out, up, there)",
+            "relativ": "time, space & motion",
+            "motion": "motion",
+            "space": "space perception",
             "time": "time",
             "work": "work",  #
             "achieve": "achievement",
@@ -95,4 +95,4 @@ class LIWCFeatures(Feature):
             "filler": "filler words/exclamations"
         }
 
-        return {f"{cls.__name__}_{s}": f"LIWC score for psychosocial construct '{d}'" for s, d in liwc_spheres.items()}
+        return {f"{cls.__name__}_{s}": f"LIWC detection of words about/in category '{d}'" for s, d in liwc_spheres.items()}

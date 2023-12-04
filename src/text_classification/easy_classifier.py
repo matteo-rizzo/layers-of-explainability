@@ -93,41 +93,43 @@ def create_skorch_model_arguments(train_data: pd.DataFrame) -> dict:
 DATASET: AbcDataset = CallMeSexistDataset()
 DO_GRID_SEARCH = False
 
-# Based on 170 features that were not important
-EXCLUDE_LIST = ['EmpathFeatures_sympathy', 'EmpathFeatures_disgust', 'EmpathFeatures_politeness', 'EmpathFeatures_valuable', 'EmpathFeatures_lust', 'EmpathFeatures_sailing',
-                'EmpathFeatures_emotional', 'EmpathFeatures_programming', 'EmpathFeatures_leader', 'EmpathFeatures_ridicule', 'EmpathFeatures_internet', 'EmpathFeatures_fabric',
-                'TextStatistics_sents', 'TextGrammarErrors_error_COLLOCATIONS', 'EmpathFeatures_clothing', 'EmpathFeatures_car', 'EmpathFeatures_air_travel',
-                'EmpathFeatures_driving', 'EmpathFeatures_health', 'EmpathFeatures_eating', 'EmpathFeatures_school', 'EmpathFeatures_dominant_personality',
-                'EmpathFeatures_weakness', 'EmpathFeatures_law', 'EmpathFeatures_neglect', 'EmpathFeatures_reading', 'EmpathFeatures_contentment', 'EmpathFeatures_speaking',
-                'EmpathFeatures_worship', 'EmpathFeatures_power', 'EmpathFeatures_achievement', 'EmpathFeatures_anticipation', 'EmpathFeatures_pride',
-                'TextGrammarErrors_error_GRAMMAR', 'EmpathFeatures_beach', 'EmpathFeatures_weather', 'EmpathFeatures_legend', 'TextGrammarErrors_error_SEMANTICS',
-                'EmpathFeatures_philosophy', 'EmpathFeatures_weapon', 'EmpathFeatures_body', 'EmpathFeatures_surprise', 'EmpathFeatures_leisure', 'EmpathFeatures_farming',
-                'EmpathFeatures_rage', 'EmpathFeatures_exasperation', 'LIWCFeatures_sad', 'TextGrammarErrors_error_BRITISH_ENGLISH', 'EmpathFeatures_prison',
-                'EmpathFeatures_negotiate', 'TextGrammarErrors_error_REDUNDANCY', 'EmpathFeatures_injury', 'EmpathFeatures_crime', 'EmpathFeatures_tourism',
-                'EmpathFeatures_shape_and_size', 'EmpathFeatures_dance', 'EmpathFeatures_movement', 'EmpathFeatures_dispute', 'EmpathFeatures_ocean', 'EmpathFeatures_swimming',
-                'EmpathFeatures_hiking', 'LIWCFeatures_we', 'EmpathFeatures_business', 'EmpathFeatures_journalism', 'EmpathFeatures_kill', 'EmpathFeatures_vacation',
-                'EmpathFeatures_fun', 'EmpathFeatures_anonymity', 'TextGrammarErrors_error_CONFUSED_WORDS', 'EmpathFeatures_torment', 'EmpathFeatures_gain', 'EmpathFeatures_phone',
-                'EmpathFeatures_pain', 'EmpathFeatures_religion', 'EmpathFeatures_sleep', 'EmpathFeatures_confusion', 'EmpathFeatures_urban', 'EmpathFeatures_breaking',
-                'EmpathFeatures_stealing', 'EmpathFeatures_banking', 'EmpathFeatures_writing', 'EmpathFeatures_superhero', 'EmpathFeatures_cheerfulness',
-                'EmpathFeatures_positive_emotion', 'EmpathFeatures_wealthy', 'EmpathFeatures_zest', 'EmpathFeatures_poor', 'EmpathFeatures_rural', 'EmpathFeatures_independence',
-                'EmpathFeatures_divine', 'EmpathFeatures_technology', 'EmpathFeatures_magic', 'TextGrammarErrors_error_NONSTANDARD_PHRASES', 'EmpathFeatures_sadness',
-                'EmpathFeatures_beauty', 'EmpathFeatures_money', 'EmpathFeatures_hipster', 'EmpathFeatures_irritability', 'TextGrammarErrors_error_AMERICAN_ENGLISH_STYLE',
-                'EmpathFeatures_death', 'EmpathFeatures_joy', 'TextGrammarErrors_error_MISC', 'EmpathFeatures_deception', 'EmpathFeatures_cold', 'LIWCFeatures_hear',
-                'EmpathFeatures_sound', 'EmpathFeatures_restaurant', 'EmpathFeatures_alcohol', 'EmpathFeatures_war', 'EmpathFeatures_vehicle',
-                'TextGrammarErrors_error_COMPOUNDING', 'EmpathFeatures_shopping', 'EmpathFeatures_white_collar_job', 'LIWCFeatures_anx', 'EmpathFeatures_exercise',
-                'EmpathFeatures_blue_collar_job', 'EmpathFeatures_military', 'EmpathFeatures_liquid', 'EmpathFeatures_politics', 'EmpathFeatures_night', 'EmpathFeatures_meeting',
-                'EmpathFeatures_plant', 'EmpathFeatures_warmth', 'EmpathFeatures_water', 'LIWCFeatures_assent', 'EmpathFeatures_animal', 'EmpathFeatures_strength',
-                'EmpathFeatures_exotic', 'EmpathFeatures_negative_emotion', 'EmpathFeatures_monster', 'EmpathFeatures_fire', 'EmpathFeatures_smell', 'EmpathFeatures_college',
-                'EmpathFeatures_competing', 'EmpathFeatures_dominant_heirarchical', 'EmpathFeatures_musical', 'EmpathFeatures_music', 'EmpathFeatures_ship',
-                'EmpathFeatures_social_media', 'EmpathFeatures_noise', 'EmpathFeatures_order', 'LIWCFeatures_money', 'LIWCFeatures_death', 'EmpathFeatures_royalty',
-                'EmpathFeatures_fear', 'EmpathFeatures_cleaning', 'EmpathFeatures_terrorism', 'TextGrammarErrors_error_STYLE', 'EmpathFeatures_horror', 'EmpathFeatures_computer',
-                'EmpathFeatures_envy', 'LIWCFeatures_nonfl', 'EmpathFeatures_medieval', 'EmpathFeatures_pet', 'EmpathFeatures_occupation', 'EmpathFeatures_fight',
-                'EmpathFeatures_morning', 'EmpathFeatures_fashion', 'EmpathFeatures_messaging', 'EmpathFeatures_office', 'EmpathFeatures_disappointment', 'EmpathFeatures_science']
+# Based on 162 features that were not important for CMS
+EXCLUDE_LIST = ['EmpathFeatures_divine', 'EmpathFeatures_body', 'EmpathFeatures_exotic', 'EmpathFeatures_ship', 'EmpathFeatures_disappointment', 'EmpathFeatures_sleep',
+                'LIWCFeatures_money', 'EmpathFeatures_alcohol', 'EmpathFeatures_independence', 'EmpathFeatures_technology', 'EmpathFeatures_horror', 'EmpathFeatures_crime',
+                'EmpathFeatures_sympathy', 'EmpathFeatures_positive_emotion', 'EmpathFeatures_pride', 'EmpathFeatures_achievement', 'EmpathFeatures_air_travel',
+                'EmpathFeatures_monster', 'EmpathFeatures_weakness', 'EmpathFeatures_cheerfulness', 'TextGrammarErrors_error_GRAMMAR', 'EmpathFeatures_programming',
+                'EmpathFeatures_cold', 'EmpathFeatures_legend', 'EmpathFeatures_exercise', 'TextGrammarErrors_error_AMERICAN_ENGLISH_STYLE', 'TextGrammarErrors_error_MISC',
+                'EmpathFeatures_philosophy', 'EmpathFeatures_magic', 'TextGrammarErrors_error_COLLOCATIONS', 'EmpathFeatures_envy', 'EmpathFeatures_vehicle',
+                'EmpathFeatures_journalism', 'EmpathFeatures_zest', 'EmpathFeatures_sailing', 'EmpathFeatures_dominant_heirarchical', 'TextGrammarErrors_error_STYLE',
+                'EmpathFeatures_dance', 'LIWCFeatures_assent', 'EmpathFeatures_messaging', 'TextGrammarErrors_error_CONFUSED_WORDS', 'EmpathFeatures_meeting',
+                'EmpathFeatures_fight', 'LIWCFeatures_anx', 'EmpathFeatures_prison', 'EmpathFeatures_social_media', 'TextGrammarErrors_error_COMPOUNDING', 'EmpathFeatures_musical',
+                'EmpathFeatures_royalty', 'EmpathFeatures_restaurant', 'TextGrammarErrors_error_REDUNDANCY', 'EmpathFeatures_fashion', 'EmpathFeatures_school',
+                'EmpathFeatures_negotiate', 'EmpathFeatures_plant', 'EmpathFeatures_speaking', 'EmpathFeatures_breaking', 'EmpathFeatures_movement', 'EmpathFeatures_smell',
+                'EmpathFeatures_medieval', 'EmpathFeatures_poor', 'EmpathFeatures_lust', 'EmpathFeatures_weather', 'EmpathFeatures_deception', 'EmpathFeatures_anonymity',
+                'EmpathFeatures_swimming', 'EmpathFeatures_office', 'LIWCFeatures_we', 'EmpathFeatures_order', 'EmpathFeatures_liquid', 'LIWCFeatures_sad', 'EmpathFeatures_pet',
+                'EmpathFeatures_computer', 'EmpathFeatures_irritability', 'EmpathFeatures_real_estate', 'EmpathFeatures_war', 'EmpathFeatures_driving', 'EmpathFeatures_competing',
+                'EmpathFeatures_urban', 'EmpathFeatures_college', 'TextGrammarErrors_error_BRITISH_ENGLISH', 'EmpathFeatures_eating', 'EmpathFeatures_disgust',
+                'EmpathFeatures_emotional', 'EmpathFeatures_military', 'EmpathFeatures_water', 'EmpathFeatures_tourism', 'EmpathFeatures_ridicule', 'EmpathFeatures_tool',
+                'EmpathFeatures_farming', 'EmpathFeatures_injury', 'EmpathFeatures_hipster', 'EmpathFeatures_science', 'EmpathFeatures_white_collar_job', 'LIWCFeatures_hear',
+                'TextGrammarErrors_error_NONSTANDARD_PHRASES', 'EmpathFeatures_writing', 'EmpathFeatures_vacation', 'EmpathFeatures_surprise', 'LIWCFeatures_death',
+                'EmpathFeatures_stealing', 'EmpathFeatures_sound', 'EmpathFeatures_noise', 'EmpathFeatures_worship', 'EmpathFeatures_fear', 'EmpathFeatures_contentment',
+                'LIWCFeatures_nonfl', 'EmpathFeatures_weapon', 'EmpathFeatures_shopping', 'EmpathFeatures_car', 'EmpathFeatures_occupation', 'EmpathFeatures_politeness',
+                'EmpathFeatures_leader', 'EmpathFeatures_anticipation', 'EmpathFeatures_valuable', 'EmpathFeatures_phone', 'EmpathFeatures_negative_emotion',
+                'EmpathFeatures_rural', 'EmpathFeatures_blue_collar_job', 'EmpathFeatures_cleaning', 'EmpathFeatures_confusion', 'EmpathFeatures_strength',
+                'EmpathFeatures_sadness', 'EmpathFeatures_leisure', 'EmpathFeatures_night', 'EmpathFeatures_fabric', 'EmpathFeatures_internet', 'EmpathFeatures_superhero',
+                'EmpathFeatures_wealthy', 'EmpathFeatures_morning', 'EmpathFeatures_torment', 'EmpathFeatures_politics', 'EmpathFeatures_hiking', 'EmpathFeatures_pain',
+                'EmpathFeatures_dispute', 'EmpathFeatures_religion', 'EmpathFeatures_shape_and_size', 'EmpathFeatures_ocean', 'EmpathFeatures_beauty', 'EmpathFeatures_law',
+                'EmpathFeatures_fire', 'EmpathFeatures_exasperation', 'EmpathFeatures_joy', 'EmpathFeatures_animal', 'EmpathFeatures_neglect', 'EmpathFeatures_fun',
+                'EmpathFeatures_beach', 'TextGrammarErrors_error_SEMANTICS', 'EmpathFeatures_banking', 'TextStatistics_sents', 'EmpathFeatures_warmth', 'EmpathFeatures_power',
+                'EmpathFeatures_kill', 'EmpathFeatures_reading', 'EmpathFeatures_rage', 'EmpathFeatures_health', 'EmpathFeatures_music', 'EmpathFeatures_business',
+                'EmpathFeatures_money', 'EmpathFeatures_terrorism', 'EmpathFeatures_dominant_personality', 'EmpathFeatures_clothing']
 
 
 def main():
     # Define which feature to use, or None to use everything
     keep_features = None
+    if EXCLUDE_LIST:
+        print(len(EXCLUDE_LIST))
     # ['TextEmotion_admiration', 'TextEmotion_annoyance', 'TextEmotion_pride',
     #              'polarity', 'EmpathFeatures_fun', 'EmpathFeatures_lust',
     #              'EmpathFeatures_messaging',

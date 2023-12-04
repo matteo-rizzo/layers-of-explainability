@@ -18,7 +18,8 @@ SK_CLASSIFIER_TYPE: type = XGBClassifier
 # 270 features: 0.902 baseline, 0.903 after
 # try to remove 170 features
 # 214 features 0.904 NO BEST
-# 220 features, same as 330, worse recall
+# 220 features, best
+# 210 features, worse recall, better acc
 # Try 250, or keep 270 -> keep 220 as it is justifiable
 
 def test_rfe():
@@ -31,7 +32,7 @@ def test_rfe():
     # data_train = data_train.iloc[:, :10]
 
     # create pipeline
-    rfe = RFECV(estimator=SK_CLASSIFIER_TYPE(**train_config[SK_CLASSIFIER_TYPE.__name__]), min_features_to_select=220, step=2)
+    rfe = RFECV(estimator=SK_CLASSIFIER_TYPE(**train_config[SK_CLASSIFIER_TYPE.__name__]), min_features_to_select=220, step=1)
     model = SK_CLASSIFIER_TYPE(**train_config[SK_CLASSIFIER_TYPE.__name__])
     # pipeline = Pipeline(steps=[('s', rfe), ('m', model)])
     # evaluate model
