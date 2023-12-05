@@ -7,8 +7,8 @@ from datasets import load_dataset
 from sklearn.model_selection import train_test_split
 
 from src.deep_learning_strategy.classes.Dataset import AbcDataset
-from src.deep_learning_strategy.settings import RANDOM_SEED
 from src.feature_extraction.text_features import separate_html_entities
+from src.utils.setup import RANDOM_SEED
 
 
 class IMDBDataset(AbcDataset):

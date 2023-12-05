@@ -1,16 +1,12 @@
 from __future__ import annotations
 
 import os
-import re
 from pathlib import Path
-from typing import Dict, Tuple, List, Union
+from typing import Dict
 
 import pandas as pd
-from sklearn.model_selection import train_test_split
 
 from src.deep_learning_strategy.classes.Dataset import AbcDataset
-from src.deep_learning_strategy.settings import RANDOM_SEED
-from src.feature_extraction.text_features import separate_html_entities
 
 
 class BiasDataset(AbcDataset):
