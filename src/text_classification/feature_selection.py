@@ -65,6 +65,8 @@ def selection_rfe(feature_min_step: int = 50, n_jobs=-1):
     n_feature_test: list[int] = [all_features - (feature_min_step * i) for i in range(1, (min_features // feature_min_step) + 1)]
     n_feature_test.append(n_feature_test[-1] - (min_features % feature_min_step))
     print(n_feature_test)
+
+    out_path = Path("dumps") / "feature_selection" / f"RFE_{DATASET.__class__.__name__}_{SK_CLASSIFIER_TYPE.__name__}_{time.time()}.json"
     for n in tqdm(n_feature_test):
         # create pipeline
         rfe = RFECV(estimator=get_model(train_config), min_features_to_select=n, cv=rkfcv, step=1, n_jobs=n_jobs)
@@ -91,9 +93,8 @@ def selection_rfe(feature_min_step: int = 50, n_jobs=-1):
         # print("*** Removed")
         # print(removed_columns)
 
-    out_path = Path("dumps") / "feature_selection" / f"RFE_{DATASET.__class__.__name__}_{SK_CLASSIFIER_TYPE.__name__}_{time.time()}.json"
-    with open(out_path, mode="w", encoding="utf-8") as fo:
-        json.dump(run_log, fo, indent=2)
+        with open(out_path, mode="w", encoding="utf-8") as fo:
+            json.dump(run_log, fo, indent=2)
 
 
 def get_feature_by_importance():
