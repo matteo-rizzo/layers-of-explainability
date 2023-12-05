@@ -1,14 +1,13 @@
 import json
 import time
 from pathlib import Path
-from pprint import pprint
 
 import numpy as np
 import pandas as pd
+from matplotlib import pyplot as plt
 from sklearn.feature_selection import RFECV
 from sklearn.metrics import make_scorer, accuracy_score, f1_score
 from sklearn.model_selection import RepeatedStratifiedKFold, cross_validate
-from tqdm import tqdm
 from xgboost import XGBClassifier
 
 from src.deep_learning_strategy.classes.CallMeSexistDataset import CallMeSexistDataset
@@ -17,6 +16,7 @@ from src.text_classification.utils import load_encode_dataset
 from src.utils.yaml_manager import load_yaml
 
 SK_CLASSIFIER_TYPE: type = XGBClassifier
+DATASET: AbcDataset = CallMeSexistDataset()
 
 
 # 330 features: 0.902 baseline and after
@@ -31,16 +31,25 @@ def get_model(conf):
     return SK_CLASSIFIER_TYPE(**conf[SK_CLASSIFIER_TYPE.__name__])
 
 
-def selection_rfe(feature_min_step: int = 50, n_jobs=-1):
+def cv_evaluate(model, x, y, cv, scoring, jobs):
+    cv_scores = cross_validate(model, x, y, scoring=scoring, cv=cv, n_jobs=jobs, error_score="raise", verbose=0)
+    # scores will now be a dict with keys 'test_accuracy' and 'test_f1'
+    cv_metrics = {k: float(np.mean(v)) for k, v in cv_scores.items()}
+    # print("Baseline scores on CV:")
+    # pprint(cv_metrics)
+    return cv_metrics
+
+
+def selection_rfe(min_features_to_select: int = None, n_jobs=-1, rfe_metric: str = "f1_macro"):
     """
     Perform Recursive Feature Elimination using classifier defined in SK_CLASSIFIER_TYPE, and trying to keep several numbers of features
 
-    @param feature_min_step: RFE will be run several times, each time removing this number of additional features
+    @param min_features_to_select: RFE will stop when reaching this number of features
+    @param rfe_metric: sklearn scoring callable or string (only single metric is allowed)
     @param n_jobs: max parallel threads
     """
     train_config: dict = load_yaml("src/text_classification/config/classifier.yml")
 
-    DATASET: AbcDataset = CallMeSexistDataset()
     data_train, _ = load_encode_dataset(dataset=DATASET, max_scale=True, features=None, exclude_features=None)
 
     y_train = data_train.pop("y")
@@ -48,53 +57,51 @@ def selection_rfe(feature_min_step: int = 50, n_jobs=-1):
 
     rkfcv = RepeatedStratifiedKFold(n_splits=10, n_repeats=2, random_state=11)
 
-    all_features = data_train.shape[1]
-    min_features = all_features // 2
-
     # Create a dictionary of the metrics you want to calculate
     scoring = {"accuracy": make_scorer(accuracy_score),
                "f1": make_scorer(f1_score, average="macro")}
-    cv_scores = cross_validate(get_model(train_config), data_train, y_train, scoring=scoring, cv=rkfcv, n_jobs=n_jobs, error_score="raise", verbose=0)
-    # scores will now be a dict with keys 'test_accuracy' and 'test_f1'
-    cv_metrics = {k: float(np.mean(v)) for k, v in cv_scores.items()}
-    print("Baseline scores on CV:")
-    pprint(cv_metrics)
+    cv_metrics = cv_evaluate(get_model(train_config), data_train, y_train, rkfcv, scoring, n_jobs)
+    run_log = {"metrics_before": cv_metrics, "removed": list()}
 
-    run_log = {all_features: {"metrics": cv_metrics, "removed": list()}}
+    out_path = Path("dumps") / "feature_selection" / f"RFE_{DATASET.__class__.__name__}_{SK_CLASSIFIER_TYPE.__name__}_{time.time()}"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    rfe = RFECV(estimator=get_model(train_config), min_features_to_select=min_features_to_select, scoring=rfe_metric, cv=rkfcv, step=1, n_jobs=n_jobs)
+    # pipeline = Pipeline(steps=[('s', rfe), ('m', model)])
+    x_transformed = rfe.fit_transform(data_train, y_train)
 
-    n_feature_test: list[int] = [all_features - (feature_min_step * i) for i in range(1, (min_features // feature_min_step) + 1)]
-    n_feature_test.append(n_feature_test[-1] - (min_features % feature_min_step))
-    print(n_feature_test)
+    # metrics = {
+    #     "mean_score": rfe.cv_results_["mean_test_score"],
+    #     "std_score": rfe.cv_results_["std_test_score"]
+    # }
 
-    out_path = Path("dumps") / "feature_selection" / f"RFE_{DATASET.__class__.__name__}_{SK_CLASSIFIER_TYPE.__name__}_{time.time()}.json"
-    for n in tqdm(n_feature_test):
-        # create pipeline
-        rfe = RFECV(estimator=get_model(train_config), min_features_to_select=n, cv=rkfcv, step=1, n_jobs=n_jobs)
-        # pipeline = Pipeline(steps=[('s', rfe), ('m', model)])
-        x_transformed = rfe.fit_transform(data_train, y_train)
+    plt.figure(figsize=(25, 9))
+    plt.xlabel("Number of features selected")
+    plt.ylabel(f"Mean test '{rfe_metric}'")
+    plt.errorbar(
+        range(min_features_to_select, len(rfe.cv_results_["mean_test_score"]) + min_features_to_select),
+        rfe.cv_results_["mean_test_score"],
+        yerr=rfe.cv_results_["std_test_score"],
+        fmt="-o"
+    )
+    plt.title(f"RFE with min={min_features_to_select} features")
+    plt.tight_layout()
+    plt.savefig(out_path.with_suffix(".png"), dpi=400)
+    # plt.show()
 
-        # res = rfe.cv_results_
-        # pprint(res)
+    # summarize all features
+    selected = [rfe.feature_names_in_[i] for i in range(data_train.shape[1]) if rfe.support_[i]]
+    # print(selected)
 
-        # summarize all features
-        selected = [rfe.feature_names_in_[i] for i in range(data_train.shape[1]) if rfe.support_[i]]
-        print(selected)
+    assert x_transformed.shape[1] == len(selected), f"Wrong num of features: {x_transformed.shape[1]}, {len(selected)}"
+    assert rfe.n_features_ == len(selected), f"Unexpected n of features: {rfe.n_features_}, {len(selected)}"
 
-        assert x_transformed.shape[1] == len(selected), f"Wrong num of features: {x_transformed.shape[1]}, {len(selected)}"
+    cv_metrics = cv_evaluate(get_model(train_config), data_train, y_train, rkfcv, scoring, n_jobs)
+    removed_columns = list(set(data_train.columns) - set(selected))
+    run_log["metrics_after"] = cv_metrics
+    run_log["removed"] = removed_columns
 
-        cv_scores = cross_validate(get_model(train_config), data_train.loc[:, selected], y_train, scoring=scoring, cv=rkfcv, n_jobs=n_jobs, error_score="raise", verbose=0)
-        cv_metrics = {k: float(np.mean(v)) for k, v in cv_scores.items()}
-        print(f"Scores on CV with only {len(selected)} features:")
-        pprint(cv_metrics)
-
-        removed_columns = list(set(data_train.columns) - set(selected))
-        run_log[n] = {"metrics": cv_metrics, "removed": removed_columns}
-
-        # print("*** Removed")
-        # print(removed_columns)
-
-        with open(out_path, mode="w", encoding="utf-8") as fo:
-            json.dump(run_log, fo, indent=2)
+    with open(out_path.with_suffix(".json"), mode="w", encoding="utf-8") as fo:
+        json.dump(run_log, fo, indent=2)
 
 
 def get_feature_by_importance():
@@ -124,4 +131,4 @@ def get_feature_by_importance():
 
 if __name__ == "__main__":
     # get_feature_by_importance()
-    selection_rfe(feature_min_step=30)
+    selection_rfe(min_features_to_select=190)
