@@ -55,7 +55,7 @@ def selection_rfe(min_features_to_select: int = None, n_jobs=-1, rfe_metric: str
     y_train = data_train.pop("y")
     # data_train = data_train.iloc[:, :10]
 
-    rkfcv = RepeatedStratifiedKFold(n_splits=10, n_repeats=2, random_state=11)
+    rkfcv = RepeatedStratifiedKFold(n_splits=5, n_repeats=3, random_state=11)
 
     # Create a dictionary of the metrics you want to calculate
     scoring = {"accuracy": make_scorer(accuracy_score),
@@ -74,7 +74,7 @@ def selection_rfe(min_features_to_select: int = None, n_jobs=-1, rfe_metric: str
     #     "std_score": rfe.cv_results_["std_test_score"]
     # }
 
-    plt.figure(figsize=(25, 9))
+    plt.figure(figsize=(32, 9))
     plt.xlabel("Number of features selected")
     plt.ylabel(f"Mean test '{rfe_metric}'")
     plt.errorbar(
@@ -95,7 +95,7 @@ def selection_rfe(min_features_to_select: int = None, n_jobs=-1, rfe_metric: str
     assert x_transformed.shape[1] == len(selected), f"Wrong num of features: {x_transformed.shape[1]}, {len(selected)}"
     assert rfe.n_features_ == len(selected), f"Unexpected n of features: {rfe.n_features_}, {len(selected)}"
 
-    cv_metrics = cv_evaluate(get_model(train_config), data_train, y_train, rkfcv, scoring, n_jobs)
+    cv_metrics = cv_evaluate(get_model(train_config), data_train.loc[:, selected], y_train, rkfcv, scoring, n_jobs)
     removed_columns = list(set(data_train.columns) - set(selected))
     run_log["metrics_after"] = cv_metrics
     run_log["removed"] = removed_columns
@@ -131,4 +131,4 @@ def get_feature_by_importance():
 
 if __name__ == "__main__":
     # get_feature_by_importance()
-    selection_rfe(min_features_to_select=190)
+    selection_rfe(min_features_to_select=10)

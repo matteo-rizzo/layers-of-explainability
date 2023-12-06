@@ -17,7 +17,7 @@ from src.text_classification.utils import load_encode_dataset, quantize_features
 from src.utils.yaml_manager import load_yaml
 
 DATASET: AbcDataset = CallMeSexistDataset()
-LOAD_MODEL_DUMP = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_CMS_FINAL.pkl"
+LOAD_MODEL_DUMP = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_CMS_FINAL_RFE.pkl"
 
 
 def read_feature_descriptions(column_names: list[str]) -> dict[str, str]:
@@ -70,10 +70,10 @@ def main():
     data_test_q, _ = quantize_features(data_test, quantiles=q_bins)
 
     # ids_to_explain = slice(0, 10)  # or [1, 4, 5, 2, 67]
-    ids_to_explain = np.random.randint(0, data_test.shape[0], size=20).tolist()
+    ids_to_explain = np.random.randint(0, data_test.shape[0], size=30).tolist()
     print(f"Chosen ids: {ids_to_explain}")
 
-    explainer.run_explain(data_test, ids_to_explain, DATASET.get_test_data(), y_true_test, feat_names, label_names={0: "not sexist", 1: "sexist"}, effect_threshold=.001,
+    explainer.run_explain(data_test, ids_to_explain, DATASET.get_test_data(), y_true_test, feat_names, label_names={0: "not sexist", 1: "sexist"}, top_k=10,
                           quantized_features=data_test_q)
 
 

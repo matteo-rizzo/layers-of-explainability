@@ -40,13 +40,12 @@ def main():
     explainer = TranShapExplainer(pipeline.pipeline, pipeline.pipeline.tokenizer, target_label=TARGET_LABEL,
                                   device=0 if config["use_gpu"] else "cpu")
     test_set = DATASET.get_test_data()
-    ids_to_explain = np.random.randint(0, len(test_set), size=20).tolist()  # [2179, 3091, 607, 1431, 3186, 1584]
+    ids_to_explain = np.random.randint(0, len(test_set), size=30).tolist()  # [2179, 3091, 607, 1431, 3186, 1584]
     # explainer.run(test_set, explain_ids=IDS_TO_EXPLAIN, show=False, out_label_name="sexist")
     # selected ids:  [1622, 1010, 1176, 799]
 
     # TRANSHAP + pretty visualization
-    explainer.run_explain(test_set, ids_to_explain, label_names={0: "not sexist", 1: "sexist"}, top_k=None, out_label_name="sexist", targets=DATASET.get_test_labels(),
-                          effect_threshold=0.001)
+    explainer.run_explain(test_set, ids_to_explain, label_names={0: "not sexist", 1: "sexist"}, top_k=10, out_label_name="sexist", targets=DATASET.get_test_labels())
 
 
 if __name__ == "__main__":
