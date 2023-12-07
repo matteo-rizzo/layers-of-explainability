@@ -1,10 +1,3 @@
-"""
-Get explanations for HuggingFace LM, using Shap and Transhap (see plots/ folder)
-
-LM dump must be set in src/deep_learning_strategy/config.yml
-
-"""
-
 from __future__ import annotations
 
 import json
@@ -85,6 +78,8 @@ def get_importance(model, texts, indices: list[int] | None, device: str):
     shap_importance = np.abs(shap_values_to_explain)
     shap_word_indices = pd.DataFrame(idx_texts_to_explain).map(lambda x: words_dict[x])
 
+    # FIXME: need to consider the direction of the importance?
+
     return shap_importance, shap_word_indices
 
 
@@ -96,7 +91,7 @@ def evaluation_faith(pipeline, test_data, device: str, q: list[int] = None, n_ex
     @param pipeline: HF pipeline
     @param test_data: list of raw text documents
     @param q: top_k values to use for computing faithfulness
-    @param n_explanations: number of explanation to use (default: 10, requires time to use all of them)
+    @param n_explanations: amount of explanation to use (default: 10, -1 = all, but requires time)
     @return: metric and its mean and std value in a dictionary
     """
     if q is None:
@@ -150,10 +145,12 @@ def evaluation_faith(pipeline, test_data, device: str, q: list[int] = None, n_ex
         # Now use the modified text in the pipeline
         # PROBLEM: using abs, which is not mentioned in paper
         probs_suff = get_prediction_probabilities(pipeline, suff_texts, predictions)
-        scores_suff = np.abs(base_probs - probs_suff)
+        # scores_suff = np.abs(base_probs - probs_suff)
+        scores_suff = base_probs - probs_suff
 
         probs_comp = get_prediction_probabilities(pipeline, comp_texts, predictions)
-        scores_comp = np.abs(base_probs - probs_comp)
+        # scores_comp = np.abs(base_probs - probs_comp)
+        scores_comp = base_probs - probs_comp
 
         metrics["comp"].append(float(np.mean(scores_comp)))
         metrics["suff"].append(float(np.mean(scores_suff)))

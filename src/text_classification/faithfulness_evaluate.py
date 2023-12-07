@@ -50,8 +50,10 @@ def compute_faith_metrics(test_data: pd.DataFrame, model, shap_values_abs, base_
     probs_comp, _ = get_prediction_probabilities(model, test_data_comp, original_predictions)
 
     # ABS val ?
-    suff = np.abs(base_probs - probs_suff)  # keep only top k
-    comp = np.abs(base_probs - probs_comp)  # remove top-k
+    # suff = np.abs(base_probs - probs_suff) # keep only top k
+    suff = base_probs - probs_suff
+    # comp = np.abs(base_probs - probs_comp)  # remove top-k
+    comp = base_probs - probs_comp  # remove top-k
     return comp, suff
 
 
@@ -66,6 +68,9 @@ def evaluation_faith(test_data: pd.DataFrame, model, feature_neutral: np.ndarray
     shap_values: np.ndarray = explainer.shap_values(test_data)
 
     shap_values_abs = np.abs(shap_values)
+
+    # FIXME: need to consider the direction of the importance?
+
     # shap_values_signs = np.where(shap_values < 0, -1, 1)
     # shap_values_relative_change = shap_values_abs / shap_values_abs.sum(1).reshape(-1, 1) * 100
     # shap_values_relative_change_df = pd.DataFrame(shap_values_relative_change, columns=test_data.columns, index=test_data.index)
@@ -83,7 +88,7 @@ def main():
     data_train, data_test = load_encode_dataset(dataset=DATASET, max_scale=True, exclude_features=EXCLUDE_LIST)
     data_train.pop("y")
     y_true_test = data_test.pop("y")
-    # data_test = data_test.iloc[:20, :]
+    # data_test = data_test.iloc[150:200, :]
 
     # Feature neutral value
     # noise = np.ones((data_test.shape[1],), dtype=float) * 0 # np.mean(data_train.to_numpy(), axis=0)
