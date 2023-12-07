@@ -10,7 +10,7 @@ import spacy
 from spacy import Language
 # from spacy.lang.it import STOP_WORDS
 # import nlpaug.augmenter.word as naw
-from treetaggerwrapper import TreeTagger
+# from treetaggerwrapper import TreeTagger
 
 from src.utils.yaml_manager import load_yaml
 

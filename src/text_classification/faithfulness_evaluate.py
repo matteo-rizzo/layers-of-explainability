@@ -12,38 +12,13 @@ import shap
 from src.deep_learning_strategy.classes.CallMeSexistDataset import CallMeSexistDataset
 from src.deep_learning_strategy.classes.Dataset import AbcDataset
 from src.text_classification.easy_classifier import EXCLUDE_LIST
-from src.text_classification.utils import load_encode_dataset
+from src.text_classification.utils import load_encode_dataset, _replace_with_column_average, _complementary_indices
 
 DATASET: AbcDataset = CallMeSexistDataset()
 LOAD_MODEL_DUMP = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_CMS_FINAL_RFE.pkl"
 
 
-def _replace_with_column_average(arr, col_indices, feature_neutral: np.ndarray):
-    # Calculate the column averages
-    # col_avgs = feature_neutral  # np.zeros(arr.shape[1])  # np.mean(arr, axis=0)
-
-    # Replace the values in the specified columns with the column averages
-    for i in range(arr.shape[0]):
-        arr[i, col_indices[i, :]] = feature_neutral[col_indices[i, :]]
-
-    return arr
-
-
-def _complementary_indices(arr, top_k_indices):
-    # Get all indices
-    all_indices = np.arange(arr.shape[1])
-
-    # Initialize an empty array to store the complementary indices
-    comp_indices = np.empty((arr.shape[0], arr.shape[1] - top_k_indices.shape[1]), dtype=int)
-
-    # For each row, find the complementary indices
-    for i in range(arr.shape[0]):
-        comp_indices[i] = np.setdiff1d(all_indices, top_k_indices[i])
-
-    return comp_indices
-
-
-def compute_faith_metrics(test_data: pd.DataFrame, model, shap_values_abs, base_probs: np.ndarray, feature_neutral: np.ndarray, top_k: int):
+def compute_faith_metrics(test_data: pd.DataFrame, model, shap_values_abs, base_probs: np.ndarray, feature_neutral: np.ndarray, top_k: int) -> dict[str, tuple[float, float]]:
     shap_top_k = np.argpartition(shap_values_abs, -top_k, axis=1)[:, -top_k:]  # (samples, top_k)
     shap_not_top_k = _complementary_indices(shap_values_abs, shap_top_k)
 
@@ -58,7 +33,10 @@ def compute_faith_metrics(test_data: pd.DataFrame, model, shap_values_abs, base_
     return comp, suff
 
 
-def evaluation_faith(test_data: pd.DataFrame, model, feature_neutral: np.ndarray, q: list[int] = [1, 5, 10, 20]) -> dict:
+def evaluation_faith(test_data: pd.DataFrame, model, feature_neutral: np.ndarray, q: list[int] = None) -> dict:
+    if q is None:
+        q = [1, 5, 10, 20]
+
     probs = model.predict_proba(test_data)[:, 1]
 
     explainer = shap.TreeExplainer(model)
@@ -76,13 +54,14 @@ def evaluation_faith(test_data: pd.DataFrame, model, feature_neutral: np.ndarray
         metrics["comp"].append(comp)
         metrics["suff"].append(suff)
 
-    return {k: float(np.mean(v)) for k, v in metrics.items()}
+    return {k: (float(np.mean(v)), float(np.std(v))) for k, v in metrics.items()}
 
 
 def main():
     data_train, data_test = load_encode_dataset(dataset=DATASET, max_scale=True, exclude_features=EXCLUDE_LIST)
     data_train.pop("y")
     y_true_test = data_test.pop("y")
+    # data_test = data_test.iloc[:20, :]
 
     # Feature neutral value
     # FIXME: consider using a sampling distribution
@@ -91,7 +70,7 @@ def main():
     # Load model
     clf = joblib.load(LOAD_MODEL_DUMP)
 
-    metrics = evaluation_faith(data_test, clf, feature_neutral)
+    metrics = evaluation_faith(data_test, clf, feature_neutral, q=[1, 5, 10])
     pprint(metrics)
 
 

@@ -113,3 +113,28 @@ def quantize_features(data: pd.DataFrame, quantiles: dict[str, dict[str, float]]
                                retbins=False)
 
     return data, quantiles
+
+
+def _replace_with_column_average(arr, col_indices, feature_neutral: np.ndarray):
+    # Calculate the column averages
+    # col_avgs = feature_neutral  # np.zeros(arr.shape[1])  # np.mean(arr, axis=0)
+
+    # Replace the values in the specified columns with the column averages
+    for i in range(arr.shape[0]):
+        arr[i, col_indices[i, :]] = feature_neutral[col_indices[i, :]]
+
+    return arr
+
+
+def _complementary_indices(arr, top_k_indices):
+    # Get all indices
+    all_indices = np.arange(arr.shape[1])
+
+    # Initialize an empty array to store the complementary indices
+    comp_indices = np.empty((arr.shape[0], arr.shape[1] - top_k_indices.shape[1]), dtype=int)
+
+    # For each row, find the complementary indices
+    for i in range(arr.shape[0]):
+        comp_indices[i] = np.setdiff1d(all_indices, top_k_indices[i])
+
+    return comp_indices
