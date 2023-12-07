@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -31,6 +32,23 @@ BATCH_SIZE = config["training"]["test_batch_size"]
 TEST_MODEL_NAME = config["testing"]["model_name"]
 TARGET_LABEL = config["testing"]["target_label"]
 DATASET: AbcDataset = HuggingFaceCallMeSexistDataset()
+
+
+def get_prediction_probabilities(model, texts, original_predictions: np.ndarray = None) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Return probabilities of predictions and prediction classes (int)
+
+    @param texts: strings to use as model input
+    @param model: model to use for prediction
+    @param original_predictions: if predictions are supplied, it will return the probabilities of these predictions,
+        otherwise it will return the predictions with the highest probability
+    @return: probabilities of predicted class and the predicted class (or input predictions)
+    """
+    probs_1 = np.array([prediction[0]["score"] for prediction in model(texts)])
+    if original_predictions is None:
+        original_predictions = (probs_1 >= .5).astype(int)
+    probs_pred = np.array([(p_1 if o > 0 else 1 - p_1) for p_1, o in zip(probs_1.tolist(), original_predictions.tolist())])
+    return probs_pred, original_predictions
 
 
 def get_importance(model, texts, indices: list[int] | None, device: str):
@@ -70,10 +88,11 @@ def get_importance(model, texts, indices: list[int] | None, device: str):
     return shap_importance, shap_word_indices
 
 
-def evaluation_faith(pipeline, test_data, q: list[int] = None, n_explanations: int = 10) -> dict[str, tuple[float, float]]:
+def evaluation_faith(pipeline, test_data, device: str, q: list[int] = None, n_explanations: int = 10) -> dict[str, tuple[float, float]]:
     """
     Compute faithfulness metrics (COMP and SUFF)
 
+    @param device: torch device str
     @param pipeline: HF pipeline
     @param test_data: list of raw text documents
     @param q: top_k values to use for computing faithfulness
@@ -90,11 +109,16 @@ def evaluation_faith(pipeline, test_data, q: list[int] = None, n_explanations: i
         idx_to_use_rnd = None
         test_data_reduced = test_data
 
-    base_score = np.array([prediction[0]["score"] for prediction in pipeline(test_data_reduced)])
+    word_importance, words = get_importance(pipeline, test_data, indices=idx_to_use_rnd, device=device)
 
-    word_importance, words = get_importance(pipeline, test_data, indices=idx_to_use_rnd, device="cuda:0")
+    # Separate words with whitespace, to correctly mask them later
+    # PROBLEM: punctuation remains separated by whitespaces
+    tok = TweetTokenizer()
+    test_data_reduced = [" ".join(s) for s in tok.tokenize_sents(test_data_reduced)]
 
-    # Avoid selecting None words as top-k
+    base_probs, predictions = get_prediction_probabilities(pipeline, test_data_reduced)
+
+    # Avoid selecting None words as top-k (debatable)
     word_importance[words.isnull()] = -1.0
 
     metrics = defaultdict(list)
@@ -111,24 +135,28 @@ def evaluation_faith(pipeline, test_data, q: list[int] = None, n_explanations: i
             # Replace words in the list with UNK token
             text_comp = original_text
             for word in words_top_k:
-                text_comp = text_comp.replace(word, pipeline.tokenizer.unk_token)
+                # text_comp = text_comp.replace(word, pipeline.tokenizer.unk_token)
+                # This avoids replacement of sub-words, and only matches whole tokens
+                text_comp = re.sub(r"(\s|^)" + re.escape(word) + r"(\s|$)", rf"\1{pipeline.tokenizer.unk_token}\2", text_comp)
 
             text_suff = original_text
             for word in words_not_top_k:
-                text_suff = text_suff.replace(word, pipeline.tokenizer.unk_token)
+                # text_suff = text_suff.replace(word, pipeline.tokenizer.unk_token)
+                text_suff = re.sub(r"(\s|^)" + re.escape(word) + r"(\s|$)", rf"\1{pipeline.tokenizer.unk_token}\2", text_suff)
 
             suff_texts.append(text_suff)
             comp_texts.append(text_comp)
 
         # Now use the modified text in the pipeline
-        predictions_suff = pipeline(suff_texts)
-        scores_suff = base_score - np.array([prediction[0]["score"] for prediction in predictions_suff])
+        # PROBLEM: using abs, which is not mentioned in paper
+        probs_suff = get_prediction_probabilities(pipeline, suff_texts, predictions)
+        scores_suff = np.abs(base_probs - probs_suff)
 
-        predictions_comp = pipeline(comp_texts)
-        scores_comp = base_score - np.array([prediction[0]["score"] for prediction in predictions_comp])
+        probs_comp = get_prediction_probabilities(pipeline, comp_texts, predictions)
+        scores_comp = np.abs(base_probs - probs_comp)
 
-        metrics["comp"].append(scores_comp)
-        metrics["suff"].append(scores_suff)
+        metrics["comp"].append(float(np.mean(scores_comp)))
+        metrics["suff"].append(float(np.mean(scores_suff)))
 
     return {k: (float(np.mean(v)), float(np.std(v))) for k, v in metrics.items()}
 
@@ -136,10 +164,10 @@ def evaluation_faith(pipeline, test_data, q: list[int] = None, n_explanations: i
 def main():
     # Load data
     pipeline = HuggingFacePipeline(TEST_MODEL_NAME, BATCH_SIZE)
-
     test_data = DATASET.get_test_data()
 
-    metrics = evaluation_faith(pipeline.pipeline, test_data, q=[1, 5, 10], n_explanations=20)
+    device = 0 if config["use_gpu"] else "cpu"
+    metrics = evaluation_faith(pipeline.pipeline, test_data, q=[1, 5, 10], n_explanations=5, device=device)
     pprint(metrics)
 
     out_path = Path("dumps") / "faithfulness" / f"faith_{DATASET.__class__.__name__}_{TEST_MODEL_NAME}_{time.time()}"
