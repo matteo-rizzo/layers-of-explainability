@@ -82,7 +82,7 @@ def get_importance(model, texts, indices: list[int] | None, device: str):
     return shap_values_to_explain, shap_word_indices
 
 
-def evaluation_faith(pipeline, test_data, device: str, q: list[int] = None, n_explanations: int = 10) -> dict[str, tuple[float, float]]:
+def evaluation_faith(pipeline, test_data, device: str, q: list[int] = None, n_explanations: int = 10) -> dict[str, tuple[float, float, float]]:
     """
     Compute faithfulness metrics (COMP and SUFF)
 
@@ -148,11 +148,11 @@ def evaluation_faith(pipeline, test_data, device: str, q: list[int] = None, n_ex
 
         # Now use the modified text in the pipeline
         # PROBLEM: using abs, which is not mentioned in paper
-        probs_suff = get_prediction_probabilities(pipeline, suff_texts, predictions)
+        probs_suff, _ = get_prediction_probabilities(pipeline, suff_texts, predictions)
         # scores_suff = np.abs(base_probs - probs_suff)
         scores_suff = base_probs - probs_suff
 
-        probs_comp = get_prediction_probabilities(pipeline, comp_texts, predictions)
+        probs_comp, _ = get_prediction_probabilities(pipeline, comp_texts, predictions)
         # scores_comp = np.abs(base_probs - probs_comp)
         scores_comp = base_probs - probs_comp
 
@@ -161,7 +161,13 @@ def evaluation_faith(pipeline, test_data, device: str, q: list[int] = None, n_ex
 
     metrics = {k: np.stack(v, axis=-1) for k, v in metrics.items()}  # k: (samples, q)
 
-    return {k: (float(v.mean()), float(v.std(axis=1).mean())) for k, v in metrics.items()}
+    # Write runs to numpy files
+    out_path = Path("dumps") / "faithfulness"
+    out_path.mkdir(parents=True, exist_ok=True)
+    for m, v in metrics.items():
+        np.save(out_path / f"{m}.npy", v)
+
+    return {k: (float(v.mean()), float(v.std(axis=1).mean()), float(v.std(axis=0).mean())) for k, v in metrics.items()}
 
 
 def main():
@@ -170,7 +176,7 @@ def main():
     test_data = DATASET.get_test_data()
 
     device = 0 if config["use_gpu"] else "cpu"
-    metrics = evaluation_faith(pipeline.pipeline, test_data, q=[1, 5, 10], n_explanations=5, device=device)
+    metrics = evaluation_faith(pipeline.pipeline, test_data, q=[1, 3, 5, 8, 10, 20], n_explanations=-1, device=device)
     pprint(metrics)
 
     out_path = Path("dumps") / "faithfulness" / f"faith_{DATASET.__class__.__name__}_{TEST_MODEL_NAME}_{time.time()}"
