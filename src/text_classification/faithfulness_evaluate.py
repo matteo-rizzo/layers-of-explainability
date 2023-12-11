@@ -43,13 +43,16 @@ def compute_faith_metrics(test_data: pd.DataFrame, model, shap_values_abs, base_
     shap_top_k = np.argpartition(shap_values_abs, -top_k, axis=1)[:, -top_k:]  # (samples, top_k)
     shap_not_top_k = _complementary_indices(shap_values_abs, shap_top_k)
 
-    test_data_suff = _replace_with_column_average(test_data.copy().to_numpy(), shap_top_k, feature_neutral)
-    test_data_comp = _replace_with_column_average(test_data.copy().to_numpy(), shap_not_top_k, feature_neutral)
+    # SUFF = keeps only the important tokens and calculates the change in output probability compared to the original predicted class
+    test_data_suff = _replace_with_column_average(test_data.copy().to_numpy(), shap_not_top_k, feature_neutral)
+
+    # COMP = change in the output probability of the predicted class after the important (top-k) tokens are removed
+    test_data_comp = _replace_with_column_average(test_data.copy().to_numpy(), shap_top_k, feature_neutral)
 
     probs_suff, _ = get_prediction_probabilities(model, test_data_suff, original_predictions)
     probs_comp, _ = get_prediction_probabilities(model, test_data_comp, original_predictions)
 
-    # ABS val ?
+    # ABS value? No, the paper accepts negative values
     # suff = np.abs(base_probs - probs_suff) # keep only top k
     suff = base_probs - probs_suff
     # comp = np.abs(base_probs - probs_comp)  # remove top-k
@@ -67,21 +70,25 @@ def evaluation_faith(test_data: pd.DataFrame, model, feature_neutral: np.ndarray
 
     shap_values: np.ndarray = explainer.shap_values(test_data)
 
-    shap_values_abs = np.abs(shap_values)
+    # shap_values_abs = np.abs(shap_values)
 
-    # FIXME: need to consider the direction of the importance?
-
-    # shap_values_signs = np.where(shap_values < 0, -1, 1)
-    # shap_values_relative_change = shap_values_abs / shap_values_abs.sum(1).reshape(-1, 1) * 100
-    # shap_values_relative_change_df = pd.DataFrame(shap_values_relative_change, columns=test_data.columns, index=test_data.index)
+    # We want to isolate contributions for the predicted class. If class is 0, contributed values have negative shap.
+    signs = np.where(predictions > 0, 1.0, -1.0).reshape(-1, 1)  # (n_samples, 1)
+    # Features with positive values will be the ones contributing to the predicted class
+    shap_values_signed = shap_values * signs
+    # Avoid removing features that contributed to the opposite of prediction
+    # shap_values_signed[shap_values_signed < 0] = .0
 
     metrics = defaultdict(list)
     for k in q:
-        comp, suff = compute_faith_metrics(test_data, model, shap_values_abs, probs, predictions, feature_neutral, k)
-        metrics["comp"].append(float(np.mean(comp)))
-        metrics["suff"].append(float(np.mean(suff)))
+        comp, suff = compute_faith_metrics(test_data, model, shap_values_signed, probs, predictions, feature_neutral, k)
+        metrics["comp"].append(comp)
+        metrics["suff"].append(suff)
 
-    return {k: (float(np.mean(v)), float(np.std(v))) for k, v in metrics.items()}
+    metrics = {k: np.stack(v, axis=-1) for k, v in metrics.items()}  # k: (samples, q)
+
+    # Average of metrics, with average of per-sample STD over all k
+    return {k: (float(v.mean()), float(v.std(axis=1).mean())) for k, v in metrics.items()}
 
 
 def main():
@@ -93,7 +100,7 @@ def main():
     # Feature neutral value
     # noise = np.ones((data_test.shape[1],), dtype=float) * 0 # np.mean(data_train.to_numpy(), axis=0)
     noise = np.median(data_train.to_numpy(), axis=0)
-    # noise = np.random.normal(loc=0.5, scale=0.1, size=data_test.shape)
+    # noise = np.random.normal(loc=0.5, scale=0.1, size=data_test.shape[1])
     # Scale the noise to [0, 1]
     # noise = (noise - np.min(noise)) / (np.max(noise) - np.min(noise))
 
