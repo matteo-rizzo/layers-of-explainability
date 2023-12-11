@@ -70,17 +70,16 @@ def get_importance(model, texts, indices: list[int] | None, device: str):
     else:
         idx_texts_to_explain = idx_texts
 
+    # HERE try to use more nsamples (highest possible number)
     shap_values = explainer.shap_values(X=idx_texts_to_explain, nsamples=96, l1_reg="aic")  # nsamples="auto" should be better
 
     # shap_values_to_explain = np.array([shap_values[class_idx][i] for i, class_idx in enumerate(predicted_classes)])
     shap_values_to_explain: np.ndarray = shap_values[0]
 
-    shap_importance = np.abs(shap_values_to_explain)
+    # shap_importance = np.abs(shap_values_to_explain)
     shap_word_indices = pd.DataFrame(idx_texts_to_explain).map(lambda x: words_dict[x])
 
-    # FIXME: need to consider the direction of the importance?
-
-    return shap_importance, shap_word_indices
+    return shap_values_to_explain, shap_word_indices
 
 
 def evaluation_faith(pipeline, test_data, device: str, q: list[int] = None, n_explanations: int = 10) -> dict[str, tuple[float, float]]:
@@ -113,13 +112,18 @@ def evaluation_faith(pipeline, test_data, device: str, q: list[int] = None, n_ex
 
     base_probs, predictions = get_prediction_probabilities(pipeline, test_data_reduced)
 
+    # Consider the direction of contribution w.r.t. predicted class
+    signs = np.where(predictions > 0, 1.0, -1.0).reshape(-1, 1)  # (n_samples, 1)
+    # Features with positive values will be the ones contributing to the predicted class
+    shap_values_signed = word_importance * signs
+
     # Avoid selecting None words as top-k (debatable)
-    word_importance[words.isnull()] = -1.0
+    shap_values_signed[words.isnull()] = -100.0
 
     metrics = defaultdict(list)
     for k in q:
-        shap_top_k = np.argpartition(word_importance, -k, axis=1)[:, -k:]  # (samples, top_k)
-        shap_not_top_k = _complementary_indices(word_importance, shap_top_k)
+        shap_top_k = np.argpartition(shap_values_signed, -k, axis=1)[:, -k:]  # (samples, top_k)
+        shap_not_top_k = _complementary_indices(shap_values_signed, shap_top_k)
 
         suff_texts = list()
         comp_texts = list()
@@ -152,10 +156,12 @@ def evaluation_faith(pipeline, test_data, device: str, q: list[int] = None, n_ex
         # scores_comp = np.abs(base_probs - probs_comp)
         scores_comp = base_probs - probs_comp
 
-        metrics["comp"].append(float(np.mean(scores_comp)))
-        metrics["suff"].append(float(np.mean(scores_suff)))
+        metrics["comp"].append(scores_comp)
+        metrics["suff"].append(scores_suff)
 
-    return {k: (float(np.mean(v)), float(np.std(v))) for k, v in metrics.items()}
+    metrics = {k: np.stack(v, axis=-1) for k, v in metrics.items()}  # k: (samples, q)
+
+    return {k: (float(v.mean()), float(v.std(axis=1).mean())) for k, v in metrics.items()}
 
 
 def main():
