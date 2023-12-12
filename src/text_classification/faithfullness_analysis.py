@@ -18,34 +18,34 @@ def plothist(a):
 def plotbox(data1, data2, x_values: list, data1_lab: str, data2_lab: str, title: str, y_lab: str, x_lab: str):
     # Create a DataFrame for easier plotting
     df1 = pd.DataFrame(data1, columns=[f'q={x}' for x in x_values])
-    df1["Array"] = data1_lab
+    df1["Model"] = data1_lab
     df2 = pd.DataFrame(data2, columns=[f'q={x}' for x in x_values])
-    df2["Array"] = data2_lab
+    df2["Model"] = data2_lab
 
     # Concatenate the two DataFrames
     df = pd.concat([df1, df2])
 
     # Melt the DataFrame to have thresholds and arrays in separate columns
-    df_melt = df.melt(id_vars="Array", var_name=x_lab, value_name=y_lab)
+    df_melt = df.melt(id_vars="Model", var_name=x_lab, value_name=y_lab)
 
     # Create the boxplot
     plt.figure(figsize=(10, 8))
-    sns.boxplot(x=x_lab, y=y_lab, hue="Array", data=df_melt, orient="v", palette="Set2"),
-    # showmeans=True,
-    # meanprops=dict(marker="o", markerfacecolor="red", markeredgecolor="black", markersize="12"))
+    sns.boxplot(x=x_lab, y=y_lab, hue="Model", data=df_melt, orient="v", palette="Set2",
+                showmeans=True,
+                meanprops=dict(marker="o", markerfacecolor="red", markeredgecolor="black", markersize="12"))
 
     # Plot means separately
-    means = df_melt.groupby(["Array", x_lab])[y_lab].mean().reset_index()
-    sns.pointplot(x=x_lab, y=y_lab, hue="Array", data=means, orient="v",
-                  markers="o", linestyles="", dodge=True, palette="Set1")
+    # means = df_melt.groupby(["Model", x_lab])[y_lab].mean().reset_index()
+    # sns.pointplot(x=x_lab, y=y_lab, hue="Model", data=means, orient="v",
+    #               markers="o", linestyles="", dodge=True, palette="Set1")
 
     plt.title(title)
     plt.show()
 
 
 def main(precision: int = 4):
-    ks = [1, 3, 5, 8, 10, 20]
-    ks_to_use = [0, 2, 4, 5]
+    ks = [1, 5, 10, 20, 50, 75]
+    ks_to_use = [0, 1, 2, 3, 4, 5]
     print(f"Using k values={[ks[i] for i in ks_to_use]}")
 
     comp_lm = np.load("experiments/faithfulness/comp.npy").astype(np.float64)[:, ks_to_use]

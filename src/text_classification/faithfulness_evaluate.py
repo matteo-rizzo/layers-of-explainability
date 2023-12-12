@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from collections import defaultdict
 from pathlib import Path
 from pprint import pprint
@@ -59,9 +60,10 @@ def compute_faith_metrics(test_data: pd.DataFrame, model, shap_values_abs, base_
     return comp, suff
 
 
-def evaluation_faith(test_data: pd.DataFrame, model, feature_neutral: np.ndarray, q: list[int] = None) -> dict:
-    if q is None:
-        q = [1, 5, 10, 20]
+def evaluation_faith(test_data: pd.DataFrame, model, feature_neutral: np.ndarray, q_perc: list[int] = None) -> dict:
+    if q_perc is None:
+        q_perc = [1, 5, 10, 20]
+    q_perc: list[float] = [q / 100 for q in q_perc]
 
     probs, predictions = get_prediction_probabilities(model, test_data)
 
@@ -79,7 +81,8 @@ def evaluation_faith(test_data: pd.DataFrame, model, feature_neutral: np.ndarray
     # shap_values_signed[shap_values_signed < 0] = .0
 
     metrics = defaultdict(list)
-    for k in q:
+    for k_perc in q_perc:
+        k = math.ceil(k_perc * test_data.shape[1])
         comp, suff = compute_faith_metrics(test_data, model, shap_values_signed, probs, predictions, feature_neutral, k)
         metrics["comp"].append(comp)
         metrics["suff"].append(suff)
@@ -112,7 +115,7 @@ def main():
     # Scale the noise to [0, 1]
     # noise = (noise - np.min(noise)) / (np.max(noise) - np.min(noise))
 
-    metrics = evaluation_faith(data_test, clf, noise, q=[1, 3, 5, 8, 10, 20])
+    metrics = evaluation_faith(data_test, clf, noise, q_perc=[1, 5, 10, 20, 50, 75])
     pprint(metrics)
 
 

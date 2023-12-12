@@ -121,7 +121,7 @@ def evaluation_faith(pipeline, test_data, device: str, q_perc: list[int] = None,
     shap_values_signed = word_importance * signs
 
     # Avoid selecting None words as top-k (debatable)
-    shap_values_signed[words.isnull()] = -100.0
+    shap_values_signed[words.isnull()] = -1000.0
 
     metrics = defaultdict(list)
     for k_perc in q_perc:
@@ -134,6 +134,7 @@ def evaluation_faith(pipeline, test_data, device: str, q_perc: list[int] = None,
             # Select word indices
             shap_top_k = np.argpartition(shap_values_signed[i], -k)[-k:]  # (top_k,)
             shap_not_top_k = np.setdiff1d(np.arange(shap_values_signed.shape[1]), shap_top_k)
+            # assert not set(shap_top_k.tolist()) & set(shap_not_top_k.tolist()), "error"
 
             # Select top-k words to be removed
             words_top_k: list[str] = [w for w in words.iloc[i, shap_top_k].tolist() if w is not None]
