@@ -3,7 +3,7 @@ add_synthetic: true
 task: B # A or B
 
 training:
-  model_name: roberta-base # google/flan-t5-base # MilaNLProc/hate-ita
+  model_name: cardiffnlp/twitter-roberta-base-2022-154m # roberta-base # google/flan-t5-base # MilaNLProc/hate-ita
 
   add_synthetic: false # Add also synthetic examples to a training set
   eval_size: 0.20

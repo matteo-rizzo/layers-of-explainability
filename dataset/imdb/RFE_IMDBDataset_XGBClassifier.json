@@ -1,0 +1,49 @@
+{
+  "metrics_before": {
+    "fit_time": 76.76410439809163,
+    "score_time": 0.12256795565287272,
+    "test_accuracy": 0.8873866666666665,
+    "test_f1": 0.8873832963108442
+  },
+  "removed": [
+    "TextGrammarErrors_error_MISC",
+    "TextGrammarErrors_error_GRAMMAR",
+    "EmpathFeatures_driving",
+    "EmpathFeatures_exasperation",
+    "EmpathFeatures_occupation",
+    "EmpathFeatures_business",
+    "EmpathFeatures_cleaning",
+    "EmpathFeatures_blue_collar_job",
+    "EmpathFeatures_exotic",
+    "TextGrammarErrors_error_AMERICAN_ENGLISH_STYLE",
+    "TextGrammarErrors_error_SEMANTICS",
+    "EmpathFeatures_restaurant",
+    "EmpathFeatures_independence",
+    "TextGrammarErrors_error_BRITISH_ENGLISH",
+    "LIWCFeatures_anx",
+    "EmpathFeatures_tourism",
+    "EmpathFeatures_urban",
+    "TextGrammarErrors_error_NONSTANDARD_PHRASES",
+    "LIWCFeatures_filler",
+    "TextGrammarErrors_error_CONFUSED_WORDS",
+    "EmpathFeatures_hiking",
+    "TextGrammarErrors_error_COMPOUNDING",
+    "EmpathFeatures_medieval",
+    "EmpathFeatures_weather",
+    "TextGrammarErrors_error_COLLOCATIONS",
+    "ChatGPTDetector_ChatGPT",
+    "TextGrammarErrors_error_STYLE",
+    "EmpathFeatures_farming",
+    "EmpathFeatures_politics",
+    "EmpathFeatures_gain",
+    "EmpathFeatures_legend",
+    "EmpathFeatures_warmth",
+    "EmpathFeatures_anonymity"
+  ],
+  "metrics_after": {
+    "fit_time": 67.82780712445577,
+    "score_time": 0.10648045539855958,
+    "test_accuracy": 0.8878666666666667,
+    "test_f1": 0.8878633657629783
+  }
+}

@@ -138,3 +138,12 @@ def _complementary_indices(arr, top_k_indices):
         comp_indices[i] = np.setdiff1d(all_indices, top_k_indices[i])
 
     return comp_indices
+
+
+def get_excluded_features_dataset(dataset: AbcDataset, sk_classifier_type: type) -> list[str] | None:
+    exclude_list = None
+    exclude_path = Path(dataset.BASE_DATASET) / f"RFE_{dataset.__class__.__name__}_{sk_classifier_type.__name__}.json"
+    if exclude_path.exists():
+        with open(exclude_path, mode="r", encoding="utf-8") as fe:
+            exclude_list: list[str] = json.load(fe)["removed"]
+    return exclude_list

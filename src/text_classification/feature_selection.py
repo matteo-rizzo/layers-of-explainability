@@ -12,6 +12,7 @@ from xgboost import XGBClassifier
 
 from src.deep_learning_strategy.classes.CallMeSexistDataset import CallMeSexistDataset
 from src.deep_learning_strategy.classes.Dataset import AbcDataset
+from src.deep_learning_strategy.classes.IMDBDataset import IMDBDataset
 from src.text_classification.utils import load_encode_dataset
 from src.utils.yaml_manager import load_yaml
 

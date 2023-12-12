@@ -12,8 +12,7 @@ from src.deep_learning_strategy.classes.Dataset import AbcDataset
 from src.explainable_strategy.SHAP.LocalShapExplainer import LocalShapExplainer
 from src.text_classification.classes.features.Feature import Feature
 from src.text_classification.classes.training.TrainingModelUtility import TrainingModelUtility
-from src.text_classification.easy_classifier import EXCLUDE_LIST
-from src.text_classification.utils import load_encode_dataset, quantize_features
+from src.text_classification.utils import load_encode_dataset, quantize_features, get_excluded_features_dataset
 from src.utils.yaml_manager import load_yaml
 
 DATASET: AbcDataset = CallMeSexistDataset()
@@ -38,15 +37,15 @@ def read_feature_descriptions(column_names: list[str]) -> dict[str, str]:
 
 
 def main():
-    # Load data
-    data_train, data_test = load_encode_dataset(dataset=DATASET, max_scale=True, exclude_features=EXCLUDE_LIST)
-    train_config: dict = load_yaml("src/text_classification/config/classifier.yml")
-    data_train.pop("y")
-    y_true_test = data_test["y"].tolist()
-
     # Load model
     clf = joblib.load(LOAD_MODEL_DUMP)
     sk_classifier_type = clf.__class__
+
+    # Load data
+    data_train, data_test = load_encode_dataset(dataset=DATASET, max_scale=True, exclude_features=get_excluded_features_dataset(DATASET, clf.__class__))
+    train_config: dict = load_yaml("src/text_classification/config/classifier.yml")
+    data_train.pop("y")
+    y_true_test = data_test["y"].tolist()
 
     # Test evaluation
     tmu = TrainingModelUtility(train_config, sk_classifier_type, dict())
