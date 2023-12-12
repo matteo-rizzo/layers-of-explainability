@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import re
 import time
@@ -17,7 +18,6 @@ from src.deep_learning_strategy.classes.Dataset import AbcDataset
 from src.deep_learning_strategy.classes.HuggingFaceCallMeSexistDataset import HuggingFaceCallMeSexistDataset
 from src.deep_learning_strategy.classes.HuggingFacePipeline import HuggingFacePipeline
 from src.explainable_strategy.transhap.explainers.SHAP_for_text import SHAPexplainer
-from src.text_classification.utils import _complementary_indices
 from src.utils.yaml_manager import load_yaml
 
 config = load_yaml(os.path.join("src", "deep_learning_strategy", "config.yml"))
@@ -70,8 +70,8 @@ def get_importance(model, texts, indices: list[int] | None, device: str):
     else:
         idx_texts_to_explain = idx_texts
 
-    # HERE try to use more nsamples (highest possible number)
-    shap_values = explainer.shap_values(X=idx_texts_to_explain, nsamples=96, l1_reg="aic")  # nsamples="auto" should be better
+    # HERE try to use more nsamples (the highest possible number)
+    shap_values = explainer.shap_values(X=idx_texts_to_explain, nsamples=256, l1_reg="aic")  # nsamples="auto" should be better
 
     # shap_values_to_explain = np.array([shap_values[class_idx][i] for i, class_idx in enumerate(predicted_classes)])
     shap_values_to_explain: np.ndarray = shap_values[0]
@@ -82,19 +82,20 @@ def get_importance(model, texts, indices: list[int] | None, device: str):
     return shap_values_to_explain, shap_word_indices
 
 
-def evaluation_faith(pipeline, test_data, device: str, q: list[int] = None, n_explanations: int = 10) -> dict[str, tuple[float, float, float]]:
+def evaluation_faith(pipeline, test_data, device: str, q_perc: list[int] = None, n_explanations: int = 10) -> dict[str, tuple[float, float, float]]:
     """
     Compute faithfulness metrics (COMP and SUFF)
 
     @param device: torch device str
     @param pipeline: HF pipeline
     @param test_data: list of raw text documents
-    @param q: top_k values to use for computing faithfulness
+    @param q_perc: k% values to use for computing faithfulness
     @param n_explanations: amount of explanation to use (default: 10, -1 = all, but requires time)
     @return: metric and its mean and std value in a dictionary
     """
-    if q is None:
-        q = [1, 5, 10, 20]
+    if q_perc is None:
+        q_perc = [1, 5, 10, 20]
+    q_perc: list[float] = [q / 100 for q in q_perc]
 
     if n_explanations > 0:
         idx_to_use_rnd = np.random.randint(0, len(test_data), size=n_explanations).tolist()
@@ -106,9 +107,11 @@ def evaluation_faith(pipeline, test_data, device: str, q: list[int] = None, n_ex
     word_importance, words = get_importance(pipeline, test_data, indices=idx_to_use_rnd, device=device)
 
     # Separate words with whitespace, to correctly mask them later
-    # PROBLEM: punctuation remains separated by whitespaces
     tok = TweetTokenizer()
-    test_data_reduced = [" ".join(s) for s in tok.tokenize_sents(test_data_reduced)]
+    tok_text = tok.tokenize_sents(test_data_reduced)
+    texts_token_len: list[int] = [len(tok) for tok in tok_text]
+    test_data_reduced = [" ".join(s) for s in tok_text]
+    # a = np.mean(texts_token_len)
 
     base_probs, predictions = get_prediction_probabilities(pipeline, test_data_reduced)
 
@@ -121,15 +124,20 @@ def evaluation_faith(pipeline, test_data, device: str, q: list[int] = None, n_ex
     shap_values_signed[words.isnull()] = -100.0
 
     metrics = defaultdict(list)
-    for k in q:
-        shap_top_k = np.argpartition(shap_values_signed, -k, axis=1)[:, -k:]  # (samples, top_k)
-        shap_not_top_k = _complementary_indices(shap_values_signed, shap_top_k)
-
+    for k_perc in q_perc:
         suff_texts = list()
         comp_texts = list()
         for i, original_text in enumerate(test_data_reduced):
-            words_top_k: list[str] = [w for w in words.iloc[i, shap_top_k[i, :]].tolist() if w is not None]
-            words_not_top_k: list[str] = [w for w in words.iloc[i, shap_not_top_k[i, :]].tolist() if w is not None]
+            # Compute number of words to remove
+            k = math.ceil(k_perc * texts_token_len[i])
+
+            # Select word indices
+            shap_top_k = np.argpartition(shap_values_signed[i], -k)[-k:]  # (top_k,)
+            shap_not_top_k = np.setdiff1d(np.arange(shap_values_signed.shape[1]), shap_top_k)
+
+            # Select top-k words to be removed
+            words_top_k: list[str] = [w for w in words.iloc[i, shap_top_k].tolist() if w is not None]
+            words_not_top_k: list[str] = [w for w in words.iloc[i, shap_not_top_k].tolist() if w is not None]
 
             # Replace words in the list with UNK token
             text_comp = original_text
@@ -147,7 +155,6 @@ def evaluation_faith(pipeline, test_data, device: str, q: list[int] = None, n_ex
             comp_texts.append(text_comp)
 
         # Now use the modified text in the pipeline
-        # PROBLEM: using abs, which is not mentioned in paper
         probs_suff, _ = get_prediction_probabilities(pipeline, suff_texts, predictions)
         # scores_suff = np.abs(base_probs - probs_suff)
         scores_suff = base_probs - probs_suff
@@ -165,7 +172,7 @@ def evaluation_faith(pipeline, test_data, device: str, q: list[int] = None, n_ex
     out_path = Path("dumps") / "faithfulness"
     out_path.mkdir(parents=True, exist_ok=True)
     for m, v in metrics.items():
-        np.save(out_path / f"{m}.npy", v)
+        np.save(out_path / f"{m}_lm.npy", v)
 
     return {k: (float(v.mean()), float(v.std(axis=1).mean()), float(v.std(axis=0).mean())) for k, v in metrics.items()}
 
@@ -176,7 +183,7 @@ def main():
     test_data = DATASET.get_test_data()
 
     device = 0 if config["use_gpu"] else "cpu"
-    metrics = evaluation_faith(pipeline.pipeline, test_data, q=[1, 3, 5, 8, 10, 20], n_explanations=-1, device=device)
+    metrics = evaluation_faith(pipeline.pipeline, test_data, q_perc=[1, 5, 10, 20, 50, 75], n_explanations=-1, device=device)
     pprint(metrics)
 
     out_path = Path("dumps") / "faithfulness" / f"faith_{DATASET.__class__.__name__}_{TEST_MODEL_NAME}_{time.time()}"
