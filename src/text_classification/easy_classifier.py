@@ -27,6 +27,7 @@ from xgboost import XGBClassifier
 
 from src.deep_learning_strategy.classes.CallMeSexistDataset import CallMeSexistDataset
 from src.deep_learning_strategy.classes.Dataset import AbcDataset
+from src.deep_learning_strategy.classes.IMDBDataset import IMDBDataset
 from src.text_classification.classes.torch_models.MLP import MLP
 from src.text_classification.classes.training.GridSearchUtility import GridSearchUtility
 from src.text_classification.classes.training.TrainingModelUtility import TrainingModelUtility
