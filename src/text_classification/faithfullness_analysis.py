@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from pathlib import Path
 from pprint import pprint
 
 import matplotlib.pyplot as plt
@@ -15,7 +18,7 @@ def plothist(a):
     plt.show()
 
 
-def plotbox(data1, data2, x_values: list, data1_lab: str, data2_lab: str, title: str, y_lab: str, x_lab: str):
+def plotbox(data1, data2, x_values: list, data1_lab: str, data2_lab: str, title: str, y_lab: str, x_lab: str, path: Path | None = None):
     # Create a DataFrame for easier plotting
     df1 = pd.DataFrame(data1, columns=[f'q={x}' for x in x_values])
     df1["Model"] = data1_lab
@@ -40,6 +43,10 @@ def plotbox(data1, data2, x_values: list, data1_lab: str, data2_lab: str, title:
     #               markers="o", linestyles="", dodge=True, palette="Set1")
 
     plt.title(title)
+
+    if path:
+        plt.savefig(path.with_suffix(".png"), dpi=400)
+
     plt.show()
 
 
@@ -68,8 +75,13 @@ def main(precision: int = 4):
     pprint(global_metrics)
     pprint(by_k_metrics)
 
-    plotbox(comp_xg, comp_lm, [ks[i] for i in ks_to_use], "XGBoost", "LM", "Comparison of COMP values for different q", x_lab="q values", y_lab="COMP")
-    plotbox(suff_xg, suff_lm, [ks[i] for i in ks_to_use], "XGBoost", "LM", "Comparison of SUFF values for different q", x_lab="q values", y_lab="SUFF")
+    out_path = Path("plots")
+    out_path.mkdir(exist_ok=True, parents=True)
+    title = "Comparison of {} values for different percentage of features"
+    plotbox(comp_xg, comp_lm, [ks[i] for i in ks_to_use], "XGBoost", "LM", title.format("COMP"), x_lab="% of removed top-features (q)", y_lab="COMP",
+            path=out_path / "comp_boxplot")
+    plotbox(suff_xg, suff_lm, [ks[i] for i in ks_to_use], "XGBoost", "LM", title.format("SUFF"), x_lab="% of retained top-features (q)", y_lab="SUFF",
+            path=out_path / "suff_boxplot")
 
     result = dict()
     for i in range(n_columns):
