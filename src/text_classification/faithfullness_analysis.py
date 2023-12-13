@@ -9,6 +9,8 @@ import pandas as pd
 from scipy.stats import ttest_ind, norm, mannwhitneyu
 import seaborn as sns
 
+from src.text_classification.external.statutils import stats_main
+
 
 def plothist(a):
     n, bins, patches = plt.hist(a, 50, density=True)
@@ -55,8 +57,8 @@ def main(precision: int = 4):
     ks_to_use = [0, 1, 2, 3, 4, 5]
     print(f"Using k values={[ks[i] for i in ks_to_use]}")
 
-    comp_lm = np.load("experiments/faithfulness/comp.npy").astype(np.float64)[:, ks_to_use]
-    suff_lm = np.load("experiments/faithfulness/suff.npy").astype(np.float64)[:, ks_to_use]
+    comp_lm = np.load("dumps/faithfulness/comp_lm.npy").astype(np.float64)[:, ks_to_use]
+    suff_lm = np.load("dumps/faithfulness/suff_lm.npy").astype(np.float64)[:, ks_to_use]
 
     comp_xg = np.load("dumps/faithfulness/comp_xg.npy").astype(np.float64)[:, ks_to_use]
     suff_xg = np.load("dumps/faithfulness/suff_xg.npy").astype(np.float64)[:, ks_to_use]
@@ -94,9 +96,17 @@ def main(precision: int = 4):
         result[f"comp_{ks[ks_to_use[i]]}"] = float(np.round(comp_r.statistic, decimals=precision)), float(np.round(comp_r.pvalue, decimals=precision))
         result[f"suff_{ks[ks_to_use[i]]}"] = float(np.round(suff_r.statistic, decimals=precision)), float(np.round(suff_r.pvalue, decimals=precision))
 
-        print([p for _, p in result.values()])
-
     pprint(result)
+
+    # p_values = [
+    #     [1.0, 5.778849948981599e-47, 0.0, 0.0, 0.0],
+    #     [2.816086414877753e-21, 4.682418035094356e-37, 5.3704015999999995e-53, 0.0, 0.0]
+    # ]
+    #
+    # experiments = ["COMP", "SUFF"]
+    # data = {k: v for k, v in zip(experiments, p_values)}
+    #
+    # stats_main(data)
 
 
 if __name__ == "__main__":

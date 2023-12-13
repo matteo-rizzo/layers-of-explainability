@@ -82,7 +82,7 @@ def get_importance(model, texts, indices: list[int] | None, device: str):
     return shap_values_to_explain, shap_word_indices
 
 
-def evaluation_faith(pipeline, test_data, device: str, q_perc: list[int] = None, n_explanations: int = 10) -> dict[str, tuple[float, float, float]]:
+def evaluation_faith(pipeline, test_data, device: str, q_perc: list[int] = None, n_explanations: int = 10) -> dict[str, tuple[float, float]]:
     """
     Compute faithfulness metrics (COMP and SUFF)
 
@@ -109,7 +109,7 @@ def evaluation_faith(pipeline, test_data, device: str, q_perc: list[int] = None,
     # Separate words with whitespace, to correctly mask them later
     tok = TweetTokenizer()
     tok_text = tok.tokenize_sents(test_data_reduced)
-    texts_token_len: list[int] = [len(tok) for tok in tok_text]
+    # texts_token_len: list[int] = [len(tok) for tok in tok_text]
     test_data_reduced = [" ".join(s) for s in tok_text]
     # a = np.mean(texts_token_len)
 
@@ -128,13 +128,18 @@ def evaluation_faith(pipeline, test_data, device: str, q_perc: list[int] = None,
         suff_texts = list()
         comp_texts = list()
         for i, original_text in enumerate(test_data_reduced):
-            # Compute number of words to remove
-            k = math.ceil(k_perc * texts_token_len[i])
+            # Find contributing words in current examples (positive shap values)
+            positive_words = np.where(shap_values_signed[i, :] > 0, 1, 0)
+            positive_words_idx = np.asarray(positive_words == 1).nonzero()[0]
 
-            # Select word indices
-            shap_top_k = np.argpartition(shap_values_signed[i], -k)[-k:]  # (top_k,)
-            shap_not_top_k = np.setdiff1d(np.arange(shap_values_signed.shape[1]), shap_top_k)
+            # Compute number of words to remove
+            k = math.ceil(k_perc * len(positive_words_idx))
+
+            # Select word indices (k < len(positive_words_idx), so it can't remove negative ones)
+            shap_top_k = np.argpartition(shap_values_signed[i, :], -k)[-k:]  # (top_k,)
+            shap_not_top_k = np.setdiff1d(positive_words_idx, shap_top_k)
             # assert not set(shap_top_k.tolist()) & set(shap_not_top_k.tolist()), "error"
+            # assert (set(shap_top_k.tolist()) | set(shap_not_top_k.tolist())) == set(positive_words_idx.tolist()), "error2"
 
             # Select top-k words to be removed
             words_top_k: list[str] = [w for w in words.iloc[i, shap_top_k].tolist() if w is not None]
@@ -175,7 +180,7 @@ def evaluation_faith(pipeline, test_data, device: str, q_perc: list[int] = None,
     for m, v in metrics.items():
         np.save(out_path / f"{m}_lm.npy", v)
 
-    return {k: (float(v.mean()), float(v.std(axis=1).mean()), float(v.std(axis=0).mean())) for k, v in metrics.items()}
+    return {k: (float(v.mean()), float(v.std(axis=1).mean())) for k, v in metrics.items()}
 
 
 def main():

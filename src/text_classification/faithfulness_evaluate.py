@@ -39,15 +39,25 @@ def get_prediction_probabilities(model, test_data: pd.DataFrame, predictions: np
 
 def compute_faith_metrics(test_data: pd.DataFrame, model, shap_values_abs, base_probs: np.ndarray,
                           original_predictions: np.ndarray,
-                          feature_neutral: np.ndarray, top_k: int) -> tuple[float, float]:
-    shap_top_k = np.argpartition(shap_values_abs, -top_k, axis=1)[:, -top_k:]  # (samples, top_k)
-    shap_not_top_k = _complementary_indices(shap_values_abs, shap_top_k)
+                          feature_neutral: np.ndarray, k_perc: float) -> tuple[float, float]:
+    test_data_comp = test_data.copy()
+    test_data_suff = test_data.copy()
+    for i in range(test_data.shape[0]):
+        # Find contributing features in current examples (positive shap values)
+        positive_features = np.where(shap_values_abs[i, :] > 0, 1, 0)
+        positive_features_idx = np.asarray(positive_features == 1).nonzero()[0]
+        # Take the percentage of positive features
+        k = math.ceil(k_perc * len(positive_features_idx))
+        # Find top-k contributing features (k < len(positive_feature_idx), so it can't remove negative ones)
+        shap_top_k = np.argpartition(shap_values_abs[i, :], -k)[-k:]
+        # Find complementary features (among the contributing ones)
+        shap_not_top_k = np.setdiff1d(positive_features_idx, shap_top_k)
 
-    # SUFF = keeps only the important tokens and calculates the change in output probability compared to the original predicted class
-    test_data_suff = _replace_with_column_average(test_data.copy().to_numpy(), shap_not_top_k, feature_neutral)
+        # SUFF = keeps only the important tokens and calculates the change in output probability compared to the original predicted class
+        test_data_suff.iloc[i, shap_not_top_k] = feature_neutral[shap_not_top_k]
 
-    # COMP = change in the output probability of the predicted class after the important (top-k) tokens are removed
-    test_data_comp = _replace_with_column_average(test_data.copy().to_numpy(), shap_top_k, feature_neutral)
+        # COMP = change in the output probability of the predicted class after the important (top-k) tokens are removed
+        test_data_comp.iloc[i, shap_top_k] = feature_neutral[shap_top_k]
 
     probs_suff, _ = get_prediction_probabilities(model, test_data_suff, original_predictions)
     probs_comp, _ = get_prediction_probabilities(model, test_data_comp, original_predictions)
@@ -82,8 +92,7 @@ def evaluation_faith(test_data: pd.DataFrame, model, feature_neutral: np.ndarray
 
     metrics = defaultdict(list)
     for k_perc in q_perc:
-        k = math.ceil(k_perc * test_data.shape[1])
-        comp, suff = compute_faith_metrics(test_data, model, shap_values_signed, probs, predictions, feature_neutral, k)
+        comp, suff = compute_faith_metrics(test_data, model, shap_values_signed, probs, predictions, feature_neutral, k_perc)
         metrics["comp"].append(comp)
         metrics["suff"].append(suff)
 
