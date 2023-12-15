@@ -22,9 +22,9 @@ def plothist(a):
 
 def plotbox(data1, data2, x_values: list, data1_lab: str, data2_lab: str, title: str, y_lab: str, x_lab: str, path: Path | None = None):
     # Create a DataFrame for easier plotting
-    df1 = pd.DataFrame(data1, columns=[f'q={x}' for x in x_values])
+    df1 = pd.DataFrame(data1, columns=[f'k={x}' for x in x_values])
     df1["Model"] = data1_lab
-    df2 = pd.DataFrame(data2, columns=[f'q={x}' for x in x_values])
+    df2 = pd.DataFrame(data2, columns=[f'k={x}' for x in x_values])
     df2["Model"] = data2_lab
 
     # Concatenate the two DataFrames
@@ -35,16 +35,28 @@ def plotbox(data1, data2, x_values: list, data1_lab: str, data2_lab: str, title:
 
     # Create the boxplot
     plt.figure(figsize=(10, 8))
-    sns.boxplot(x=x_lab, y=y_lab, hue="Model", data=df_melt, orient="v", palette="Set2",
-                showmeans=True,
-                meanprops=dict(marker="o", markerfacecolor="red", markeredgecolor="black", markersize="12"))
+    sns.set(font_scale=1.09)
+    sns.set_style("whitegrid")
+    ax = sns.boxplot(x=x_lab, y=y_lab, hue="Model", data=df_melt, orient="v", palette="Set2", notch=True,
+                     showmeans=True,
+                     meanprops=dict(marker="o", markerfacecolor="red", markeredgecolor="black", markersize="11"),
+                     medianprops=dict(color="red", label="_median_", linewidth=2),
+                     flierprops=dict(alpha=0.3))
 
-    # Plot means separately
-    # means = df_melt.groupby(["Model", x_lab])[y_lab].mean().reset_index()
-    # sns.pointplot(x=x_lab, y=y_lab, hue="Model", data=means, orient="v",
-    #               markers="o", linestyles="", dodge=True, palette="Set1")
+    # median_colors = ['orange', 'yellow']
+    # median_lines = [line for line in ax.get_lines() if line.get_label() == "_median_"]
+    # for i, line in enumerate(median_lines):
+    #     if i > len(median_lines) // 2:
+    #         i += 1
+    #     line.set_color(median_colors[i % len(median_colors)])
+
+    # Add text labels to the top of each boxplot
+    for i in range(len(x_values)):
+        ax.text(i - 0.2, df_melt[df_melt["Model"] == data1_lab][y_lab].max() + 0.03, data1_lab, color="#5ab4ac", ha="center", weight="bold", rotation=0)
+        ax.text(i + 0.2, df_melt[df_melt["Model"] == data2_lab][y_lab].max() + 0.04, data2_lab, color="#fc8d59", ha="center", weight="bold", rotation=0)
 
     plt.title(title)
+    plt.tight_layout()
 
     if path:
         plt.savefig(path.with_suffix(".png"), dpi=400)
@@ -77,8 +89,8 @@ def main(precision: int = 4):
     ks_to_use = [0, 1, 2, 3, 4, 5]
     print(f"Using k values={[ks[i] for i in ks_to_use]}")
 
-    comp_lm = np.load("experiments/faithfulness/comp.npy").astype(np.float64)[:, ks_to_use]
-    suff_lm = np.load("experiments/faithfulness/suff.npy").astype(np.float64)[:, ks_to_use]
+    comp_lm = np.load("dumps/faithfulness/comp_lm.npy").astype(np.float64)[:, ks_to_use]
+    suff_lm = np.load("dumps/faithfulness/suff_lm.npy").astype(np.float64)[:, ks_to_use]
 
     comp_xg = np.load("dumps/faithfulness/comp_xg.npy").astype(np.float64)[:, ks_to_use]
     suff_xg = np.load("dumps/faithfulness/suff_xg.npy").astype(np.float64)[:, ks_to_use]
@@ -100,9 +112,9 @@ def main(precision: int = 4):
     out_path = Path("plots")
     out_path.mkdir(exist_ok=True, parents=True)
     title = "Comparison of {} values for different percentage of features"
-    plotbox(comp_xg, comp_lm, [ks[i] for i in ks_to_use], "XGBoost", "LM", title.format("COMP"), x_lab="% of removed top-features (q)", y_lab="COMP",
+    plotbox(comp_xg, comp_lm, [ks[i] for i in ks_to_use], "XG", "LM", title.format("COMP"), x_lab="% of removed top-features (k)", y_lab="COMP",
             path=out_path / "comp_boxplot")
-    plotbox(suff_xg, suff_lm, [ks[i] for i in ks_to_use], "XGBoost", "LM", title.format("SUFF"), x_lab="% of retained top-features (q)", y_lab="SUFF",
+    plotbox(suff_xg, suff_lm, [ks[i] for i in ks_to_use], "XG", "LM", title.format("SUFF"), x_lab="% of retained top-features (k)", y_lab="SUFF",
             path=out_path / "suff_boxplot")
 
     result = dict()
@@ -122,16 +134,16 @@ def main(precision: int = 4):
 
     pprint(result)
 
-    # p_values = [
-    #     [1.0, 5.778849948981599e-47, 0.0, 0.0, 0.0],
-    #     [2.816086414877753e-21, 4.682418035094356e-37, 5.3704015999999995e-53, 0.0, 0.0]
-    # ]
-    #
-    # experiments = ["COMP", "SUFF"]
-    # data = {k: v for k, v in zip(experiments, p_values)}
-    #
-    # stats_main(data)
+    p_values = [
+        [1.0, 4.6889071121511585e-34, 0.0, 0.0, 0.0, 0.0],
+        [1.0, 1.0, 1.0, 0.040625840378956904, 0.0, 1.9999999999999996e-64]
+    ]
+
+    experiments = ["COMP", "SUFF"]
+    data = {k: v for k, v in zip(experiments, p_values)}
+
+    stats_main(data)
 
 
 if __name__ == "__main__":
-    main(30)
+    main(3)
