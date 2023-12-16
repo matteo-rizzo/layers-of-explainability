@@ -16,6 +16,7 @@ from nltk import TweetTokenizer
 
 from src.deep_learning_strategy.classes.Dataset import AbcDataset
 from src.deep_learning_strategy.classes.HuggingFaceCallMeSexistDataset import HuggingFaceCallMeSexistDataset
+from src.deep_learning_strategy.classes.HuggingFaceIMDBDataset import HuggingFaceIMDBDataset
 from src.deep_learning_strategy.classes.HuggingFacePipeline import HuggingFacePipeline
 from src.explainable_strategy.transhap.explainers.SHAP_for_text import SHAPexplainer
 from src.utils.yaml_manager import load_yaml
@@ -24,7 +25,9 @@ config = load_yaml(os.path.join("src", "deep_learning_strategy", "config.yml"))
 BATCH_SIZE = config["training"]["test_batch_size"]
 TEST_MODEL_NAME = config["testing"]["model_name"]
 TARGET_LABEL = config["testing"]["target_label"]
-DATASET: AbcDataset = HuggingFaceCallMeSexistDataset()
+MODEL_MAX_LEN = config["training"]["model_max_length"]
+DATASET: AbcDataset = HuggingFaceIMDBDataset()
+BASE_FOLDER: str = "dumps"
 
 
 def get_prediction_probabilities(model, texts, original_predictions: np.ndarray = None) -> tuple[np.ndarray, np.ndarray]:
@@ -37,7 +40,7 @@ def get_prediction_probabilities(model, texts, original_predictions: np.ndarray 
         otherwise it will return the predictions with the highest probability
     @return: probabilities of predicted class and the predicted class (or input predictions)
     """
-    probs_1 = np.array([prediction[0]["score"] for prediction in model(texts)])
+    probs_1 = np.array([prediction[0]["score"] for prediction in model(texts, max_length=MODEL_MAX_LEN, truncation=True, padding=True)])
     if original_predictions is None:
         original_predictions = (probs_1 >= .5).astype(int)
     probs_pred = np.array([(p_1 if o > 0 else 1 - p_1) for p_1, o in zip(probs_1.tolist(), original_predictions.tolist())])
@@ -56,14 +59,14 @@ def get_importance(model, texts, indices: list[int] | None, device: str):
         words_dict[h + 1] = hh
         words_dict_reverse[hh] = h + 1
 
-    predictor = SHAPexplainer(model, model.tokenizer, words_dict, words_dict_reverse, device=device, use_logits=True)
+    predictor = SHAPexplainer(model, model.tokenizer, words_dict, words_dict_reverse, device=device, use_logits=True, max_tokens=MODEL_MAX_LEN)
     train_dt = np.array([predictor.split_string(x) for x in np.array(texts)])
-    idx_train_data, max_seq_len = predictor.dt_to_idx(train_dt)
+    idx_train_data, max_seq_len = predictor.dt_to_idx(train_dt, truncate=True)
 
     explainer = shap.KernelExplainer(model=predictor.predict, data=shap.kmeans(idx_train_data, k=50), output_names=labels)
 
     texts_: list[list[str]] = [predictor.split_string(x) for x in texts]
-    idx_texts, _ = predictor.dt_to_idx(texts_, max_seq_len=max_seq_len)
+    idx_texts, _ = predictor.dt_to_idx(texts_, max_seq_len=max_seq_len, truncate=True)
 
     if indices is not None:
         idx_texts_to_explain = idx_texts[indices, :]
@@ -71,6 +74,7 @@ def get_importance(model, texts, indices: list[int] | None, device: str):
         idx_texts_to_explain = idx_texts
 
     # HERE try to use more nsamples (the highest possible number)
+    # 'nsamples' should be >= number of tokens/features
     shap_values = explainer.shap_values(X=idx_texts_to_explain, nsamples=256, l1_reg="aic")  # nsamples="auto" should be better
 
     # shap_values_to_explain = np.array([shap_values[class_idx][i] for i, class_idx in enumerate(predicted_classes)])
@@ -127,10 +131,12 @@ def evaluation_faith(pipeline, test_data, device: str, q_perc: list[int] = None,
     for k_perc in q_perc:
         suff_texts = list()
         comp_texts = list()
+        # means = list()
         for i, original_text in enumerate(test_data_reduced):
             # Find contributing words in current examples (positive shap values)
             positive_words = np.where(shap_values_signed[i, :] > 0, 1, 0)
             positive_words_idx = np.asarray(positive_words == 1).nonzero()[0]
+            # means.append(len(positive_words_idx))
 
             # Compute number of words to remove
             k = math.ceil(k_perc * len(positive_words_idx))
@@ -160,6 +166,7 @@ def evaluation_faith(pipeline, test_data, device: str, q_perc: list[int] = None,
             suff_texts.append(text_suff)
             comp_texts.append(text_comp)
 
+        # print(np.average(means))
         # Now use the modified text in the pipeline
         probs_suff, _ = get_prediction_probabilities(pipeline, suff_texts, predictions)
         # scores_suff = np.abs(base_probs - probs_suff)
@@ -175,7 +182,7 @@ def evaluation_faith(pipeline, test_data, device: str, q_perc: list[int] = None,
     metrics = {k: np.stack(v, axis=-1) for k, v in metrics.items()}  # k: (samples, q)
 
     # Write runs to numpy files
-    out_path = Path("dumps") / "faithfulness"
+    out_path = Path(BASE_FOLDER) / "faithfulness"
     out_path.mkdir(parents=True, exist_ok=True)
     for m, v in metrics.items():
         np.save(out_path / f"{m}_lm.npy", v)
@@ -192,7 +199,7 @@ def main():
     metrics = evaluation_faith(pipeline.pipeline, test_data, q_perc=[1, 5, 10, 20, 50, 75], n_explanations=-1, device=device)
     pprint(metrics)
 
-    out_path = Path("dumps") / "faithfulness" / f"faith_{DATASET.__class__.__name__}_{TEST_MODEL_NAME}_{time.time()}"
+    out_path = Path(BASE_FOLDER) / "faithfulness" / f"faith_{DATASET.__class__.__name__}_{TEST_MODEL_NAME}_{time.time()}"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path.with_suffix(".json"), mode="w", encoding="utf-8") as fo:
         json.dump(metrics, fo, indent=2)
