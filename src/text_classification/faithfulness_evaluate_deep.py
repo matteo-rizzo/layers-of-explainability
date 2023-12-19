@@ -28,6 +28,7 @@ TARGET_LABEL = config["testing"]["target_label"]
 MODEL_MAX_LEN = config["training"]["model_max_length"]
 DATASET: AbcDataset = HuggingFaceIMDBDataset()
 BASE_FOLDER: str = "dumps"
+suffix_str = 'CMS' if DATASET.__class__.__name__ == 'CallMeSexistDataset' else 'IMDB'
 
 
 def get_prediction_probabilities(model, texts, original_predictions: np.ndarray = None) -> tuple[np.ndarray, np.ndarray]:
@@ -102,6 +103,7 @@ def evaluation_faith(pipeline, test_data, device: str, q_perc: list[int] = None,
     q_perc: list[float] = [q / 100 for q in q_perc]
 
     if n_explanations > 0:
+        np.random.seed(3)
         idx_to_use_rnd = np.random.randint(0, len(test_data), size=n_explanations).tolist()
         test_data_reduced = [test_data[i] for i in idx_to_use_rnd]
     else:
@@ -185,7 +187,7 @@ def evaluation_faith(pipeline, test_data, device: str, q_perc: list[int] = None,
     out_path = Path(BASE_FOLDER) / "faithfulness"
     out_path.mkdir(parents=True, exist_ok=True)
     for m, v in metrics.items():
-        np.save(out_path / f"{m}_lm.npy", v)
+        np.save(out_path / f"{m}_lm_{suffix_str}.npy", v)
 
     return {k: (float(v.mean()), float(v.std(axis=1).mean())) for k, v in metrics.items()}
 

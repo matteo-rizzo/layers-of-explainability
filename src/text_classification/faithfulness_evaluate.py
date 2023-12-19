@@ -12,10 +12,12 @@ import shap
 
 from src.deep_learning_strategy.classes.CallMeSexistDataset import CallMeSexistDataset
 from src.deep_learning_strategy.classes.Dataset import AbcDataset
+from src.deep_learning_strategy.classes.IMDBDataset import IMDBDataset
 from src.text_classification.utils import load_encode_dataset, _replace_with_column_average, _complementary_indices, get_excluded_features_dataset
 
-DATASET: AbcDataset = CallMeSexistDataset()
-LOAD_MODEL_DUMP = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_CMS_FINAL_RFE.pkl"
+DATASET: AbcDataset = IMDBDataset()
+suffix_str = 'CMS' if DATASET.__class__.__name__ == 'CallMeSexistDataset' else 'IMDB'
+LOAD_MODEL_DUMP = Path("dumps") / "nlp_models" / "XGBClassifier" / f"model_{suffix_str}_FINAL_RFE.pkl"
 
 
 def get_prediction_probabilities(model, test_data: pd.DataFrame, predictions: np.ndarray = None) -> tuple[np.ndarray, np.ndarray]:
@@ -102,7 +104,7 @@ def evaluation_faith(test_data: pd.DataFrame, model, feature_neutral: np.ndarray
     out_path = Path("dumps") / "faithfulness"
     out_path.mkdir(parents=True, exist_ok=True)
     for m, v in metrics.items():
-        np.save(out_path / f"{m}_xg.npy", v)
+        np.save(out_path / f"{m}_xg_{suffix_str}.npy", v)
 
     # Average of metrics, with average of per-sample STD over all k
     return {k: (float(v.mean()), float(v.std(axis=1).mean())) for k, v in metrics.items()}
@@ -115,7 +117,8 @@ def main():
     data_train, data_test = load_encode_dataset(dataset=DATASET, max_scale=True, exclude_features=get_excluded_features_dataset(DATASET, clf.__class__))
     data_train.pop("y")
     y_true_test = data_test.pop("y")
-    # data_test = data_test.iloc[150:200, :]
+    # np.random.seed(3)
+    # data_test = data_test.iloc[np.random.randint(0, len(data_test), size=3500), :]
 
     # Feature neutral value
     # noise = np.ones((data_test.shape[1],), dtype=float) * 0 # np.mean(data_train.to_numpy(), axis=0)

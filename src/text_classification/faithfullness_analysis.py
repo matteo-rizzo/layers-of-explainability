@@ -89,11 +89,11 @@ def main(precision: int = 4):
     ks_to_use = [0, 1, 2, 3, 4, 5]
     print(f"Using k values={[ks[i] for i in ks_to_use]}")
 
-    comp_lm = np.load("dumps/faithfulness/comp_lm.npy").astype(np.float64)[:, ks_to_use]
-    suff_lm = np.load("dumps/faithfulness/suff_lm.npy").astype(np.float64)[:, ks_to_use]
+    comp_lm = np.load(f"dumps/faithfulness/comp_lm_{SUFF}.npy").astype(np.float64)[:, ks_to_use]
+    suff_lm = np.load(f"dumps/faithfulness/suff_lm_{SUFF}.npy").astype(np.float64)[:, ks_to_use]
 
-    comp_xg = np.load("dumps/faithfulness/comp_xg.npy").astype(np.float64)[:, ks_to_use]
-    suff_xg = np.load("dumps/faithfulness/suff_xg.npy").astype(np.float64)[:, ks_to_use]
+    comp_xg = np.load(f"dumps/faithfulness/comp_xg_{SUFF}.npy").astype(np.float64)[:, ks_to_use]
+    suff_xg = np.load(f"dumps/faithfulness/suff_xg_{SUFF}.npy").astype(np.float64)[:, ks_to_use]
 
     assert comp_xg.shape == suff_xg.shape == comp_lm.shape == suff_lm.shape, "Shapes are not the same"
     n_columns = int(comp_lm.shape[1])
@@ -134,9 +134,13 @@ def main(precision: int = 4):
 
     pprint(result)
 
-    p_values = [
-        [1.0, 4.6889071121511585e-34, 0.0, 0.0, 0.0, 0.0],
-        [1.0, 1.0, 1.0, 0.040625840378956904, 0.0, 1.9999999999999996e-64]
+    # p_values = [ # CMSB
+    #     [1.0, 4.6889071121511585e-34, 0.0, 0.0, 0.0, 0.0],
+    #     [1.0, 1.0, 1.0, 0.040625840378956904, 0.0, 1.9999999999999996e-64]
+    # ]
+    p_values = [  # IMDB
+        [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [1.0, 1.0, 0.8979067535544744, 1.945139891451969e-21, 0.0, 0.0]
     ]
 
     experiments = ["COMP", "SUFF"]
@@ -146,4 +150,5 @@ def main(precision: int = 4):
 
 
 if __name__ == "__main__":
+    SUFF = "CMS"  # "IMDB"
     main(3)
