@@ -109,7 +109,7 @@ NeuralNetBinaryClassifier:
   max_epochs: 1000
 
 grid_search_params:
-  num_seeds: 2
+  num_seeds: 1
   test_size: 0.2
 
   GradientBoostingClassifier:
@@ -179,13 +179,13 @@ grid_search_params:
     tol: [ 1.0e-4, 1.0e-5, 1.0e-3 ]
 
   XGBClassifier:
-    objective: [ "binary:logistic" ]
+#    objective: [ "binary:logistic" ]
     n_estimators: [ 100, 500 ]
     min_child_weight: [ 1, 5, 10 ]
     gamma: [ 0.5, 1.5, 5 ]
     subsample: [ 0.8, 1.0 ]
-    max_depth: [ 3, 4 ]
-    device: [ "cuda" ]
+#    max_depth: [ 3, 4 ]
+#    device: [ "cuda" ]
 
   DecisionTreeClassifier:
     # The function to measure the quality of a split
