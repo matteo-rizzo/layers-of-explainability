@@ -64,24 +64,21 @@ def plotbox(data1, data2, x_values: list, data1_lab: str, data2_lab: str, title:
     plt.show()
 
 
-def rank_biserial_correlation(a: np.ndarray, b: np.ndarray, au: float) -> float:
+def wilcoxon_rank_biserial_correlation(w_pos: float, n: float, precision: int) -> float:
     """
-    Compute the rank biserial correlation between two set of measurements
+    Compute the matched rank biserial correlation using Kerby strategy, stating that the correlation is equal to the
+    difference between the proportion of favorable and unfavorable evidence: r = f – u.
 
-    @param a: measurements for population a
-    @param b: measurements for population b
-    @param au: u-test statistic for population
-    @return: the rank-biserial correlation
-
-
-    # TODO: fix for Wilcoxon SRT
+    @param w_pos: W+ statistic for population
+    @param n: number of measurements
+    @param precision: floating point precision
+    @return: the rank-biserial correlation, simple difference formula
     """
     # Calculate the rank-biserial correlation as the effect size
-    n1 = len(a)
-    n2 = len(b)
-    rbc = 1 - (2 * au) / (n1 * n2)
+    # rbc = 1 - (2 * au) / (n * (n + 1))
+    rbc = (4 * w_pos / (n * (n + 1))) - 1
 
-    return rbc
+    return round(rbc, precision)
 
 
 def main(precision: int = 4):
@@ -128,9 +125,9 @@ def main(precision: int = 4):
         # suff_r = ttest_ind(suff_xg[:, i], suff_lm[:, i], equal_var=False)
 
         result[f"comp_{ks[ks_to_use[i]]}"] = (float(np.round(u_comp, decimals=precision)), float(np.round(p_comp, decimals=precision)),
-                                              rank_biserial_correlation(comp_xg[:, i], comp_lm[:, i], u_comp))
+                                              wilcoxon_rank_biserial_correlation(u_comp, n=len(comp_xg[:, i]), precision=precision))
         result[f"suff_{ks[ks_to_use[i]]}"] = (float(np.round(u_suff, decimals=precision)), float(np.round(p_suff, decimals=precision)),
-                                              rank_biserial_correlation(suff_xg[:, i], suff_lm[:, i], u_suff))
+                                              wilcoxon_rank_biserial_correlation(u_suff, n=len(suff_xg[:, i]), precision=precision))
 
     pprint(result)
 

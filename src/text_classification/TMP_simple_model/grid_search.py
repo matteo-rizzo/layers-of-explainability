@@ -45,6 +45,7 @@ def grid_search_best_params(sk_classifier_type: type):
         # Define the grid search
 
         param_grid = {f'classifier__{k}': v for k, v in params.items()}
+        param_grid |= {'vectorizer__ngram_range': [(1, 3), (1, 2)], "vectorizer__max_features": [10000, 8000]}
         grid_search = GridSearchCV(pipeline, param_grid=param_grid, cv=5, n_jobs=None, scoring="f1_macro", refit=True)
 
         # Fit the grid search
