@@ -4,9 +4,10 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
 
-from src.deep_learning_strategy.classes.Dataset import AbcDataset
+from src.datasets.classes.Dataset import AbcDataset
 from src.text_classification.external.bias.bias_madlibs import _read_word_list
-from src.text_classification.external.bias.model_bias_analysis import add_subgroup_columns_from_text, compute_bias_metrics_for_model, SUBGROUP_AUC, NEGATIVE_CROSS_AUC, \
+from src.text_classification.external.bias.model_bias_analysis import add_subgroup_columns_from_text, \
+    compute_bias_metrics_for_model, SUBGROUP_AUC, NEGATIVE_CROSS_AUC, \
     POSITIVE_CROSS_AUC, POSITIVE_AEG, NEGATIVE_AEG
 
 

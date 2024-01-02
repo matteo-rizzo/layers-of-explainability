@@ -22,8 +22,8 @@ def statistical_adjustments(experiments: Dict):
         3. We find the largest p-value that has p<q given its rank r.
         4. All p-values at rank i≤r are considered significant.
 
-    @param experiments: a dict with ids of the experiments as the keys and lists of p-values as the values. Example:
-    experiments = {
+    @param experiments: a dict with ids of the classes as the keys and lists of p-values as the values. Example:
+    classes = {
         "3-folds": [0.2007, 0.0250, 0.0565, 0.3892, 0.0413, 0.1131],
         "4-folds": [0.0923, 0.0045, 0.0198, 0.1870, 0.0339, 0.0430],
     }
@@ -41,11 +41,11 @@ def statistical_adjustments(experiments: Dict):
 
 def effect_size(experiments: Dict):
     """
-    Computes the effect sizes for the given experiments
+    Computes the effect sizes for the given classes
     -> Reference: https://machinelearningmastery.com/effect-size-measures-in-python/
-    @param experiments: a dict with ids of experiments as keys and "models id" - "list of metrics values for each split
+    @param experiments: a dict with ids of classes as keys and "models id" - "list of metrics values for each split
     in the CV" dicts  as values. Example:
-    experiments = {
+    classes = {
         "4-folds": {
             "tccnet": [2.41, 2.34, 2.58, 3.18],
             "tccnetc4": [2.41, 2.54, 2.70, 2.38],

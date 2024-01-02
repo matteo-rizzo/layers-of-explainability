@@ -8,7 +8,8 @@ BASE_FOLDER = Path("src") / "text_classification" / "external" / "EmotionDynamic
 if __name__ == "__main__":
     for lexicon in LEXICONS:
         if lexicon == "NRC-VAD-Lexicon.txt":
-            df = pd.read_csv(BASE_FOLDER / lexicon, sep="\t", header=None, names=["word", "valence", "arousal", "domination"])
+            df = pd.read_csv(BASE_FOLDER / lexicon, sep="\t", header=None,
+                             names=["word", "valence", "arousal", "domination"])
             df.to_csv((BASE_FOLDER / lexicon).with_suffix(".csv"), index=False)
         elif lexicon == "NRC-Emotion-Lexicon-Wordlevel-v0.92.txt":
             data = pd.read_csv(BASE_FOLDER / lexicon, sep="\t", header=None, names=["word", "emotion", "value"])

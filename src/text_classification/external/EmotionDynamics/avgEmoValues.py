@@ -9,11 +9,13 @@ from tqdm import tqdm
 tqdm.pandas()
 
 parser = ArgumentParser()
-parser.add_argument("--dataPath", help="path to CSV data file with texts", default="src/text_classification/external/EmotionDynamics/sample_data/sample_input.csv")
+parser.add_argument("--dataPath", help="path to CSV data file with texts",
+                    default="src/text_classification/external/EmotionDynamics/sample_data/sample_input.csv")
 parser.add_argument("--lexPath", help="path to lexicon. CSV with columns \"word\" plus emotion columns",
                     default="src/text_classification/external/EmotionDynamics/lexicons/NRC-VAD-Lexicon.csv")
 parser.add_argument("--lexNames", nargs="*", type=str, help="Names of the lexicons/column names in the lexicon CSV")
-parser.add_argument("--savePath", help="path to save folder", default="src/text_classification/external/EmotionDynamics/output")
+parser.add_argument("--savePath", help="path to save folder",
+                    default="src/text_classification/external/EmotionDynamics/output")
 
 
 def read_lexicon(path, LEXNAMES):

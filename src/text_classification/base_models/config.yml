@@ -1,0 +1,231 @@
+---
+# Path to install folder of TreeTagger (on Linux the one where you executed the installation script)
+tree_tagger_path: /home/alessandro/opt/treetagger # /treetagger
+add_synthetic: true
+task: A # A or B
+max_features: 10000
+
+RidgeClassifier:
+  solver: auto # lbfgs when positive = True
+  tol: 0.0001
+  alpha: 1.0
+  positive: false
+
+RidgePriorClassifier:
+  solver: auto # lbfgs when positive = True
+  tol: 1.0e-4
+  alpha: 10.0
+  positive: false
+
+LogisticPriorClassifier:
+  solver: liblinear
+  tol: 1.0e-4
+  dual: true
+  penalty: l2
+  C: 1.0
+  max_iter: 100000
+
+BayesianRidgeClassifier:
+  #  max_iter: None
+  tol: 1.0e-4
+  alpha_1: 1.0e-6
+  alpha_2: 1.0e-6
+  lambda_1: 1.0e-6
+  lambda_2: 1.0e-6
+#  alpha_init: None
+
+LogisticRegression:
+  solver: liblinear
+  tol: 0.001
+  dual: false
+  penalty: l1
+  C: 0.1
+  max_iter: 1000
+
+DecisionTreeClassifier:
+  criterion: "entropy"
+  splitter: "best"
+  min_samples_split: 2
+  ccp_alpha: 0.001
+
+GaussianHMM:
+  algorithm: viterbi
+
+LinearSVC:
+  penalty: l2
+  loss: squared_hinge
+  tol: 1.0e-4
+  C: 1.0
+  dual: auto
+  max_iter: 1000
+
+MultinomialNB:
+  alpha: 1.0
+  fit_prior: true
+  force_alpha: false
+
+RandomForestClassifier:
+  ccp_alpha: 0.0
+  criterion: gini
+  min_samples_split: 4
+  n_estimators: 1000
+
+
+AdaBoostClassifier:
+  n_estimators: 100
+  learning_rate: 1.7
+
+HistGradientBoostingClassifier:
+  learning_rate: 0.1
+  max_iter: 100
+  l2_regularization: 0.01
+
+XGBClassifier:
+  objective: "binary:logistic"
+  n_estimators: 500
+  #  min_child_weight: 1
+  #  gamma: 0.5
+  #  subsample: 1.0
+  #  max_depth: 4
+  #  device: "cuda"
+  n_jobs: -1
+
+XGBRFClassifier:
+  objective: "binary:logistic"
+
+
+GradientBoostingClassifier:
+  loss: "log_loss"
+  learning_rate: 0.1
+  n_estimators: 100
+  subsample: 1.0
+  criterion: "friedman_mse"
+  max_depth: 3
+  ccp_alpha: 0.0
+
+NeuralNetBinaryClassifier:
+  optimizer__weight_decay: 1.0e-2
+  lr: 1.0e-6
+  batch_size: 256
+  max_epochs: 1000
+
+grid_search_params:
+  num_seeds: 1
+  test_size: 0.2
+
+  GradientBoostingClassifier:
+    loss: [ "log_loss", "exponential" ]
+    learning_rate: [ 0.1, 0.001 ]
+    n_estimators: [ 100, 200 ]
+    subsample: [ 1.0, 0.5 ]
+    criterion: [ "friedman_mse", "squared_error" ]
+    max_depth: [ 3,6 ]
+    ccp_alpha: [ 0.0, 0.01 ]
+  #  RidgeClassifier:
+  #    solver: [ auto, lsqr, sparse_cg ]
+  #    tol: [ 1.0e-4, 1.0e-5, 1.0e-3 ]
+  #    alpha: [ 1.0e-06, 1.0e-05,  1.0e-04, 1.0e-03, 1.0e-02, 1.0e-01, 1.0, 1.0e+1, 1.0e+2, 1.0e+3, 1.0e+4, 1.0e+5, 1.0e+6 ]
+  RidgeClassifier:
+    solver: [ auto ] # lbfgs when positive = True
+    tol: [ 1.0e-4, 1.0e-5, 1.0e-3, 1.0e-2 ]
+    alpha: [ 1.0, 2.5, 5.0, 7.5, 10.0, 15.0 ]
+    positive: [ false ]
+
+  RidgePriorClassifier:
+    solver: [ auto, lsqr, sparse_cg ] # lbfgs when positive = True
+    tol: [ 1.0e-4, 1.0e-5, 1.0e-3 ]
+    alpha: [ 1.0e-06, 1.0e-03, 1.0e-02, 1.0e-01, 1.0, 1.0e+1, 1.0e+2, 1.0e+5, 1.0e+6 ]
+    positive: [ false, true ]
+
+  LogisticRegression:
+    solver: [ liblinear, newton-cg, lbfgs ]
+    tol: [ 1.0e-4, 1.0e-5, 1.0e-3, 1.0e-3 ]
+    dual: [ true, false ]
+    penalty: [ l1, l2 ]
+    C: [ 0.001, 0.01, 0.1, 1.0, 10, 100, 500 ]
+    max_iter: [ 500, 1000 ]
+
+  LinearSVC:
+    penalty: [ l1, l2 ]
+    loss: [ hinge, squared_hinge ]
+    tol: [ 1.0e-4, 1.0e-5, 1.0e-3 ]
+    C: [ 0.001, 0.01, 0.1, 1.0, 10, 100, 200, 500 ]
+    max_iter: [ 50000, 100000 ]
+    dual: [ auto ]
+
+  MultinomialNB:
+    alpha: [ 0.001, 0.01, 0.1, 1.0, 5, 10, 15, 20, 100, 1000 ]
+    fit_prior: [ true, false ]
+    force_alpha: [ true, false ]
+
+  GaussianNB:
+    var_smoothing: [ 1.0e-9, 1.0e-6, 1.0e-3, 1.0e-1 ]
+
+  BayesianGaussianMixture:
+    n_components: [ 1, 5, 10 ]
+    covariance_type: [ 'full', 'tied', 'diag', 'spherical' ]
+    tol: [ 1.0e-4, 1.0e-5, 1.0e-3 ]
+    n_init: [ 1, 5 ]
+
+  RandomForestClassifier:
+    n_estimators: [ 50, 100, 500, 1000 ]
+    criterion: [ "gini", "entropy", "log_loss" ]
+    min_samples_split: [ 2, 4, 5, 6 ]
+    ccp_alpha: [ 0.0, 0.001, 0.01, 0.1 ]
+
+  SVC:
+    C: [ 0.1, 1.0, 10.0 ]
+    kernel: [ 'linear', 'rbf' ]
+    gamma: [ 'scale', 'auto' ]
+    tol: [ 1.0e-4, 1.0e-5, 1.0e-3 ]
+
+  XGBClassifier:
+    #    objective: [ "binary:logistic" ]
+    n_estimators: [ 100, 500 ]
+    min_child_weight: [ 1, 5, 10 ]
+    gamma: [ 0.5, 1.5, 5 ]
+    subsample: [ 0.8, 1.0 ]
+  #    max_depth: [ 3, 4 ]
+  #    device: [ "cuda" ]
+
+  DecisionTreeClassifier:
+    # The function to measure the quality of a split
+    criterion: [ "gini", "entropy", "log_loss" ]
+    # The strategy used to choose the split at each node
+    # Supported strategies are “best” to choose the best split and “random” to choose the best random split
+    splitter: [ "best", "random" ]
+    # The maximum depth of the tree # null = None
+    # max_depth: [null, 2, 3, 4, 5, 10, 12, 13, 14, 15, 16, 17, 18, 20]
+    # The minimum number of samples required to split an internal node
+    min_samples_split: [ 2, 3, 4 ]
+    # The minimum number of samples required to be at a leaf node
+    # min_samples_leaf: [1, 2, 3, 4, 5]
+    # The number of features to consider when looking for the best split # null = None
+    max_features: [ null, "sqrt", "log2" ] # Not very impactful
+    # Grow a tree with max_leaf_nodes in best-first fashion # null = None
+    # max_leaf_nodes: [null, 5, 10, 15, 30, 50, 75, 100]
+    # Complexity parameter used for Minimal Cost-Complexity Pruning
+    # The subtree with the largest cost complexity that is smaller than ccp_alpha will be chosen
+    # By default, no pruning is performed
+    ccp_alpha: [ 0.0, 0.001, 0.01, 0.1 ]
+
+  AdaBoostClassifier:
+    n_estimators: [ 50, 100, 200 ]
+    learning_rate: [ 1.0, 0.8, 1.7 ]
+
+  HistGradientBoostingClassifier:
+    learning_rate: [ 0.1, 0.8, 1.0 ]
+    max_iter: [ 100, 200, 300, 500 ]
+    l2_regularization: [ 0, 0.1, 0.01 ]
+
+  NeuralNetBinaryClassifier:
+    optimizer__weight_decay: [ 1.0e-2, 1.0e-1, 0.0 ]
+    lr: [ 1.0e-3, 1.0e-4, 1.0e-5 ]
+
+#  BNClassifier:
+#    learningMethod: ['GHC', 'MIIC']
+#    prior: ['Smoothing', 'BDeu', 'NoPrior']
+#    priorWeight: [0.1, 1, 10]
+#    discretizationNbBins: [1]
+#    discretizationStrategy: ["uniform", 'kmeans', 'uniform', 'quantile', 'NML', 'MDLP', 'CAIM', 'NoDiscretization']
+#    usePR: [False]

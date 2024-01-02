@@ -7,18 +7,20 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder, StandardScaler, MinMaxScaler
 
-from src.deep_learning_strategy.classes.CGReviewDataset import CGReviewDataset
-from src.deep_learning_strategy.classes.Dataset import AbcDataset
+from src.datasets.classes.CGReviewDataset import CGReviewDataset
+from src.datasets.classes.Dataset import AbcDataset
 
 
 def load_encode_dataset(dataset: AbcDataset, std_scale: bool = False, max_scale: bool = False,
-                        features: list[str] | None = None, exclude_features: list[str] | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
+                        features: list[str] | None = None, exclude_features: list[str] | None = None) -> tuple[
+    pd.DataFrame, pd.DataFrame]:
     """
     Load dataset composed of extracted features based on the 'DATASET' global params that must be set to an AbcDataset object.
 
     @return: two dataframes with training and test data; target label is set to class 'y' and is encoded with numbers in 0...n-1
     """
-    assert not (std_scale and max_scale), "You can't use standard scaler and Max scaler together, only (at most) one operation should be done."
+    assert not (
+            std_scale and max_scale), "You can't use standard scaler and Max scaler together, only (at most) one operation should be done."
 
     data_path_train = Path(dataset.BASE_DATASET) / f"{dataset.__class__.__name__}_train_features.csv"
     data_path_test = Path(dataset.BASE_DATASET) / f"{dataset.__class__.__name__}_test_features.csv"
@@ -84,14 +86,16 @@ def bin_column(values: pd.Series, labels: list[str]) -> tuple[pd.Series, dict[st
     has_duplicates: bool = len(np.unique(test_quantiles)) != len(test_quantiles)
     if has_duplicates:
         # Can't do partition by quantiles so just use linear partition
-        t_values, bins = pd.cut(values, bins=len(labels), labels=labels, include_lowest=True, duplicates="raise", ordered=True, right=True, retbins=True)
+        t_values, bins = pd.cut(values, bins=len(labels), labels=labels, include_lowest=True, duplicates="raise",
+                                ordered=True, right=True, retbins=True)
     else:
         t_values, bins = pd.qcut(values, q=len(labels), labels=labels, duplicates="raise", retbins=True)
     bin_labels = dict(zip(labels, bins[1:].tolist()))  # exclude the lowest bound which is always 0
     return t_values, bin_labels
 
 
-def quantize_features(data: pd.DataFrame, quantiles: dict[str, dict[str, float]] | None = None, interval_labels: list[str] = None) -> tuple[pd.DataFrame, dict]:
+def quantize_features(data: pd.DataFrame, quantiles: dict[str, dict[str, float]] | None = None,
+                      interval_labels: list[str] = None) -> tuple[pd.DataFrame, dict]:
     """
     Quantization of feature based on frequency intervals
 
@@ -110,7 +114,8 @@ def quantize_features(data: pd.DataFrame, quantiles: dict[str, dict[str, float]]
             data[col], quantiles[col] = bin_column(data[col], interval_labels)
     else:
         for col in data.columns:
-            data[col] = pd.cut(data[col], bins=[0, *quantiles[col].values()], labels=list(quantiles[col].keys()), include_lowest=True, duplicates="raise", right=True,
+            data[col] = pd.cut(data[col], bins=[0, *quantiles[col].values()], labels=list(quantiles[col].keys()),
+                               include_lowest=True, duplicates="raise", right=True,
                                retbins=False)
 
     return data, quantiles

@@ -1,5 +1,5 @@
-from sklearn.base import BaseEstimator, TransformerMixin
 from nltk import Tree
+from sklearn.base import BaseEstimator, TransformerMixin
 
 
 class CFGExtractor(BaseEstimator, TransformerMixin):

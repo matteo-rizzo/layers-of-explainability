@@ -4,7 +4,7 @@ from typing import Iterable
 
 import pandas as pd
 
-from src.feature_extraction.text_features import TextFeatureExtractor
+from src.features_extraction.functional.text_features_utils import TextFeatureExtractor
 
 """ Utilities to generate corpus of offensive/common words in the Italian language """
 
