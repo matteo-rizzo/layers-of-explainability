@@ -28,7 +28,7 @@ def read_feature_descriptions(column_names: list[str]) -> dict[str, str]:
     modules = list({e.split("_")[0] for e in column_names})
     feature_dict = defaultdict(lambda: "Other features")
     for mod_path in modules:
-        module = import_module(f"src.text_classification.classes.features.{mod_path}")
+        module = import_module(f"src.features_extraction.classes.{mod_path}")
         feature_class: type[Feature] = getattr(module, mod_path)
         descriptions = feature_class.label_description()
         if descriptions is not None:
@@ -44,7 +44,7 @@ def main():
     # Load data
     data_train, data_test = load_encode_dataset(dataset=DATASET, max_scale=True,
                                                 exclude_features=get_excluded_features_dataset(DATASET, clf.__class__))
-    train_config: dict = load_yaml("src/text_classification/config/config.yml")
+    train_config: dict = load_yaml("src/text_classification/base_models/config.yml")
     data_train.pop("y")
     y_true_test = data_test["y"].tolist()
 

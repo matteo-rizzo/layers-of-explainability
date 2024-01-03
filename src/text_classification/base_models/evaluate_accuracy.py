@@ -13,29 +13,21 @@ Classifier/grid search configuration is to be set in "src/text_classification/co
 
 from __future__ import annotations
 
-import time
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.tree import DecisionTreeClassifier
 from pathlib import Path
 
 import joblib
-import pandas as pd
-import torch
-from sklearn.ensemble import AdaBoostClassifier
-from sklearn.tree import DecisionTreeClassifier
-from skorch.callbacks import Checkpoint, EarlyStopping
-from torch import nn
 from xgboost import XGBClassifier
 
-from src.datasets.classes.CallMeSexistDataset import CallMeSexistDataset
-from src.datasets.classes.Dataset import AbcDataset
-from src.text_classification.base_models.classes.torch_models import MLP
-from src.text_classification.base_models.classes.training.GridSearchUtility import GridSearchUtility
 from src.text_classification.base_models.classes.training.TrainingModelUtility import TrainingModelUtility
-from src.text_classification.utils import load_encode_dataset, get_excluded_features_dataset
+from src.datasets.classes.CallMeSexistDataset import CallMeSexistDataset
+from src.datasets.classes.IMDBDataset import IMDBDataset
+from src.text_classification.utils import load_encode_dataset
 from src.utils.yaml_manager import load_yaml
 
 
-def update_params_composite_classifiers(train_config: dict, SK_CLASSIFIER_TYPE: type,
-                                        SK_CLASSIFIER_PARAMS: dict) -> dict:
+def update_params_composite_classifiers(train_config: dict, SK_CLASSIFIER_TYPE: type, SK_CLASSIFIER_PARAMS: dict) -> dict:
     """
     Some classifiers (ensemble, boosting, etc.) may need specific configuration depending on the type.
     For instance, AdaBoost takes an "estimator" argument to set the base estimator.
@@ -52,73 +44,42 @@ def update_params_composite_classifiers(train_config: dict, SK_CLASSIFIER_TYPE: 
     return train_config
 
 
-def create_skorch_model_arguments(train_data: pd.DataFrame) -> dict:
-    """ Create parameters to train Neural model with skorch """
-    layers = [
-        (512, 0.1, True, nn.ReLU()),
-        (512, 0.2, True, nn.ReLU()),
-        (256, 0.1, True, nn.ReLU()),
-        (256, 0.1, True, nn.ReLU()),
-        (128, 0.1, True, nn.ReLU()),
-        (128, 0.2, True, nn.ReLU()),
-        (64, 0.1, True, nn.ReLU()),
-        (32, 0.1, True, nn.ReLU()),
-        (16, 0.1, True, nn.ReLU()),
-        (8, 0.1, True, nn.ReLU()),
-        (1, 0.1, False, None)
-    ]
+# Path to a trained models on sexism dataset
+MODEL_DIR = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_CMS_FINAL_RFE.pkl"
+# MODEL_DIR = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_IMDB_FINAL_RFE.pkl"
 
-    network_model = MLP(input_dim=len(train_data.columns) - 1, layers=layers)
-
-    classifier = dict(
-        module=network_model,
-        callbacks=[EarlyStopping(),
-                   Checkpoint(f_params="params_{last_epoch[epoch]}.pt",
-                              dirname=Path("dumps") / "nlp_models" / "checkpoints")
-                   ],
-        criterion=torch.nn.BCEWithLogitsLoss,
-        optimizer=torch.optim.AdamW,
-        verbose=True,
-        device="cuda"
-    )
-
-    return classifier
-
-
-DATASET: AbcDataset = CallMeSexistDataset()
-DO_GRID_SEARCH = False
+SK_CLASSIFIER_TYPE: type = XGBClassifier
+DATASET = CallMeSexistDataset()  # IMDBDataset()
 
 
 def main():
-    # Define which feature to use, or None to use everything
-    keep_features = None
+    # train_config: dict = load_yaml("src/text_classification/base_models/config.yml")
+    # bias_dataset = BiasDataset()
 
-    # SETTINGS:
-    # ------------- SK learn classifiers
-    SK_CLASSIFIER_TYPE: type = XGBClassifier
-    SK_CLASSIFIER_PARAMS: dict = dict()  # dict(estimator=LogisticRegression())
+    # data_train, data_test = load_encode_dataset(dataset=bias_dataset, max_scale=True, features=None)
+    train_config: dict = load_yaml("src/text_classification/base_models/config.yml")
+    bias_dataset = DATASET
+    clf = joblib.load(MODEL_DIR)
 
-    exclude_list = get_excluded_features_dataset(DATASET, SK_CLASSIFIER_TYPE)
+    features = list(set(clf.feature_names_in_.tolist()))
+    data_train, data_test = load_encode_dataset(dataset=bias_dataset, max_scale=True, features=features)
+    # data_base, _ = load_encode_dataset(dataset=DATASET, max_scale=True, features=None)
 
-    if exclude_list:
-        print(len(exclude_list))
-    data_train, data_test = load_encode_dataset(dataset=DATASET, max_scale=True, features=keep_features,
-                                                exclude_features=exclude_list)
-    train_config: dict = load_yaml("src/text_classification/config/config.yml")
+    # Load model
+    # missing_features = list(set(clf.feature_names_in_.tolist()) - set(data_train.columns.tolist()))
+    # for f in missing_features:
+    #     data_train[f] = np.random.random((data_train.shape[0],))
+    #
+    # data_train = data_train[clf.feature_names_in_.tolist() + ["y"]]
 
-    update_params_composite_classifiers(train_config, SK_CLASSIFIER_TYPE, SK_CLASSIFIER_PARAMS)
+    # Test evaluation
+    tmu = TrainingModelUtility(train_config, SK_CLASSIFIER_TYPE, dict())
+    tmu.trained_classifier = clf
+    tmu.evaluate(data_test, bias_dataset.compute_metrics)
+    # Get probabilities
+    # y_pred_probs = tmu.trained_classifier.predict_proba(data_train)[:, 1]
 
-    if DO_GRID_SEARCH:
-        gsu = GridSearchUtility(train_config, SK_CLASSIFIER_TYPE, SK_CLASSIFIER_PARAMS)
-        clf = gsu.grid_search_best_params(data_train, DATASET.compute_metrics)
-    else:
-        tmu = TrainingModelUtility(train_config, SK_CLASSIFIER_TYPE, SK_CLASSIFIER_PARAMS)
-        clf = tmu.train_classifier(data_train)
-        tmu.evaluate(data_test, DATASET.compute_metrics)
-
-    save_dir = Path("dumps") / "nlp_models" / clf.__class__.__name__ / f"model_{time.time()}.pkl"
-    save_dir.parent.mkdir(exist_ok=True, parents=True)
-    joblib.dump(clf, save_dir)
+    # bias_computation(data_train, y_pred_probs, bias_dataset=bias_dataset)
 
 
 if __name__ == "__main__":

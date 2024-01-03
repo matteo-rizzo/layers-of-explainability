@@ -18,10 +18,11 @@ from src.shap.core.classes.TranShapExplainer import TranShapExplainer
 from src.text_classification.deep_learning.classes.HuggingFacePipeline import HuggingFacePipeline
 from src.utils.yaml_manager import load_yaml
 
-config = load_yaml(os.path.join("src", "deep_learning_strategy", "config.yml"))
+config = load_yaml(os.path.join("src", "text_classification", "deep_learning", "config.yml"))
 BATCH_SIZE = config["training"]["test_batch_size"]
 TEST_MODEL_NAME = config["testing"]["model_name"]
 TARGET_LABEL = config["testing"]["target_label"]
+
 DATASET: AbcDataset = HuggingFaceCallMeSexistDataset()
 
 
