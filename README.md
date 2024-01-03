@@ -46,7 +46,7 @@ pip install -r requirements.txt
 1. **Download the Dataset**: Access and download the CMSB dataset from
    the [official source academic database](https://search.gesis.org/research_data/SDN-10.7802-2251).
 
-2. **Place the Dataset in the `dataset/` Directory**: Move the dataset into the `dataset/` directory of this repository.
+2. **Place the Dataset in the `dataset/` Directory**: Move the dataset into this repository's `dataset/` directory.
 
 ### IMDb Dataset for Sentiment Analysis
 
@@ -54,7 +54,7 @@ pip install -r requirements.txt
    from [Kaggle](https://www.kaggle.com/columbine/imdb-dataset-sentiment-analysis-in-csv-format) or
    the [official IMDb website](https://www.imdb.com/interfaces/).
 
-2. **Place the Dataset in the `dataset/` Directory**: Move the dataset into the `dataset/` directory of this repository.
+2. **Place the Dataset in the `dataset/` Directory**: Move the dataset into this repository's `dataset/` directory.
 
 ## Usage
 
@@ -63,6 +63,8 @@ To use the repository:
 1. **Generate Explanations**: Navigate to `src/explanations/` and run the scripts to generate explanations.
 
 2. **Evaluate Accuracy**: Go to `src/text_classification/` and execute the scripts to reproduce the accuracy results.
+
+Link to trained models dumps: https://drive.google.com/drive/folders/1wUedBu7Upe0DnQonqwBmoGqO5YKTe1Ea?usp=sharing
 
 ## License
 
