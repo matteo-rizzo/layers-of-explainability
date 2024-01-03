@@ -7,7 +7,7 @@ presents a novel approach to text classification that emphasizes explainability 
 performance. **The paper is currently under review for a conference submission.**
 
 **Model dumps** and **SUPPLEMENTAL MATERIAL** are
-shared in [GDrive folder](https://drive.google.com/drive/folders/1wUedBu7Upe0DnQonqwBmoGqO5YKTe1Ea?usp=sharing).
+shared in [GDrive folder](https://drive.google.com/drive/folders/1X7ZHkWA2lCruGEU5ifCfleEysHv3h1jb?usp=sharing).
 
 ## Abstract
 
@@ -63,7 +63,7 @@ pip install -r requirements.txt
 ## Download dumps
 
 1. Download pretrained models
-   from [GDrive folder](https://drive.google.com/drive/folders/1wUedBu7Upe0DnQonqwBmoGqO5YKTe1Ea?usp=sharing).
+   from [GDrive folder](https://drive.google.com/drive/folders/1X7ZHkWA2lCruGEU5ifCfleEysHv3h1jb?usp=sharing).
 
 2. Place them in `dumps/` folder
 
