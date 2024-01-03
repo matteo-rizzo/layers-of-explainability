@@ -6,6 +6,9 @@ This repository contains the implementation for the paper "Crossing the Divide: 
 presents a novel approach to text classification that emphasizes explainability without significantly compromising
 performance. **The paper is currently under review for a conference submission.**
 
+**Model dumps** and **SUPPLEMENTAL MATERIAL** are
+shared in [GDrive folder](https://drive.google.com/drive/folders/1wUedBu7Upe0DnQonqwBmoGqO5YKTe1Ea?usp=sharing).
+
 ## Abstract
 
 In the era of deep learning, the opaque nature of sophisticated models often stands at odds with the growing demand for
