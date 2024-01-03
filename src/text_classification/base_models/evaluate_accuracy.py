@@ -13,8 +13,6 @@ Classifier/grid search configuration is to be set in "src/text_classification/co
 
 from __future__ import annotations
 
-from sklearn.ensemble import AdaBoostClassifier
-from sklearn.tree import DecisionTreeClassifier
 from pathlib import Path
 
 import joblib
@@ -25,24 +23,6 @@ from src.datasets.classes.CallMeSexistDataset import CallMeSexistDataset
 from src.datasets.classes.IMDBDataset import IMDBDataset
 from src.text_classification.utils import load_encode_dataset
 from src.utils.yaml_manager import load_yaml
-
-
-def update_params_composite_classifiers(train_config: dict, SK_CLASSIFIER_TYPE: type, SK_CLASSIFIER_PARAMS: dict) -> dict:
-    """
-    Some classifiers (ensemble, boosting, etc.) may need specific configuration depending on the type.
-    For instance, AdaBoost takes an "estimator" argument to set the base estimator.
-    This cannot be specified in YAML, and each estimator can have its hyperparameters and grid search params.
-    Hence, this method updates the configuration of AdaBoost with all parameters of nested classifiers.
-    """
-    if SK_CLASSIFIER_TYPE in [AdaBoostClassifier]:  # potentially works for other "nested" cases
-        base_est_name = SK_CLASSIFIER_PARAMS.setdefault("estimator", DecisionTreeClassifier()).__class__.__name__
-        base_est_config = {f"estimator__{k}": v for k, v in train_config[base_est_name].items()}
-        base_est_gs_config = {f"estimator__{k}": vs for k, vs in
-                              train_config["grid_search_params"][base_est_name].items()}
-        train_config[f"{SK_CLASSIFIER_TYPE.__name__}"].update(base_est_config)
-        train_config["grid_search_params"][f"{SK_CLASSIFIER_TYPE.__name__}"].update(base_est_gs_config)
-    return train_config
-
 
 # Path to a trained models on sexism dataset
 MODEL_DIR = Path("dumps") / "nlp_models" / "XGBClassifier" / "model_CMS_FINAL_RFE.pkl"

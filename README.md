@@ -21,6 +21,7 @@ applications where understandability is paramount.
 ## Repository Structure
 
 - `dataset/`: Contains the datasets used in the study.
+- `dumps/`: Contains dumps of models
 - `src/`: Source code for the proposed framework.
     - `src/explanations/`: Scripts for generating explanations.
     - `src/text_classification/base_models/evaluate_accuracy.py`: Scripts to reproduce the accuracy results reported in
@@ -56,16 +57,34 @@ pip install -r requirements.txt
 
 2. **Place the Dataset in the `dataset/` Directory**: Move the dataset into this repository's `dataset/` directory.
 
+## Download dumps
+
+1. Download pretrained models
+   from [GDrive folder](https://drive.google.com/drive/folders/1wUedBu7Upe0DnQonqwBmoGqO5YKTe1Ea?usp=sharing).
+
+2. Place them in `dumps/` folder
+
 ## Usage
 
 To use the repository:
 
 1. **Generate Explanations**: Navigate to `src/explanations/` and run the scripts to generate explanations.
+    - in the script, set the model path in `local_explanation`/`local_explanation_deep`
+    - set the dataset to be used
 
-2. **Evaluate Accuracy**: Go to `src/text_classification/` and execute the scripts to reproduce the accuracy results.
+2. **Evaluate Accuracy**: Go to `src/text_classification/` and execute the scripts to reproduce the accuracy results
+    - use `base_models/evaluate_accuracy.py` or `deep_learning/evaluate_accuracy.py`
+    - set the model and `DATASET` variables in both scripts (deep model name must be set
+      in `src/text_classification/deep_learning/config.yml` in `testing` -> `model name`)
 
-Link to trained models dumps: https://drive.google.com/drive/folders/1wUedBu7Upe0DnQonqwBmoGqO5YKTe1Ea?usp=sharing
+### Train new models
+
+You can use script `src/text_classification/deep_learning/finetune.py`
+and `src/text_classification/base_models/train_classifier.py` to finetune a LM from HuggingFace or train a XGBoost
+classifier respectively.
+Features can be extracted running `src/features_analysis/aggregate_features.py`, and setting the correct dataset to be
+used in the scripts.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
