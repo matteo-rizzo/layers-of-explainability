@@ -28,10 +28,12 @@ from xgboost import XGBClassifier
 from src.datasets.classes.CallMeSexistDataset import CallMeSexistDataset
 from src.datasets.classes.Dataset import AbcDataset
 from src.text_classification.base_models.classes.torch_models.MLP import MLP
+from src.text_classification.base_models.classes.training import LGBMTrainingUtility
 from src.text_classification.base_models.classes.training.GridSearchUtility import GridSearchUtility
 from src.text_classification.base_models.classes.training.TrainingModelUtility import TrainingModelUtility
 from src.text_classification.utils import get_excluded_features_dataset, load_encode_dataset
 from src.utils.yaml_manager import load_yaml
+import lightgbm as lgb
 
 
 def update_params_composite_classifiers(train_config: dict, SK_CLASSIFIER_TYPE: type, SK_CLASSIFIER_PARAMS: dict) -> dict:
@@ -98,7 +100,8 @@ def main():
 
     # SETTINGS:
     # ------------- SK learn classifiers
-    SK_CLASSIFIER_TYPE: type = XGBClassifier
+    SK_CLASSIFIER_TYPE: type = lgb.LGBMClassifier
+    SK_CLASSIFIER_PARAMS: dict = dict()  # dict(estimator=LogisticRegression())
 
     exclude_list = get_excluded_features_dataset(DATASET, SK_CLASSIFIER_TYPE)
 
@@ -110,10 +113,10 @@ def main():
         data_train, data_test = load_encode_dataset(dataset=DATASET, max_scale=True, features=keep_features)
         train_config: dict = load_yaml("src/text_classification/base_models/config.yml")
 
-        # SETTINGS:
-        # ------------- SK learn classifiers
-        SK_CLASSIFIER_TYPE: type = XGBClassifier
-        SK_CLASSIFIER_PARAMS: dict = dict()  # dict(estimator=LogisticRegression())
+        GSU = GridSearchUtility
+        TMU = TrainingModelUtility
+        if SK_CLASSIFIER_TYPE == lgb.LGBMClassifier:
+            TMU = LGBMTrainingUtility
 
         # ------------- TORCH with SKORCH
         # SK_CLASSIFIER_TYPE: type = NeuralNetBinaryClassifier
@@ -122,10 +125,10 @@ def main():
         update_params_composite_classifiers(train_config, SK_CLASSIFIER_TYPE, SK_CLASSIFIER_PARAMS)
 
         if DO_GRID_SEARCH:
-            gsu = GridSearchUtility(train_config, SK_CLASSIFIER_TYPE, SK_CLASSIFIER_PARAMS)
+            gsu = GSU(train_config, SK_CLASSIFIER_TYPE, SK_CLASSIFIER_PARAMS)
             clf = gsu.grid_search_best_params(data_train, DATASET.compute_metrics)
         else:
-            tmu = TrainingModelUtility(train_config, SK_CLASSIFIER_TYPE, SK_CLASSIFIER_PARAMS)
+            tmu = TMU(train_config, SK_CLASSIFIER_TYPE, SK_CLASSIFIER_PARAMS)
             clf = tmu.train_classifier(data_train)
             metrics = tmu.evaluate(data_test, DATASET.compute_metrics)
             all_metrics.append(metrics)

@@ -103,6 +103,15 @@ GradientBoostingClassifier:
   max_depth: 3
   ccp_alpha: 0.0
 
+LGBMClassifier:
+  boosting_type: gbdt
+  num_leaves: 31
+  min_data_in_leaf: 20
+  max_depth: -1
+  learning_rate: 0.1
+  n_estimators: 100
+  subsample_for_bin: 200000
+
 NeuralNetBinaryClassifier:
   optimizer__weight_decay: 1.0e-2
   lr: 1.0e-6
@@ -112,6 +121,15 @@ NeuralNetBinaryClassifier:
 grid_search_params:
   num_seeds: 1
   test_size: 0.2
+
+  LGBMClassifier:
+    boosting_type: gbdt
+    num_leaves: [ 10, 31, 50, 80, 100 ]
+    min_data_in_leaf: [ 20, 10, 30 ]
+    max_depth: [ -1, 20, 50 ]
+    learning_rate: 0.1
+    n_estimators: 100
+    subsample_for_bin: 200000
 
   GradientBoostingClassifier:
     loss: [ "log_loss", "exponential" ]
