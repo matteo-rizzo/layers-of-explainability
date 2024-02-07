@@ -19,6 +19,7 @@ from pathlib import Path
 import joblib
 import pandas as pd
 import torch
+from lightgbm import early_stopping
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.tree import DecisionTreeClassifier
 from skorch.callbacks import Checkpoint, EarlyStopping
@@ -28,7 +29,7 @@ from xgboost import XGBClassifier
 from src.datasets.classes.CallMeSexistDataset import CallMeSexistDataset
 from src.datasets.classes.Dataset import AbcDataset
 from src.text_classification.base_models.classes.torch_models.MLP import MLP
-from src.text_classification.base_models.classes.training import LGBMTrainingUtility
+from src.text_classification.base_models.classes.training.LGBMTrainingModelUtility import LGBMTrainingModelUtility
 from src.text_classification.base_models.classes.training.GridSearchUtility import GridSearchUtility
 from src.text_classification.base_models.classes.training.TrainingModelUtility import TrainingModelUtility
 from src.text_classification.utils import get_excluded_features_dataset, load_encode_dataset
@@ -91,7 +92,7 @@ def create_skorch_model_arguments(train_data: pd.DataFrame) -> dict:
 
 
 DATASET: AbcDataset = CallMeSexistDataset()
-DO_GRID_SEARCH = False
+DO_GRID_SEARCH = True
 
 
 def main():
@@ -115,8 +116,11 @@ def main():
 
         GSU = GridSearchUtility
         TMU = TrainingModelUtility
+        gsu_fit_params = dict(n_jobs=8)
         if SK_CLASSIFIER_TYPE == lgb.LGBMClassifier:
-            TMU = LGBMTrainingUtility
+            TMU = LGBMTrainingModelUtility
+            gsu_fit_params = dict(eval_metric=["average_precision"], eval_set=[],
+                                  callbacks=[early_stopping(10, first_metric_only=False, verbose=False)])
 
         # ------------- TORCH with SKORCH
         # SK_CLASSIFIER_TYPE: type = NeuralNetBinaryClassifier
@@ -126,7 +130,7 @@ def main():
 
         if DO_GRID_SEARCH:
             gsu = GSU(train_config, SK_CLASSIFIER_TYPE, SK_CLASSIFIER_PARAMS)
-            clf = gsu.grid_search_best_params(data_train, DATASET.compute_metrics)
+            clf = gsu.grid_search_best_params(data_train, DATASET.compute_metrics, **gsu_fit_params)
         else:
             tmu = TMU(train_config, SK_CLASSIFIER_TYPE, SK_CLASSIFIER_PARAMS)
             clf = tmu.train_classifier(data_train)
