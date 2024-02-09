@@ -5,7 +5,9 @@ from typing import Callable, Any
 
 import lightgbm as lgb
 import pandas as pd
+from lightgbm import early_stopping, log_evaluation
 from sklearn.base import ClassifierMixin
+from sklearn.model_selection import train_test_split
 
 from src.text_classification.base_models.classes.training.TrainingModelUtility import TrainingModelUtility
 
@@ -19,22 +21,20 @@ class LGBMTrainingModelUtility(TrainingModelUtility):
 
         y_train = training_data.pop("y")
 
-        training_set = lgb.Dataset(training_data, label=y_train)
-        train_bin = Path("dumps/lgbm/train.bin")
-        train_bin.mkdir(parents=True, exist_ok=True)
-        training_set.save_binary(train_bin)
-        validation_data = training_set.create_valid(train_bin)
+        # training_set = lgb.Dataset(training_data, label=y_train)
+        # train_bin = Path("dumps/lgbm/train.bin")
+        # train_bin.parent.mkdir(parents=True, exist_ok=True)
+        # training_set.save_binary(train_bin)
+        # validation_data = training_set.create_valid(train_bin)
 
         clf = self._base_classifier_type(**self._base_classifier_kwargs,
-                                         **self.train_config[self._base_classifier_type.__name__],
-                                         eval_metric="accuracy",
-                                         eval_set=[validation_data])
+                                         **self.train_config[self._base_classifier_type.__name__])
+
+        x_train, x_val, y_train, y_val = train_test_split(training_data, y_train, test_size=.15, stratify=y_train, shuffle=True, random_state=3)
 
         # num_round = 10
-        # clf = lgb.train(self._base_classifier_kwargs, training_set, num_round,
-        #                 feval=[],
-        #                 valid_sets=[validation_data],
-        #                 callbacks=[lgb.early_stopping(5)])
+        clf.fit(x_train, y_train, eval_metric=["average_precision"], eval_set=[(x_val, y_val)],
+                callbacks=[early_stopping(10, first_metric_only=False), log_evaluation(1)])
         self.trained_classifier = clf
 
         return clf
