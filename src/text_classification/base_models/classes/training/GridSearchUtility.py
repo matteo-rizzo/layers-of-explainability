@@ -21,7 +21,8 @@ class GridSearchUtility(BaseUtility):
         super().__init__(configuration_parameters, base_classifier_type, base_classifier_kwargs)
 
     def grid_search_best_params(self, training_data: pd.DataFrame,
-                                compute_metrics_fn: Callable[[Any, Any], dict[str, float]], n_jobs: int = None, **fit_params) -> ClassifierMixin:
+                                compute_metrics_fn: Callable[[Any, Any], dict[str, float]], n_jobs: int = None,
+                                **fit_params) -> ClassifierMixin:
         """
         Perform grid search of the selected classifier (see 'SK_CLASSIFIER_TYPE').
 
@@ -54,7 +55,8 @@ class GridSearchUtility(BaseUtility):
             params = self.train_config["grid_search_params"][self._base_classifier_type.__name__]
             base_estimator_params = self.train_config[self._base_classifier_type.__name__]
 
-            gs = GridSearchCV(self._base_classifier_type(**self._base_classifier_kwargs, random_state=rs), param_grid=params, verbose=10,
+            gs = GridSearchCV(self._base_classifier_type(**self._base_classifier_kwargs, random_state=rs),
+                              param_grid=params, verbose=10,
                               refit=False, n_jobs=n_jobs, cv=5, scoring=make_scorer(f1_score))
             # Set base parameters in the estimator inside GS
             gs.estimator.set_params(**base_estimator_params)
@@ -88,8 +90,8 @@ class GridSearchUtility(BaseUtility):
             avg_metrics["f1"].append(metrics["f1"])
 
             params = {
-                "gs_params": copy.deepcopy(gs.best_params_),
-                "all_params": gs.get_params(True),
+                "gs_params": copy.deepcopy(dict(gs.best_params_)),
+                # "all_params": gs.get_params(False),
                 "metrics": metrics
             }
 
@@ -105,4 +107,4 @@ class GridSearchUtility(BaseUtility):
         print("-----------------------------------------------------------")
         pprint(best_params)
 
-        return gs.best_estimator_
+        # return gs.best_estimator_

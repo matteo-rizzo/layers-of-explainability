@@ -140,7 +140,7 @@ def main():
         # TO BE DONE: Implement saving if needed
         save_dir = Path("dumps") / "nlp_models" / clf.__class__.__name__ / f"model_{time.time()}.pkl"
         save_dir.parent.mkdir(exist_ok=True, parents=True)
-        joblib.dump(clf, save_dir)
+        #joblib.dump(clf, save_dir)
 
     df = pd.DataFrame(all_metrics)
     print("CV metrics on test data")
