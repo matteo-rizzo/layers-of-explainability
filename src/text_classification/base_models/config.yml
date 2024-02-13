@@ -106,12 +106,15 @@ GradientBoostingClassifier:
 LGBMClassifier:
   objective: binary
   is_unbalance: false
-  boosting_type: goss
-  num_leaves: 100
+  boosting_type: rf
+  num_leaves: 128
   #  min_data_in_leaf: 20
-  max_depth: 50
-  learning_rate: 0.05
-  n_estimators: 300
+  max_depth: 15
+  learning_rate: 0.1
+  n_estimators: 100
+  bagging_fraction: 0.1
+  feature_fraction: 0.7
+  max_bin: 128
   # subsample_for_bin: 200000
   seed: 7
   n_jobs: 8
