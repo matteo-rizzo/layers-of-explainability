@@ -2,12 +2,12 @@
 
 ## Introduction
 
-This repository contains the implementation for the paper "Crossing the Divide: Designing Layers of Explainability". It
+This repository contains the implementation for the paper "Crossing the Divide: Designing Layers of Explainability." It
 presents a novel approach to text classification that emphasizes explainability without significantly compromising
-performance. **The paper is currently under review for a conference submission.**
+performance. The paper has been accepted at "The 23rd International Conference on Artificial Intelligence and Soft Computing" (ICAISC 2024).
 
 **Model dumps** and **SUPPLEMENTAL MATERIAL** are
-shared in [GDrive folder](https://drive.google.com/drive/folders/1X7ZHkWA2lCruGEU5ifCfleEysHv3h1jb?usp=sharing).
+shared in [GDrive folder](https://drive.google.com/drive/folders/163E_XKLPwEDqZwnKbGgMlhpfGxPVmPiM?usp=sharing).
 
 ## Abstract
 
@@ -63,7 +63,7 @@ pip install -r requirements.txt
 ## Download dumps
 
 1. Download pretrained models
-   from [GDrive folder](https://drive.google.com/drive/folders/1X7ZHkWA2lCruGEU5ifCfleEysHv3h1jb?usp=sharing).
+   from [GDrive folder](https://drive.google.com/drive/folders/163E_XKLPwEDqZwnKbGgMlhpfGxPVmPiM?usp=sharing).
 
 2. Place them in `dumps/` folder
 
