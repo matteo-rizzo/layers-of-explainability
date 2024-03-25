@@ -19,6 +19,7 @@ from pathlib import Path
 import joblib
 import pandas as pd
 import torch
+from lightgbm import early_stopping
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.tree import DecisionTreeClassifier
 from skorch.callbacks import Checkpoint, EarlyStopping
@@ -28,10 +29,12 @@ from xgboost import XGBClassifier
 from src.datasets.classes.CallMeSexistDataset import CallMeSexistDataset
 from src.datasets.classes.Dataset import AbcDataset
 from src.text_classification.base_models.classes.torch_models.MLP import MLP
+from src.text_classification.base_models.classes.training.LGBMTrainingModelUtility import LGBMTrainingModelUtility
 from src.text_classification.base_models.classes.training.GridSearchUtility import GridSearchUtility
 from src.text_classification.base_models.classes.training.TrainingModelUtility import TrainingModelUtility
 from src.text_classification.utils import get_excluded_features_dataset, load_encode_dataset
 from src.utils.yaml_manager import load_yaml
+import lightgbm as lgb
 
 
 def update_params_composite_classifiers(train_config: dict, SK_CLASSIFIER_TYPE: type, SK_CLASSIFIER_PARAMS: dict) -> dict:
@@ -89,7 +92,7 @@ def create_skorch_model_arguments(train_data: pd.DataFrame) -> dict:
 
 
 DATASET: AbcDataset = CallMeSexistDataset()
-DO_GRID_SEARCH = False
+DO_GRID_SEARCH = True
 
 
 def main():
@@ -98,7 +101,8 @@ def main():
 
     # SETTINGS:
     # ------------- SK learn classifiers
-    SK_CLASSIFIER_TYPE: type = XGBClassifier
+    SK_CLASSIFIER_TYPE: type = lgb.LGBMClassifier
+    SK_CLASSIFIER_PARAMS: dict = dict()  # dict(estimator=LogisticRegression())
 
     exclude_list = get_excluded_features_dataset(DATASET, SK_CLASSIFIER_TYPE)
 
@@ -110,10 +114,13 @@ def main():
         data_train, data_test = load_encode_dataset(dataset=DATASET, max_scale=True, features=keep_features)
         train_config: dict = load_yaml("src/text_classification/base_models/config.yml")
 
-        # SETTINGS:
-        # ------------- SK learn classifiers
-        SK_CLASSIFIER_TYPE: type = XGBClassifier
-        SK_CLASSIFIER_PARAMS: dict = dict()  # dict(estimator=LogisticRegression())
+        GSU = GridSearchUtility
+        TMU = TrainingModelUtility
+        gsu_fit_params = dict(n_jobs=8)
+        if SK_CLASSIFIER_TYPE == lgb.LGBMClassifier:
+            TMU = LGBMTrainingModelUtility
+            gsu_fit_params = dict(eval_metric=["average_precision"], eval_set=[],
+                                  callbacks=[early_stopping(10, first_metric_only=False, verbose=False)])
 
         # ------------- TORCH with SKORCH
         # SK_CLASSIFIER_TYPE: type = NeuralNetBinaryClassifier
@@ -122,10 +129,10 @@ def main():
         update_params_composite_classifiers(train_config, SK_CLASSIFIER_TYPE, SK_CLASSIFIER_PARAMS)
 
         if DO_GRID_SEARCH:
-            gsu = GridSearchUtility(train_config, SK_CLASSIFIER_TYPE, SK_CLASSIFIER_PARAMS)
-            clf = gsu.grid_search_best_params(data_train, DATASET.compute_metrics)
+            gsu = GSU(train_config, SK_CLASSIFIER_TYPE, SK_CLASSIFIER_PARAMS)
+            clf = gsu.grid_search_best_params(data_train, DATASET.compute_metrics, **gsu_fit_params)
         else:
-            tmu = TrainingModelUtility(train_config, SK_CLASSIFIER_TYPE, SK_CLASSIFIER_PARAMS)
+            tmu = TMU(train_config, SK_CLASSIFIER_TYPE, SK_CLASSIFIER_PARAMS)
             clf = tmu.train_classifier(data_train)
             metrics = tmu.evaluate(data_test, DATASET.compute_metrics)
             all_metrics.append(metrics)
@@ -133,7 +140,7 @@ def main():
         # TO BE DONE: Implement saving if needed
         save_dir = Path("dumps") / "nlp_models" / clf.__class__.__name__ / f"model_{time.time()}.pkl"
         save_dir.parent.mkdir(exist_ok=True, parents=True)
-        joblib.dump(clf, save_dir)
+        #joblib.dump(clf, save_dir)
 
     df = pd.DataFrame(all_metrics)
     print("CV metrics on test data")

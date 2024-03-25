@@ -12,8 +12,7 @@ from src.datasets.classes.Dataset import AbcDataset
 
 
 def load_encode_dataset(dataset: AbcDataset, std_scale: bool = False, max_scale: bool = False,
-                        features: list[str] | None = None, exclude_features: list[str] | None = None) -> tuple[
-    pd.DataFrame, pd.DataFrame]:
+                        features: list[str] | None = None, exclude_features: list[str] | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Load dataset composed of extracted features based on the 'DATASET' global params that must be set to an AbcDataset object.
 
@@ -27,6 +26,9 @@ def load_encode_dataset(dataset: AbcDataset, std_scale: bool = False, max_scale:
 
     data_train = pd.read_csv(data_path_train, usecols=features)
     data_test = pd.read_csv(data_path_test, usecols=features)
+
+    # data_train.columns = [a.replace(" ", "_") for a in data_train.columns.tolist()]
+    # data_test.columns = [a.replace(" ", "_") for a in data_test.columns.tolist()]
 
     if exclude_features is not None:
         data_train = data_train.drop(columns=exclude_features)
@@ -151,5 +153,6 @@ def get_excluded_features_dataset(dataset: AbcDataset, sk_classifier_type: type)
     exclude_path = Path(dataset.BASE_DATASET) / f"RFE_{dataset.__class__.__name__}_{sk_classifier_type.__name__}.json"
     if exclude_path.exists():
         with open(exclude_path, mode="r", encoding="utf-8") as fe:
+            # exclude_list: list[str] = [a.replace(" ", "_") for a in json.load(fe)["removed"]]
             exclude_list: list[str] = json.load(fe)["removed"]
     return exclude_list
